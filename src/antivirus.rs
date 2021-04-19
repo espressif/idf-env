@@ -18,24 +18,26 @@ fn get_antivirus_property(property_name: String) -> Result<()> {
 
     let wmi_con = WMIConnection::with_namespace_path("ROOT\\SecurityCenter2", COMLibrary::new()?.into())?;
     let query = format!("SELECT {} FROM AntiVirusProduct", property_name);
-    match wmi_con.raw_query(query) {
-        Ok(products) => {
-            for antivirus_product in products {
-                match property_name == "*" {
-                    true => println!("{:#?}", antivirus_product),
-                    _ => {
-                        let prod: HashMap<String, Variant> = antivirus_product;
-                        let property_value = &prod[&property_name];
+    let products = wmi_con.raw_query(query)?;
+    let mut is_first = true;
+    for antivirus_product in products {
+        match property_name == "*" {
+            true => println!("{:#?}", antivirus_product),
+            _ => {
+                let prod: HashMap<String, Variant> = antivirus_product;
+                let property_value = &prod[&property_name];
 
-                        if let Variant::String(value) = property_value {
-                            print!("{}", value)
-                        }
+                if let Variant::String(value) = property_value {
+                    if is_first {
+                        is_first = false;
+                    } else {
+                        print!(", ");
                     }
+                    print!("{}", value)
                 }
             }
-        },
-        Err(error) => { println!("Oh noes: {:?}", error); }
-    };
+        }
+    }
     Ok(())
 }
 
@@ -54,10 +56,16 @@ pub fn get_cmd<'a>() -> Command<'a, str> {
         })
         .runner(|_args, matches| {
             let property_name = matches.value_of("property").unwrap().to_string();
-            get_antivirus_property(property_name);
+            match get_antivirus_property(property_name) {
+                Ok(..) => {}
+                Err(error) => {
+                    println!("Error: {:?}", error);
+                }
+            };
             Ok(())
         })
 }
+
 
 pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
     let multi_cmd: MultiCommand<str, str> = Commander::new()
