@@ -30,7 +30,7 @@ fn get_antivirus_property(property_name: String, include_inactive: bool) -> Resu
             if let Variant::I8(value) = product_state {
                 // magic number of antivirus state: https://mcpforlife.com/2020/04/14/how-to-resolve-this-state-value-of-av-providers/
                 if value & 0b1000000000000 == 0 {
-                    continue
+                    continue;
                 }
             }
         }
@@ -38,7 +38,7 @@ fn get_antivirus_property(property_name: String, include_inactive: bool) -> Resu
         match property_name == "*" {
             true => {
                 println!("{:#?}", prod)
-            },
+            }
             _ => {
                 let property_value = &prod[&property_name];
 
@@ -79,10 +79,10 @@ pub fn get_cmd<'a>() -> Command<'a, str> {
             let property_name = matches.value_of("property").unwrap().to_string();
             let include_inactive = matches.is_present("include-inactive");
             match get_antivirus_property(property_name, include_inactive) {
-                Ok(..) => {}
                 Err(error) => {
                     println!("Error: {:?}", error);
                 }
+                _ => {}
             };
             Ok(())
         })
