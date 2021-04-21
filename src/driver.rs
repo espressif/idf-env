@@ -18,9 +18,6 @@ mod windows;
 #[cfg(windows)]
 use windows::to_wchar;
 
-// use termion::input::TermRead;
-// use termion::raw::IntoRawMode;
-// use std::io::{stdout, stdin, Write};
 use std::{thread, time};
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
