@@ -190,8 +190,7 @@ fn install_driver(driver_inf: String) {
     //     &DestinationInfFileNameComponent))
     // Rust: https://docs.rs/winapi/0.3.9/winapi/um/setupapi/fn.SetupCopyOEMInfW.html
 
-    let driver_file = format!("{}\\{}",std::env::current_dir().unwrap().display().to_string(), driver_inf.replace("/", "\\"));
-    let source_inf_filename = to_wchar(&driver_file).as_ptr();
+    let source_inf_filename = to_wchar(&driver_inf).as_ptr();
     let mut destination_inf_filename_vec: Vec<u16> = Vec::with_capacity(255);
     let destination_inf_filename = destination_inf_filename_vec.as_mut_ptr();
     let destination_inf_filename_len = 254;
@@ -207,7 +206,7 @@ fn install_driver(driver_inf: String) {
             destination_inf_filename_len,
             null_mut(),
             &mut a as *mut _);
-        print!("Installing driver with INF: {} ... ", driver_file);
+        print!("Installing driver with INF: {} ... ", driver_inf);
         match result {
             1 => { println!("Ok"); }
             0 => { println!("Failed"); }
