@@ -18,6 +18,11 @@ mod windows;
 #[cfg(windows)]
 use windows::to_wchar;
 
+// use termion::input::TermRead;
+// use termion::raw::IntoRawMode;
+// use std::io::{stdout, stdin, Write};
+use std::{thread, time};
+
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 #[cfg(unix)]
@@ -223,6 +228,17 @@ fn get_install_runner(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::resu
                            "https://www.ftdichip.com/Drivers/CDM/CDM%20v2.12.28%20WHQL%20Certified.zip".to_string(),
                            "ftdi.zip".to_string());
         }
+
+        if _matches.is_present("esp32") {
+            install_driver("tmp/USB_JTAG_debug_unit.inf".to_string(),
+                           "https://dl.espressif.com/dl/idf-driver/idf-driver-esp32-c3-2021-04-20.zip".to_string(),
+                           "idf-driver-esp32-c3.zip".to_string());
+        }
+
+        if _matches.is_present("wait") {
+            println!("Finished...");
+            thread::sleep(time::Duration::from_millis(100000));
+        }
     } else {
         let mut arguments: Vec<String> = [].to_vec();
 
@@ -232,6 +248,14 @@ fn get_install_runner(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::resu
 
         if _matches.is_present("ftdi") {
             arguments.push("--ftdi".to_string());
+        }
+
+        if _matches.is_present("esp32") {
+            arguments.push("--esp32".to_string());
+        }
+
+        if _matches.is_present("wait") {
+            arguments.push("--wait".to_string());
         }
 
         if arguments.len() == 0 {
@@ -280,17 +304,29 @@ pub fn get_install_cmd<'a>() -> Command<'a, str> {
                 Arg::with_name("ftdi")
                     .short("f")
                     .long("ftdi")
-                    .help("Install ftdi driver"),
+                    .help("Install FTDI driver"),
             )
                 .arg(
                     Arg::with_name("silabs")
                         .short("s")
                         .long("silabs")
-                        .help("Install Silabs drivers"),
+                        .help("Install Silabs driver"),
+                )
+                .arg(
+                    Arg::with_name("esp32")
+                        .short("e")
+                        .long("esp32")
+                        .help("Install Espressif driver"),
+                )
+                .arg(
+                    Arg::with_name("wait")
+                        .short("w")
+                        .long("wait")
+                        .help("Wait after the installation for user confirmation"),
                 )
                 .arg(
                     Arg::with_name("verbose")
-                        .short("w")
+                        .short("m")
                         .long("verbose")
                         .takes_value(false)
                         .help("display diagnostic log after installation"))
