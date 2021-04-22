@@ -22,9 +22,6 @@ jobs:
           CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
         shell: pwsh
         run: ./Sign-File.ps1 -Path target/release/idf-env.exe
-      - name: ZIP artifact
-        shell: pwsh
-        run: Compress-Archive -Path target/release/idf-env.exe -DestinationPath idf-env.zip
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -42,7 +39,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: idf-env.zip
-          asset_name: idf-env.zip
-          asset_content_type: application/zip
+          asset_path: target/release/idf-env.exe
+          asset_name: idf-env.exe
+          asset_content_type: application/octet-stream
 

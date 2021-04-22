@@ -54,5 +54,5 @@ Run in elevated shell - requires Administrator privileges.
 Tools will request elevated privileges by UAC if necessary.
 
 ```
-idf-env driver install --ftdi --silabs
+idf-env driver install --espressif --ftdi --silabs
 ```
