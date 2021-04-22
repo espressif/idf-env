@@ -205,7 +205,7 @@ fn install_driver(driver_inf: String) {
             &mut a as *mut _);
         match result {
             1 => { println!("Ok"); }
-            0 => { println!("Failed"); }
+            0 => { println!("Already installed"); }
             _ => { println!("Exit code: {:#}", result); }
         }
 
