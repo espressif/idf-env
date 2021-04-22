@@ -12,20 +12,42 @@ fn get_antivirus_property(_property_name: String) -> Result<()> {
 }
 
 #[cfg(windows)]
-fn get_antivirus_property(property_name: String) -> Result<()> {
+fn get_antivirus_property(property_name: String, include_inactive: bool) -> Result<()> {
     use wmi::*;
     use wmi::Variant;
 
     let wmi_con = WMIConnection::with_namespace_path("ROOT\\SecurityCenter2", COMLibrary::new()?.into())?;
-    let query = format!("SELECT {} FROM AntiVirusProduct", property_name);
-    let results: Vec<HashMap<String, Variant>> = wmi_con.raw_query(query).unwrap();
-    for antivirus_product in results {
+    let query = format!("SELECT * FROM AntiVirusProduct");
+    let products = wmi_con.raw_query(query)?;
+    let mut is_first = true;
+    for antivirus_product in products {
+        let prod: HashMap<String, Variant> = antivirus_product;
+
+        // Filter only active products
+        if !include_inactive {
+            let product_state = &prod["productState"];
+
+            if let Variant::I8(value) = product_state {
+                // magic number of antivirus state: https://mcpforlife.com/2020/04/14/how-to-resolve-this-state-value-of-av-providers/
+                if value & 0b1000000000000 == 0 {
+                    continue;
+                }
+            }
+        }
+
         match property_name == "*" {
-            true => println!("{:#?}", antivirus_product),
+            true => {
+                println!("{:#?}", prod)
+            }
             _ => {
-                let property_value = &antivirus_product[&property_name];
+                let property_value = &prod[&property_name];
 
                 if let Variant::String(value) = property_value {
+                    if is_first {
+                        is_first = false;
+                    } else {
+                        print!(", ");
+                    }
                     print!("{}", value)
                 }
             }
@@ -46,13 +68,26 @@ pub fn get_cmd<'a>() -> Command<'a, str> {
                     .takes_value(true)
                     .default_value("*"),
             )
+                .arg(
+                    Arg::with_name("include-inactive")
+                        .short("i")
+                        .long("include-inactive")
+                        .help("Include all antivirus registration"),
+                )
         })
         .runner(|_args, matches| {
             let property_name = matches.value_of("property").unwrap().to_string();
-            get_antivirus_property(property_name).unwrap();
+            let include_inactive = matches.is_present("include-inactive");
+            match get_antivirus_property(property_name, include_inactive) {
+                Err(error) => {
+                    println!("Error: {:?}", error);
+                }
+                _ => {}
+            };
             Ok(())
         })
 }
+
 
 pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
     let multi_cmd: MultiCommand<str, str> = Commander::new()
