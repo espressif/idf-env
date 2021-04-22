@@ -198,7 +198,7 @@ fn install_driver(driver_inf: String) {
             source_inf_filename,
             null_mut(),
             winapi::um::setupapi::SPOST_PATH,
-            winapi::um::setupapi::SP_COPY_NEWER_OR_SAME,
+            winapi::um::setupapi::SP_COPY_NOOVERWRITE,
             destination_inf_filename,
             destination_inf_filename_len,
             null_mut(),
