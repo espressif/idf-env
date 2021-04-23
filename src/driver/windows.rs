@@ -69,7 +69,7 @@ impl Drop for QueryAccessToken {
     }
 }
 
-pub fn to_wchar(str: &str) -> Vec<u16> {
+pub fn to_wchar(str: &str) -> Vec<winapi::um::winnt::WCHAR> {
     // OsStr::new(str).encode_wide().chain(Some(0).into_iter()).collect()
     OsStr::new(str).encode_wide().chain(once(0)).collect()
 }

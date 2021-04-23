@@ -5,6 +5,7 @@ use std::io::Cursor;
 #[cfg(windows)]
 use std::collections::HashMap;
 use tokio::runtime::Handle;
+use std::env;
 use std::fs;
 use std::io;
 
@@ -174,6 +175,7 @@ fn unzip(file_path: String, output_directory: String) -> Result<()> {
 #[cfg(unix)]
 fn install_driver(driver_inf: String, driver_url: String, _driver_archive: String) {}
 
+use widestring::WideCString;
 #[cfg(windows)]
 fn install_driver(driver_inf: String) {
     // Reference: https://github.com/microsoft/Windows-driver-samples/tree/master/setup/devcon
@@ -186,27 +188,45 @@ fn install_driver(driver_inf: String) {
     //     NULL,
     //     &DestinationInfFileNameComponent))
     // Rust: https://docs.rs/winapi/0.3.9/winapi/um/setupapi/fn.SetupCopyOEMInfW.html
-    print!("Installing driver with INF: {} ... ", driver_inf);
-    let source_inf_filename = to_wchar(&driver_inf).as_ptr();
-    let mut destination_inf_filename_vec: Vec<u16> = Vec::with_capacity(255);
-    let destination_inf_filename = destination_inf_filename_vec.as_mut_ptr();
-    let destination_inf_filename_len = 254;
+    let driver_inf = driver_inf.replace("/", "\\");
+    let driver_inf = format!("{}\\{}", env::current_dir().unwrap().display(), driver_inf);
+    print!("Installing driver with INF {} ", driver_inf);
+    let mut destination_inf_filename_vec: Vec<winapi::um::winnt::WCHAR> = vec![0; 255];
+    let destination_inf_filename:winapi::um::winnt::PWSTR = destination_inf_filename_vec.as_mut_ptr();
+    let destination_inf_filename_len:winapi::um::winnt::FLONG = 250;
     let mut v: Vec<u16> = Vec::with_capacity(255);
     let mut a: winapi::um::winnt::PWSTR = v.as_mut_ptr();
+
+    let source_inf_filename = WideCString::from_str(&driver_inf).unwrap();
     unsafe {
+        // https://docs.microsoft.com/en-us/windows/win32/api/setupapi/nf-setupapi-setupcopyoeminfw
         let result = winapi::um::setupapi::SetupCopyOEMInfW(
-            source_inf_filename,
+            source_inf_filename.as_slice_with_nul().as_ptr(),
             null_mut(),
             winapi::um::setupapi::SPOST_PATH,
-            winapi::um::setupapi::SP_COPY_NEWER_OR_SAME,
+            winapi::um::setupapi::SP_COPY_NOOVERWRITE,
             destination_inf_filename,
             destination_inf_filename_len,
             null_mut(),
             &mut a as *mut _);
-        match result {
-            1 => { println!("Ok"); }
-            0 => { println!("Failed"); }
-            _ => { println!("Exit code: {:#}", result); }
+        let error_code = winapi::um::errhandlingapi::GetLastError();
+        let destination_oem = WideCString::from_vec_with_nul(destination_inf_filename_vec).unwrap().to_string_lossy();
+        if destination_oem.len() != 0 {
+            print!("-> {} ", destination_oem);
+        }
+        print!("... ");
+
+        match (result, error_code) {
+            (1, 0) => { println!("Ok"); }
+            (0, 2) => { println!("File not found"); }
+            (0, 80) => { println!("Already installed"); }
+            (0, 87) => { println!("Invalid parameter"); }
+            (0, 122) => { println!("Insufficient buffer"); }
+            (0, 1630) => { println!("Unsupported type"); }
+            _ => {
+                println!("Exit codes: {:#}, {:#}", result, error_code);
+                println!("{:#?}", source_inf_filename);
+            }
         }
 
     }
