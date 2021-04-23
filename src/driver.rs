@@ -5,6 +5,7 @@ use std::io::Cursor;
 #[cfg(windows)]
 use std::collections::HashMap;
 use tokio::runtime::Handle;
+use std::env;
 use std::fs;
 use std::io;
 
@@ -188,7 +189,6 @@ fn install_driver(driver_inf: String) {
     //     &DestinationInfFileNameComponent))
     // Rust: https://docs.rs/winapi/0.3.9/winapi/um/setupapi/fn.SetupCopyOEMInfW.html
     let driver_inf = driver_inf.replace("/", "\\");
-    use std::env;
     let driver_inf = format!("{}\\{}", env::current_dir().unwrap().display(), driver_inf);
     print!("Installing driver with INF {} ", driver_inf);
     let mut destination_inf_filename_vec: Vec<winapi::um::winnt::WCHAR> = vec![0; 255];
