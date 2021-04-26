@@ -1,14 +1,10 @@
 use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
-use std::path::Path;
-use std::io::Cursor;
 #[cfg(windows)]
 use std::collections::HashMap;
-use tokio::runtime::Handle;
 use std::env;
-use std::fs;
-use std::io;
 
+use crate::package::prepare_package;
 
 #[cfg(windows)]
 use core::ptr::null_mut;
@@ -63,39 +59,6 @@ fn get_missing_driver_property(property_name: String) -> Result<()> {
     return get_driver_property(property_name, "ConfigManagerErrorCode>0".to_string());
 }
 
-async fn fetch_url(url: String, output: String) -> Result<()> {
-    let response = reqwest::get(url).await?;
-    let mut file = std::fs::File::create(output)?;
-    let mut content = Cursor::new(response.bytes().await?);
-    std::io::copy(&mut content, &mut file)?;
-    Ok(())
-}
-
-async fn download_zip(url: String, output: String) -> Result<()> {
-    if Path::new(&output).exists() {
-        println!("Using cached driver: {}", output);
-        return Ok(());
-    }
-    println!("Downloading: {}", url);
-    fetch_url(url, output).await
-}
-
-fn download_driver(driver_url: String, driver_archive: String) -> Result<()> {
-    let handle = Handle::current().clone();
-    let th = std::thread::spawn(move || {
-        handle.block_on(download_zip(driver_url, driver_archive)).unwrap();
-    });
-    Ok(th.join().unwrap())
-}
-
-fn prepare_driver(driver_url: String, driver_archive: String, output_directory: String) -> Result<()> {
-    download_driver(driver_url, driver_archive.clone());
-    if !Path::new(&output_directory).exists() {
-        unzip(driver_archive, output_directory).unwrap();
-    }
-    Ok(())
-}
-
 pub fn get_cmd<'a>() -> Command<'a, str> {
     Command::new("get")
         .description("Get information about drivers")
@@ -124,52 +87,6 @@ pub fn get_cmd<'a>() -> Command<'a, str> {
             }
             Ok(())
         })
-}
-
-fn unzip(file_path: String, output_directory: String) -> Result<()> {
-    let file_name = std::path::Path::new(&file_path);
-    let file = fs::File::open(&file_name).unwrap();
-
-    let mut archive = zip::ZipArchive::new(file).unwrap();
-
-    for i in 0..archive.len() {
-        let mut file = archive.by_index(i).unwrap();
-        let file_outpath = match file.enclosed_name() {
-            Some(path) => path.to_owned(),
-            None => continue,
-        };
-
-        // Add path prefix to extract the file
-        let mut outpath = std::path::PathBuf::new();
-        outpath.push(&output_directory);
-        outpath.push(file_outpath);
-
-        {
-            let comment = file.comment();
-            if !comment.is_empty() {
-                println!("File {} comment: {}", i, comment);
-            }
-        }
-
-        if (&*file.name()).ends_with('/') {
-            println!("* extracted: \"{}\"", outpath.display());
-            fs::create_dir_all(&outpath).unwrap();
-        } else {
-            println!(
-                "* extracted: \"{}\" ({} bytes)",
-                outpath.display(),
-                file.size()
-            );
-            if let Some(p) = outpath.parent() {
-                if !p.exists() {
-                    fs::create_dir_all(&p).unwrap();
-                }
-            }
-            let mut outfile = fs::File::create(&outpath).unwrap();
-            io::copy(&mut file, &mut outfile).unwrap();
-        }
-    }
-    Ok(())
 }
 
 #[cfg(unix)]
@@ -242,17 +159,17 @@ fn get_install_runner(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::resu
     // Download drivers, if app is self-elevated this flag serves to avoid downloading in elevated mode.
     if !_matches.is_present("no-download") {
         if _matches.is_present("silabs") {
-            prepare_driver("https://www.silabs.com/documents/public/software/CP210x_Universal_Windows_Driver.zip".to_string(),
+            prepare_package("https://www.silabs.com/documents/public/software/CP210x_Universal_Windows_Driver.zip".to_string(),
                            "cp210x.zip".to_string(),
                            "tmp/silabs".to_string());
         }
         if _matches.is_present("ftdi") {
-            prepare_driver("https://www.ftdichip.com/Drivers/CDM/CDM%20v2.12.28%20WHQL%20Certified.zip".to_string(),
+            prepare_package("https://www.ftdichip.com/Drivers/CDM/CDM%20v2.12.28%20WHQL%20Certified.zip".to_string(),
                            "ftdi.zip".to_string(),
                            "tmp/ftdi".to_string());
         }
         if _matches.is_present("espressif") {
-            prepare_driver("https://dl.espressif.com/dl/idf-driver/idf-driver-esp32-c3-2021-04-21.zip".to_string(),
+            prepare_package("https://dl.espressif.com/dl/idf-driver/idf-driver-esp32-c3-2021-04-21.zip".to_string(),
                            "idf-driver-esp32-c3.zip".to_string(),
                            "tmp/espressif".to_string());
         }

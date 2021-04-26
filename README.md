@@ -56,3 +56,9 @@ Tools will request elevated privileges by UAC if necessary.
 ```
 idf-env driver install --espressif --ftdi --silabs
 ```
+
+### Web IDE Companion
+
+```
+idf-env companion start --port COM7
+```
