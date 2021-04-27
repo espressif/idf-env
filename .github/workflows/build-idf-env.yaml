@@ -49,11 +49,12 @@ jobs:
           toolchain: stable
       - run: cargo build --release --all-features
       - name: Sign artifact
+        if: matrix.os == 'windows-latest'
         env:
           CERTIFICATE: ${{ secrets.CERTIFICATE }}
           CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
         shell: pwsh
-        run: ./Sign-File.ps1 -Path target/release/idf-env.exe
+        run: ./Sign-File.ps1 -Path target/release/${{matrix.BINARY_NAME}}
       - name: Upload Release Asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
