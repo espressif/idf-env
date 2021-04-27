@@ -1,9 +1,10 @@
+---
 name: build-idf-env
 
 on:
   push:
     tags:
-    - v*
+      - v*
 
 jobs:
   create_release:
@@ -60,7 +61,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.create_release.outputs.upload_url }}
-          asset_path: target/release/{{ matrix.BINARY_NAME }}
-          asset_name: {{ matrix.TARGET }}/{{ matrix.BINARY_NAME }}
+          asset_path: target/release/${{matrix.BINARY_NAME}}
+          asset_name: ${{matrix.TARGET}}/${{matrix.BINARY_NAME}}
           asset_content_type: application/octet-stream
-
+...
