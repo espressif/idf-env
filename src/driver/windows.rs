@@ -115,24 +115,37 @@ pub fn run_elevated(arguments: Vec<String>) {
 
 }
 
-pub fn run_self_elevated(elevated_command: String, elevated_arguments: Vec<String>, original_arguments: Vec<String>) -> Result<bool, Error>{
-
-    if is_app_elevated() {
-        println!("Executing: {} {:?}", elevated_command, elevated_arguments);
-        let mut child_process = std::process::Command::new(elevated_command)
-            .args(elevated_arguments)
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .spawn()?;
-        {
-            // let child_stdin = child_process.stdin.as_mut().unwrap();
-            // child_stdin.write_all(b"cd examples/get-started/blink; idf.py fullclean; idf.py build\n")?;
-            // Close stdin to finish and avoid indefinite blocking
-            // drop(child_stdin);
-        }
-    } else {
-        run_elevated(original_arguments);
+pub fn run(command:String, arguments:Vec<String>) -> Result<bool, Error> {
+    println!("Executing: {} {:?}", command, arguments);
+    let mut child_process = std::process::Command::new(command)
+        .args(arguments)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()?;
+    {
+        // let child_stdin = child_process.stdin.as_mut().unwrap();
+        // child_stdin.write_all(b"cd examples/get-started/blink; idf.py fullclean; idf.py build\n")?;
+        // Close stdin to finish and avoid indefinite blocking
+        // drop(child_stdin);
     }
     Ok(true)
+}
 
+pub fn run_self_elevated() -> Result<bool, Error> {
+    if !is_app_elevated() {
+        let mut arguments: Vec<String> = std::env::args().collect();
+        arguments.remove(0);
+        run_elevated(arguments);
+    }
+    Ok(true)
+}
+
+pub fn run_self_elevated_with_extra_argument(argument:String) -> Result<bool, Error>{
+    if !is_app_elevated() {
+        let mut arguments: Vec<String> = std::env::args().collect();
+        arguments.remove(0);
+        arguments.push(argument);
+        run_elevated(arguments);
+    }
+    Ok(true)
 }

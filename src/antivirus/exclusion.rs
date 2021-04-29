@@ -38,18 +38,16 @@ fn add_exclusions(path:String) {
     arguments.push("-ExclusionProcess".to_string());
     arguments.push(path.clone());
 
-    let mut self_arguments: Vec<String> = [].to_vec();
-    self_arguments.push("antivirus".to_string());
-    self_arguments.push("exclusion".to_string());
-    self_arguments.push("add".to_string());
-    self_arguments.push("--path".to_string());
-    self_arguments.push(path);
-
     println!("Registering exclusion: powershell {:?}", arguments);
-    windows::run_self_elevated("powershell".to_string(), arguments, self_arguments);
+    windows::run("powershell".to_string(), arguments);
 }
 
 fn get_add_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+    if !windows::is_app_elevated() {
+        windows::run_self_elevated();
+        return Ok(());
+    }
+
     if matches.is_present("all") {
         let file_list = get_tool_files("".to_string(), ".exe".to_string());
         let exclusion_paths = file_list.join(",");
@@ -79,18 +77,16 @@ fn remove_exclusions(path:String) {
     arguments.push("-ExclusionProcess".to_string());
     arguments.push(path.clone());
 
-    let mut self_arguments: Vec<String> = [].to_vec();
-    self_arguments.push("antivirus".to_string());
-    self_arguments.push("exclusion".to_string());
-    self_arguments.push("remove".to_string());
-    self_arguments.push("--path".to_string());
-    self_arguments.push(path);
-
     println!("Registering exclusion: powershell {:?}", arguments);
-    windows::run_self_elevated("powershell".to_string(), arguments, self_arguments);
+    windows::run("powershell".to_string(), arguments);
 }
 
 fn get_remove_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+    if !windows::is_app_elevated() {
+        windows::run_self_elevated();
+        return Ok(());
+    }
+
     if matches.is_present("all") {
         let file_list = get_tool_files("".to_string(), ".exe".to_string());
         let exclusion_paths = file_list.join(",");

@@ -193,35 +193,10 @@ fn get_install_runner(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::resu
             thread::sleep(time::Duration::from_millis(100000));
         }
     } else {
-        let mut arguments: Vec<String> = [].to_vec();
-
-        arguments.push("driver".to_string());
-        arguments.push("install".to_string());
-
-        if _matches.is_present("silabs") {
-            arguments.push("--silabs".to_string());
-        }
-
-        if _matches.is_present("ftdi") {
-            arguments.push("--ftdi".to_string());
-        }
-
-        if _matches.is_present("espressif") {
-            arguments.push("--espressif".to_string());
-        }
-
-        if arguments.len() == 0 {
-            println!("No driver specified.");
+        if !windows::is_app_elevated() {
+            windows::run_self_elevated_with_extra_argument("--no-download".to_string());
             return Ok(());
         }
-
-        if _matches.is_present("wait") {
-            arguments.push("--wait".to_string());
-        }
-
-        arguments.push("--no-download".to_string());
-
-        windows::run_elevated(arguments);
     }
     Ok(())
 }
