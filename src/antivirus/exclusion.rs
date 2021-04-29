@@ -8,6 +8,7 @@ use crate::driver::windows;
 use crate::config;
 
 use walkdir::{WalkDir, DirEntry};
+use std::{thread, time};
 
 fn is_filter_match(entry: DirEntry, filter: &str) -> bool {
     println!("M{}", entry.path().display());
@@ -30,16 +31,34 @@ fn get_tool_files(tool_name: String, filter: String) -> Vec<String> {
     result_list
 }
 
-fn add_exclusions(path:String) {
-    let mut arguments: Vec<String> = [].to_vec();
-    arguments.push("Add-MpPreference".to_string());
-    arguments.push("-ExclusionPath".to_string());
-    arguments.push(path.clone());
-    arguments.push("-ExclusionProcess".to_string());
-    arguments.push(path.clone());
+fn process_exclusion(operation: String, file_list:Vec<String>, chunk_size: usize) {
+    let chunks = file_list.len() / chunk_size + 1;
+    for chunk_index in 0..chunks {
+        let start_index = chunk_index * chunk_size;
+        let mut remaining_size = chunk_size;
+        if start_index + chunk_size > file_list.len() {
+            remaining_size = file_list.len() - start_index;
+        }
+        if remaining_size == 0 {
+            continue
+        }
+        println!("Processing batch {}", chunk_index + 1);
+        let path = file_list[start_index..start_index + remaining_size].join(",");
+        let mut arguments: Vec<String> = [].to_vec();
+        arguments.push(operation.clone());
+        arguments.push("-ExclusionPath".to_string());
+        arguments.push(path.clone());
+        arguments.push("-ExclusionProcess".to_string());
+        arguments.push(path.clone());
 
-    println!("Registering exclusion: powershell {:?}", arguments);
-    windows::run("powershell".to_string(), arguments);
+        windows::run("powershell".to_string(), arguments);
+    }
+    // thread::sleep(time::Duration::from_millis(100000));
+
+}
+
+fn add_exclusions(file_list:Vec<String>, chunk_size: usize) {
+    process_exclusion("Add-MpPreference".to_string(), file_list, chunk_size);
 }
 
 fn get_add_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
@@ -48,37 +67,29 @@ fn get_add_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::R
         return Ok(());
     }
 
+    let chunk_size:usize = matches.value_of("chunk").unwrap().to_string().parse().unwrap();
+
     if matches.is_present("all") {
         let file_list = get_tool_files("".to_string(), ".exe".to_string());
-        let exclusion_paths = file_list.join(",");
-        add_exclusions(exclusion_paths);
+        add_exclusions(file_list, chunk_size);
     }
 
     if matches.is_present("tool") {
         let tool_name = matches.value_of("tool").unwrap().to_string();
         let file_list = get_tool_files(tool_name, ".exe".to_string());
-        let exclusion_paths = file_list.join(",");
-        add_exclusions(exclusion_paths);
+        add_exclusions(file_list, chunk_size);
     }
 
     if matches.is_present("path") {
-        let path = matches.value_of("path").unwrap().to_string();
-        add_exclusions(path);
+        let file_list:Vec<String> = vec![matches.value_of("path").unwrap().to_string()];
+        add_exclusions(file_list, chunk_size);
     }
 
     Ok(())
 }
 
-fn remove_exclusions(path:String) {
-    let mut arguments: Vec<String> = [].to_vec();
-    arguments.push("Remove-MpPreference".to_string());
-    arguments.push("-ExclusionPath".to_string());
-    arguments.push(path.clone());
-    arguments.push("-ExclusionProcess".to_string());
-    arguments.push(path.clone());
-
-    println!("Registering exclusion: powershell {:?}", arguments);
-    windows::run("powershell".to_string(), arguments);
+fn remove_exclusions(file_list:Vec<String>, chunk_size:usize) {
+    process_exclusion("Remove-MpPreference".to_string(), file_list, chunk_size);
 }
 
 fn get_remove_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
@@ -87,22 +98,22 @@ fn get_remove_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result
         return Ok(());
     }
 
+    let chunk_size:usize = matches.value_of("chunk").unwrap().to_string().parse().unwrap();
+
     if matches.is_present("all") {
         let file_list = get_tool_files("".to_string(), ".exe".to_string());
-        let exclusion_paths = file_list.join(",");
-        remove_exclusions(exclusion_paths);
+        remove_exclusions(file_list, chunk_size);
     }
 
     if matches.is_present("tool") {
         let tool_name = matches.value_of("tool").unwrap().to_string();
         let file_list = get_tool_files(tool_name, ".exe".to_string());
-        let exclusion_paths = file_list.join(",");
-        remove_exclusions(exclusion_paths);
+        remove_exclusions(file_list, chunk_size);
     }
 
     if matches.is_present("path") {
-        let path = matches.value_of("path").unwrap().to_string();
-        remove_exclusions(path);
+        let file_list:Vec<String> = vec![matches.value_of("path").unwrap().to_string()];
+        remove_exclusions(file_list, chunk_size);
     }
 
     Ok(())
@@ -133,6 +144,13 @@ pub fn get_add_cmd<'a>() -> Command<'a, str> {
                         .long("all")
                         .help("Register all tools exclusions")
                 )
+                .arg(
+                    Arg::with_name("chunk")
+                        .short("c")
+                        .long("chunk")
+                        .help("Number of exclusions sent to antivirus in one batch")
+                        .default_value("20")
+                )
         })
         .runner(|_args, matches| get_add_runner(_args, matches) )
 }
@@ -161,6 +179,14 @@ pub fn get_remove_cmd<'a>() -> Command<'a, str> {
                         .short("a")
                         .long("all")
                         .help("Remove registration of all tools from antivirus exclusions")
+
+                )
+                .arg(
+                    Arg::with_name("chunk")
+                        .short("c")
+                        .long("chunk")
+                        .help("Number of exclusions sent to antivirus in one batch")
+                        .default_value("20")
                 )
         })
         .runner(|_args, matches| get_remove_runner(_args, matches) )
