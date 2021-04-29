@@ -21,6 +21,11 @@ pub fn get_tools_path() -> String {
     )
 }
 
+pub fn get_tool_path(tool_name:String) -> String {
+    let tools_path = get_tools_path();
+    format!("{}/tools/{}", tools_path, tool_name)
+}
+
 pub fn get_selected_idf_path() -> String {
     let selected_idf_id = get_property("idfSelectedId".to_string());
     get_property_with_idf_id("path".to_string(), selected_idf_id)

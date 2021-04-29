@@ -40,7 +40,11 @@ idf-env idf build
 idf-env antivirus get
 idf-env antivirus get --property displayName
 idf-env antivirus exclusion add --path "C:\....exe"
+idf-env antivirus exclusion add --tool cmake
+idf-env antivirus exclusion add --all
 idf-env antivirus exclusion remove --path "C:\....exe"
+idf-env antivirus exclusion remove --tool cmake
+idf-env antivirus exclusion remove --all
 idf-env antivirus exclusion list
 idf-env antivirus exclusion manage
 ```

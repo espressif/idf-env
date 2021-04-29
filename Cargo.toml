@@ -14,6 +14,7 @@ native-windows-gui = "*"
 num_cpus = "*"
 reqwest = "*"
 tokio = { version = "1", features = ["full"] }
+walkdir = "*"
 wmi = "*"
 widestring = "*"
 winapi = { version = "*", features = ["setupapi", "handleapi", "processthreadsapi", "winnt", "securitybaseapi", "impl-default", "shellapi"] }
