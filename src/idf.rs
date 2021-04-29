@@ -279,13 +279,10 @@ pub fn get_shell_cmd<'a>() -> Command<'a, str> {
 }
 
 
-
-
 fn run_build(idf_path: &String, shell_initializer: &String) -> std::result::Result<(), clap::Error> {
     // println!("Starting process");
     let root = Path::new(&idf_path);
     assert!(env::set_current_dir(&root).is_ok());
-    // println!("Successfully changed working directory to {}!", root.display());
 
     let mut arguments: Vec<String> = [].to_vec();
     arguments.push("-ExecutionPolicy".to_string());

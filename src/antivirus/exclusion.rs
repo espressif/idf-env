@@ -10,14 +10,6 @@ use crate::config;
 use walkdir::{WalkDir, DirEntry};
 use std::{thread, time};
 
-fn is_filter_match(entry: DirEntry, filter: &str) -> bool {
-    println!("M{}", entry.path().display());
-    entry.file_name()
-        .to_str()
-        .map(|s| s.starts_with("e"))
-        .unwrap_or(false)
-}
-
 fn get_tool_files(tool_name: String, filter: String) -> Vec<String> {
     let tool_path = config::get_tool_path(tool_name);
     let mut result_list: Vec<String> = [].to_vec();
@@ -25,7 +17,7 @@ fn get_tool_files(tool_name: String, filter: String) -> Vec<String> {
         let metadata = e.metadata().unwrap();
         if metadata.is_file() && e.file_name().to_string_lossy().ends_with(&filter) {
             // println!("{}", e.path().display());
-            result_list.push(e.path().display().to_string());
+            result_list.push(e.path().display().to_string().replace("/", "\\"));
         }
     }
     result_list
@@ -59,6 +51,11 @@ fn process_exclusion(operation: String, file_list:Vec<String>, chunk_size: usize
 
 fn add_exclusions(file_list:Vec<String>, chunk_size: usize) {
     process_exclusion("Add-MpPreference".to_string(), file_list, chunk_size);
+}
+
+fn nuke_exclusions() {
+    windows::run_with_stdin("powershell".to_string(), "foreach ($Path in (Get-MpPreference).ExclusionPath) { Remove-MpPreference -ExclusionPath $Path }".to_string());
+    windows::run_with_stdin("powershell".to_string(), "foreach ($Process in (Get-MpPreference).ExclusionProcess) { Remove-MpPreference -ExclusionProcess $Process }".to_string());
 }
 
 fn get_add_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
@@ -114,6 +111,11 @@ fn get_remove_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result
     if matches.is_present("path") {
         let file_list:Vec<String> = vec![matches.value_of("path").unwrap().to_string()];
         remove_exclusions(file_list, chunk_size);
+    }
+
+    if matches.is_present("nuke") {
+        println!("Deleting Absolutely ALL Exclusions");
+        nuke_exclusions();
     }
 
     Ok(())
@@ -187,6 +189,12 @@ pub fn get_remove_cmd<'a>() -> Command<'a, str> {
                         .long("chunk")
                         .help("Number of exclusions sent to antivirus in one batch")
                         .default_value("20")
+                )
+                .arg(
+                    Arg::with_name("nuke")
+                        .short("x")
+                        .long("nuke")
+                        .help("Obliterate Absolutely ALL exclusions at once")
                 )
         })
         .runner(|_args, matches| get_remove_runner(_args, matches) )

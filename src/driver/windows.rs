@@ -131,6 +131,22 @@ pub fn run(command:String, arguments:Vec<String>) -> Result<bool, Error> {
     Ok(true)
 }
 
+pub fn run_with_stdin(command:String, stdin:String) -> Result<bool, Error> {
+    println!("Executing: {} {}", command, stdin);
+    let mut child_process = std::process::Command::new(command)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()?;
+    {
+        let child_stdin = child_process.stdin.as_mut().unwrap();
+        child_stdin.write_all(stdin.as_bytes())?;
+        // Close stdin to finish and avoid indefinite blocking
+        drop(child_stdin);
+    }
+    Ok(true)
+}
+
+
 pub fn run_self_elevated() -> Result<bool, Error> {
     if !is_app_elevated() {
         let mut arguments: Vec<String> = std::env::args().collect();
