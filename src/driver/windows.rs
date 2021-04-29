@@ -13,6 +13,9 @@ use std::ffi::OsStr;
 use std::os::windows::prelude::*;
 use std::iter::once;
 
+use std::process::Stdio;
+use std::io::{self, Write};
+
 /// Based on: https://users.rust-lang.org/t/how-do-i-determine-if-i-have-admin-rights-on-windows/35710/8
 /// Returns true if the current process has admin rights, otherwise false.
 pub fn is_app_elevated() -> bool {
@@ -72,4 +75,64 @@ impl Drop for QueryAccessToken {
 pub fn to_wchar(str: &str) -> Vec<winapi::um::winnt::WCHAR> {
     // OsStr::new(str).encode_wide().chain(Some(0).into_iter()).collect()
     OsStr::new(str).encode_wide().chain(once(0)).collect()
+}
+
+
+pub fn run_elevated(arguments: Vec<String>) {
+    // Based on https://github.com/rust-lang/rustup/pull/1117/files
+    let current_exe = std::env::current_exe().unwrap().display().to_string();
+    let argument_string = arguments.clone().into_iter().map(|i| format!("{} ", i.to_string())).collect::<String>();
+    let parameters_string = format!("{}", argument_string);
+    let operation = to_wchar("runas");
+    let path = to_wchar(&current_exe);
+    let parameters = to_wchar(&parameters_string);
+    let sw_showminnoactive = 7;
+    println!("Requesting elevation of privileges for: {} {}", current_exe, parameters_string);
+
+    let result = unsafe {
+        // https://docs.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shellexecutew
+        winapi::um::shellapi::ShellExecuteW(null_mut(),
+                                            operation.as_ptr(),
+                                            path.as_ptr(),
+                                            parameters.as_ptr(),
+                                            null_mut(),
+                                            sw_showminnoactive)
+    };
+
+    match result {
+        _ => { println!("Exit code: {:?}", result); }
+    }
+
+    // pub fn ShellExecuteA(
+    //     hwnd: HWND,
+    //     lpOperation: LPCSTR,
+    //     lpFile: LPCSTR,
+    //     lpParameters: LPCSTR,
+    //     lpDirectory: LPCSTR,
+    //     nShowCmd: c_int,
+    // ) -> HINSTANCE;
+
+
+}
+
+pub fn run_self_elevated(elevated_command: String, elevated_arguments: Vec<String>, original_arguments: Vec<String>) -> Result<bool, Error>{
+
+    if is_app_elevated() {
+        println!("Executing: {} {:?}", elevated_command, elevated_arguments);
+        let mut child_process = std::process::Command::new(elevated_command)
+            .args(elevated_arguments)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()?;
+        {
+            // let child_stdin = child_process.stdin.as_mut().unwrap();
+            // child_stdin.write_all(b"cd examples/get-started/blink; idf.py fullclean; idf.py build\n")?;
+            // Close stdin to finish and avoid indefinite blocking
+            // drop(child_stdin);
+        }
+    } else {
+        run_elevated(original_arguments);
+    }
+    Ok(true)
+
 }

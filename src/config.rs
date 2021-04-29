@@ -6,6 +6,7 @@ use std::fs;
 use std::path::Path;
 use md5;
 use std::env;
+use dirs::home_dir;
 
 
 fn print_path(property_path: &std::string::String) {
@@ -14,13 +15,19 @@ fn print_path(property_path: &std::string::String) {
     print!("{}", parent.unwrap());
 }
 
-fn get_json_path() -> String {
-    let idf_tools_path_env = "IDF_TOOLS_PATH";
+pub fn get_tools_path() -> String {
+    env::var("IDF_TOOLS_PATH").unwrap_or_else(|e|
+        home_dir().unwrap().display().to_string() + "/.espressif"
+    )
+}
 
-    let idf_tools_path = env::var(idf_tools_path_env).unwrap_or_else(|e| {
-        panic!("could not find {}: {}", idf_tools_path_env, e)
-    });
-    let idf_json_path = idf_tools_path + "/esp_idf.json";
+pub fn get_selected_idf_path() -> String {
+    let selected_idf_id = get_property("idfSelectedId".to_string());
+    get_property_with_idf_id("path".to_string(), selected_idf_id)
+}
+
+fn get_json_path() -> String {
+    let idf_json_path = format!("{}/esp_idf.json", get_tools_path());
     return idf_json_path;
 }
 
@@ -48,6 +55,12 @@ fn print_property(property_name: String) {
 pub fn get_git_path() -> String {
     get_property("gitPath".to_string())
 }
+
+pub fn get_property_with_idf_id(property_name: String, idf_id: String) -> String {
+    let parsed_json = load_json();
+    return parsed_json["idfInstalled"][idf_id][property_name].to_string();
+}
+
 
 pub fn get_property_with_path(property_name: String, idf_path: String) -> String {
     let parsed_json = load_json();

@@ -9,7 +9,15 @@ type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>
 
 use std::env;
 
+use std::process::Stdio;
+use std::io::{self, Write};
+use std::io::Read;
+
+use std::time::{Duration, Instant};
+
 use crate::config::get_git_path;
+use crate::config::get_tools_path;
+use crate::config::get_selected_idf_path;
 
 fn get_installer(matches: &clap::ArgMatches) -> String {
     if matches.is_present("installer") {
@@ -226,10 +234,142 @@ pub fn get_install_cmd<'a>() -> Command<'a, str> {
 }
 
 
+fn get_shell_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+    println!("Starting process");
+    // let root = Path::new("C:\\esp");
+    // assert!(env::set_current_dir(&root).is_ok());
+    // println!("Successfully changed working directory to {}!", root.display());
+
+    let mut arguments: Vec<String> = [].to_vec();
+    arguments.push("-ExecutionPolicy".to_string());
+    arguments.push("Bypass".to_string());
+    arguments.push("-NoExit".to_string());
+    arguments.push("-File".to_string());
+    arguments.push("C:/projects/tmp/.espressif/Initialize-Idf.ps1".to_string());
+
+
+    let process = std::process::Command::new("powershell")
+        .args(arguments)
+        .stdin(Stdio::inherit())
+        .stdout(Stdio::inherit())
+        .spawn().unwrap();
+
+    let mut s = String::new();
+    match process.stdout.unwrap().read_to_string(&mut s) {
+        Err(why) => panic!("couldn't read stdout: {}", why),
+        Ok(_) => print!("{}", s),
+    }
+
+    Ok(())
+}
+
+pub fn get_shell_cmd<'a>() -> Command<'a, str> {
+    Command::new("shell")
+        .description("Start the companion")
+        .options(|app| {
+            app.arg(
+                Arg::with_name("port")
+                    .short("p")
+                    .long("port")
+                    .help("Name of communication port")
+                    .takes_value(true)
+            )
+        })
+        .runner(|_args, matches| get_shell_runner(_args, matches) )
+}
+
+
+
+
+fn run_build(idf_path: &String, shell_initializer: &String) -> std::result::Result<(), clap::Error> {
+    // println!("Starting process");
+    let root = Path::new(&idf_path);
+    assert!(env::set_current_dir(&root).is_ok());
+    // println!("Successfully changed working directory to {}!", root.display());
+
+    let mut arguments: Vec<String> = [].to_vec();
+    arguments.push("-ExecutionPolicy".to_string());
+    arguments.push("Bypass".to_string());
+    arguments.push("-NoExit".to_string());
+    arguments.push("-File".to_string());
+    arguments.push(shell_initializer.to_string());
+
+    let mut child_process = std::process::Command::new("powershell")
+        .args(arguments)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()?;
+    {
+        let child_stdin = child_process.stdin.as_mut().unwrap();
+        child_stdin.write_all(b"cd examples/get-started/blink; idf.py fullclean; idf.py build\n")?;
+        // Close stdin to finish and avoid indefinite blocking
+        drop(child_stdin);
+
+    }
+    let output = child_process.wait_with_output()?;
+
+    // println!("output = {:?}", output);
+    Ok(())
+}
+
+fn get_build_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+    let build_repetitions:i32 = matches.value_of("repeat").unwrap().to_string().parse().unwrap();
+    let idf_path = matches.value_of("idf-path")
+        .unwrap_or(&*get_selected_idf_path()).to_string();
+    let tools_path = format!("{}/Initialize-Idf.ps1", matches.value_of("tools-path")
+        .unwrap_or(&*get_tools_path()).to_string());
+
+    println!("Number of CPU cores: {}", num_cpus::get());
+    println!("ESP-IDF Shell Initializer: {}", tools_path);
+    println!("ESP-IDF Path: {}", idf_path);
+    for build_number in 0..build_repetitions {
+        let start = Instant::now();
+        run_build(&idf_path, &tools_path);
+        let duration = start.elapsed();
+        println!("Time elapsed in build: {:?}", duration);
+    }
+    Ok(())
+}
+
+pub fn get_build_cmd<'a>() -> Command<'a, str> {
+    Command::new("build")
+        .description("Start build process")
+        .options(|app| {
+            app.arg(
+                Arg::with_name("repeat")
+                    .short("r")
+                    .long("repeat")
+                    .help("Number of repetitions of the same command")
+                    .takes_value(true)
+                    .default_value("1")
+            )
+                .arg(
+                    Arg::with_name("idf-path")
+                        .short("p")
+                        .long("idf-path")
+                        .help("Path to ESP IDF source code repository")
+                        .takes_value(true)
+                )
+                .arg(
+                    Arg::with_name("tools-path")
+                        .short("t")
+                        .long("tools-path")
+                        .help("Path to Tools directory")
+                        .takes_value(true)
+                )
+        })
+        .runner(|_args, matches|
+            get_build_runner(_args, matches)
+        )
+}
+
 pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
     let multi_cmd: MultiCommand<str, str> = Commander::new()
+        .add_cmd(get_build_cmd())
         .add_cmd(get_install_cmd())
         .add_cmd(get_reset_cmd())
+        .add_cmd(get_shell_cmd())
         .into_cmd("idf")
 
         // Optionally specify a description
