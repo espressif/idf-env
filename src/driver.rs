@@ -10,7 +10,7 @@ use crate::package::prepare_package;
 use core::ptr::null_mut;
 
 #[cfg(windows)]
-mod windows;
+pub mod windows;
 
 #[cfg(windows)]
 use windows::to_wchar;
@@ -193,63 +193,10 @@ fn get_install_runner(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::resu
             thread::sleep(time::Duration::from_millis(100000));
         }
     } else {
-        let mut arguments: Vec<String> = [].to_vec();
-
-        if _matches.is_present("silabs") {
-            arguments.push("--silabs".to_string());
-        }
-
-        if _matches.is_present("ftdi") {
-            arguments.push("--ftdi".to_string());
-        }
-
-        if _matches.is_present("espressif") {
-            arguments.push("--espressif".to_string());
-        }
-
-        if arguments.len() == 0 {
-            println!("No driver specified.");
+        if !windows::is_app_elevated() {
+            windows::run_self_elevated_with_extra_argument("--no-download".to_string());
             return Ok(());
         }
-
-        if _matches.is_present("wait") {
-            arguments.push("--wait".to_string());
-        }
-
-        arguments.push("--no-download".to_string());
-
-        // Based on https://github.com/rust-lang/rustup/pull/1117/files
-        println!("Installation requires elevated privileges.");
-        let current_exe = std::env::current_exe().unwrap().display().to_string();
-        let argument_string = arguments.clone().into_iter().map(|i| format!("{} ", i.to_string())).collect::<String>();
-        let parameters_string = format!("driver install {}", argument_string);
-        let operation = to_wchar("runas");
-        let path = to_wchar(&current_exe);
-        let parameters = to_wchar(&parameters_string);
-        let sw_showminnoactive = 7;
-        println!("Requesting elevation for: {} {}", current_exe, parameters_string);
-
-        let result = unsafe {
-            // https://docs.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shellexecutew
-            winapi::um::shellapi::ShellExecuteW(null_mut(),
-                                                operation.as_ptr(),
-                                                path.as_ptr(),
-                                                parameters.as_ptr(),
-                                                null_mut(),
-                                                sw_showminnoactive)
-        };
-
-        match result {
-            _ => { println!("Exit code: {:?}", result); }
-        }
-        // pub fn ShellExecuteA(
-        //     hwnd: HWND,
-        //     lpOperation: LPCSTR,
-        //     lpFile: LPCSTR,
-        //     lpParameters: LPCSTR,
-        //     lpDirectory: LPCSTR,
-        //     nShowCmd: c_int,
-        // ) -> HINSTANCE;
     }
     Ok(())
 }

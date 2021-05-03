@@ -1,16 +1,20 @@
 [package]
 name = "idf_env"
-version = "1.1.3"
+version = "1.1.4"
 authors = ["Juraj Michalek <juraj.michalek@espressif.com>"]
 edition = "2018"
 
 [dependencies]
 clap = "*"
 clap-nested = "*"
+dirs = "*"
 json = "*"
 md5 = "*"
+native-windows-gui = "*"
+num_cpus = "*"
 reqwest = "*"
 tokio = { version = "1", features = ["full"] }
+walkdir = "*"
 wmi = "*"
 widestring = "*"
 winapi = { version = "*", features = ["setupapi", "handleapi", "processthreadsapi", "winnt", "securitybaseapi", "impl-default", "shellapi"] }

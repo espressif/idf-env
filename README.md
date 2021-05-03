@@ -30,6 +30,8 @@ idf-env idf install
 idf-env idf install --idf-version "master" --installer "G:\idf-installer\build\esp-idf-tools-setup-online-unsigned.exe"
 idf-env idf uninstall
 idf-env idf reset --path "G:\esp-idf"
+idf-env idf shell
+idf-env idf build
 ```
 
 ### Working with Antivirus
@@ -37,8 +39,15 @@ idf-env idf reset --path "G:\esp-idf"
 ```
 idf-env antivirus get
 idf-env antivirus get --property displayName
-idf-env antivirus register --path "C:\....exe"
-idf-env antivirus unregister --path "C:\....exe"
+idf-env antivirus exclusion add --path "C:\....exe"
+idf-env antivirus exclusion add --tool cmake
+idf-env antivirus exclusion add --all
+idf-env antivirus exclusion add --all --chunk 5
+idf-env antivirus exclusion remove --path "C:\....exe"
+idf-env antivirus exclusion remove --tool cmake
+idf-env antivirus exclusion remove --all
+idf-env antivirus exclusion list
+idf-env antivirus exclusion manage
 ```
 
 
@@ -61,4 +70,10 @@ idf-env driver install --espressif --ftdi --silabs
 
 ```
 idf-env companion start --port COM7
+```
+
+### Launching shell
+
+```
+idf-env shell
 ```

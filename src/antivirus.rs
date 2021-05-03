@@ -1,7 +1,13 @@
+mod exclusion;
+
 use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
 #[cfg(windows)]
 use std::collections::HashMap;
+
+use std::process::Stdio;
+use std::io::{self, Write};
+
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
@@ -88,10 +94,10 @@ pub fn get_cmd<'a>() -> Command<'a, str> {
         })
 }
 
-
 pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
     let multi_cmd: MultiCommand<str, str> = Commander::new()
         .add_cmd(get_cmd())
+        .add_cmd(exclusion::get_multi_cmd())
         .into_cmd("antivirus")
 
         // Optionally specify a description
