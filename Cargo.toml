@@ -9,8 +9,10 @@ clap = "*"
 clap-nested = "*"
 dirs = "*"
 json = "*"
+iced = { version = "*", features = ["tokio"] }
+iced_native = "*"
+iced_futures = "*"
 md5 = "*"
-native-windows-gui = "*"
 num_cpus = "*"
 reqwest = "*"
 tokio = { version = "1", features = ["full"] }

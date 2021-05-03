@@ -32,6 +32,7 @@ idf-env idf uninstall
 idf-env idf reset --path "G:\esp-idf"
 idf-env idf shell
 idf-env idf build
+idf-env idf build --repeat 10
 ```
 
 ### Working with Antivirus
@@ -46,6 +47,7 @@ idf-env antivirus exclusion add --all --chunk 5
 idf-env antivirus exclusion remove --path "C:\....exe"
 idf-env antivirus exclusion remove --tool cmake
 idf-env antivirus exclusion remove --all
+idf-env antivirus exclusion remove --nuke
 idf-env antivirus exclusion list
 idf-env antivirus exclusion manage
 ```
