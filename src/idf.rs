@@ -10,7 +10,7 @@ type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>
 use std::env;
 
 use std::process::Stdio;
-use std::io::{self, Write};
+use std::io::{Write};
 use std::io::Read;
 
 use std::time::{Duration, Instant};

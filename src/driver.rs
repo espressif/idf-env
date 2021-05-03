@@ -2,18 +2,15 @@ use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
 #[cfg(windows)]
 use std::collections::HashMap;
-use std::env;
 
 use crate::package::prepare_package;
+use crate::config;
 
 #[cfg(windows)]
 use core::ptr::null_mut;
 
 #[cfg(windows)]
 pub mod windows;
-
-#[cfg(windows)]
-use windows::to_wchar;
 
 use std::{thread, time};
 
@@ -106,7 +103,6 @@ fn install_driver(driver_inf: String) {
     //     &DestinationInfFileNameComponent))
     // Rust: https://docs.rs/winapi/0.3.9/winapi/um/setupapi/fn.SetupCopyOEMInfW.html
     let driver_inf = driver_inf.replace("/", "\\");
-    let driver_inf = format!("{}\\{}", env::current_dir().unwrap().display(), driver_inf);
     print!("Installing driver with INF {} ", driver_inf);
     let mut destination_inf_filename_vec: Vec<winapi::um::winnt::WCHAR> = vec![0; 255];
     let destination_inf_filename:winapi::um::winnt::PWSTR = destination_inf_filename_vec.as_mut_ptr();
@@ -154,38 +150,44 @@ fn get_install_runner(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::resu
     Ok(())
 }
 
+pub fn get_driver_path(driver_name:String) -> String {
+    let drivers_path = config::get_tool_path("idf-driver".to_string());
+    format!("{}/{}", drivers_path, driver_name)
+}
+
 #[cfg(windows)]
 fn get_install_runner(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+
     // Download drivers, if app is self-elevated this flag serves to avoid downloading in elevated mode.
     if !_matches.is_present("no-download") {
         if _matches.is_present("silabs") {
             prepare_package("https://www.silabs.com/documents/public/software/CP210x_Universal_Windows_Driver.zip".to_string(),
                            "cp210x.zip".to_string(),
-                           "tmp/silabs".to_string());
+                            get_driver_path("silabs-2021-05-03".to_string()));
         }
         if _matches.is_present("ftdi") {
             prepare_package("https://www.ftdichip.com/Drivers/CDM/CDM%20v2.12.28%20WHQL%20Certified.zip".to_string(),
                            "ftdi.zip".to_string(),
-                           "tmp/ftdi".to_string());
+                            get_driver_path("ftdi-2021-05-03".to_string()));
         }
         if _matches.is_present("espressif") {
             prepare_package("https://dl.espressif.com/dl/idf-driver/idf-driver-esp32-c3-2021-04-21.zip".to_string(),
                            "idf-driver-esp32-c3.zip".to_string(),
-                           "tmp/espressif".to_string());
+                            get_driver_path("espressif-esp32-c3-2021-04-21".to_string()));
         }
     }
 
     if windows::is_app_elevated() {
         if _matches.is_present("silabs") {
-            install_driver("tmp/silabs/silabser.inf".to_string());
+            install_driver(get_driver_path("silabs-2021-05-03/silabser.inf".to_string()));
         }
 
         if _matches.is_present("ftdi") {
-            install_driver("tmp/ftdi/ftdiport.inf".to_string());
+            install_driver(get_driver_path("ftdi-2021-05-03/ftdiport.inf".to_string()));
         }
 
         if _matches.is_present("espressif") {
-            install_driver("tmp/espressif/usb_jtag_debug_unit.inf".to_string());
+            install_driver(get_driver_path("espressif-esp32-c3-2021-04-21/usb_jtag_debug_unit.inf".to_string()));
         }
 
         if _matches.is_present("wait") {

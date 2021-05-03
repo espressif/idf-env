@@ -5,10 +5,6 @@ use clap_nested::{Command, Commander, MultiCommand};
 #[cfg(windows)]
 use std::collections::HashMap;
 
-use std::process::Stdio;
-use std::io::{self, Write};
-
-
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 #[cfg(unix)]
