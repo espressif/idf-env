@@ -156,25 +156,32 @@ pub fn get_driver_path(driver_name:String) -> String {
 }
 
 #[cfg(windows)]
+fn download_drivers(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+    if _matches.is_present("silabs") {
+        prepare_package("https://www.silabs.com/documents/public/software/CP210x_Universal_Windows_Driver.zip".to_string(),
+                        "cp210x.zip".to_string(),
+                        get_driver_path("silabs-2021-05-03".to_string()));
+    }
+    if _matches.is_present("ftdi") {
+        prepare_package("https://www.ftdichip.com/Drivers/CDM/CDM%20v2.12.28%20WHQL%20Certified.zip".to_string(),
+                        "ftdi.zip".to_string(),
+                        get_driver_path("ftdi-2021-05-03".to_string()));
+    }
+    if _matches.is_present("espressif") {
+        prepare_package("https://dl.espressif.com/dl/idf-driver/idf-driver-esp32-c3-2021-04-21.zip".to_string(),
+                        "idf-driver-esp32-c3.zip".to_string(),
+                        get_driver_path("espressif-esp32-c3-2021-04-21".to_string()));
+    }
+    Ok(())
+}
+
+
+#[cfg(windows)]
 fn get_install_runner(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
 
     // Download drivers, if app is self-elevated this flag serves to avoid downloading in elevated mode.
     if !_matches.is_present("no-download") {
-        if _matches.is_present("silabs") {
-            prepare_package("https://www.silabs.com/documents/public/software/CP210x_Universal_Windows_Driver.zip".to_string(),
-                           "cp210x.zip".to_string(),
-                            get_driver_path("silabs-2021-05-03".to_string()));
-        }
-        if _matches.is_present("ftdi") {
-            prepare_package("https://www.ftdichip.com/Drivers/CDM/CDM%20v2.12.28%20WHQL%20Certified.zip".to_string(),
-                           "ftdi.zip".to_string(),
-                            get_driver_path("ftdi-2021-05-03".to_string()));
-        }
-        if _matches.is_present("espressif") {
-            prepare_package("https://dl.espressif.com/dl/idf-driver/idf-driver-esp32-c3-2021-04-21.zip".to_string(),
-                           "idf-driver-esp32-c3.zip".to_string(),
-                            get_driver_path("espressif-esp32-c3-2021-04-21".to_string()));
-        }
+        download_drivers(_args, _matches);
     }
 
     if windows::is_app_elevated() {
@@ -249,10 +256,39 @@ pub fn get_install_cmd<'a>() -> Command<'a, str> {
 }
 
 
+pub fn get_download_cmd<'a>() -> Command<'a, str> {
+    Command::new("download")
+        .description("Download drivers")
+        .options(|app| {
+            app.arg(
+                Arg::with_name("ftdi")
+                    .short("f")
+                    .long("ftdi")
+                    .help("Install FTDI driver"),
+            )
+                .arg(
+                    Arg::with_name("silabs")
+                        .short("s")
+                        .long("silabs")
+                        .help("Install Silabs driver"),
+                )
+                .arg(
+                    Arg::with_name("espressif")
+                        .short("e")
+                        .long("espressif")
+                        .help("Install Espressif driver"),
+                )
+
+        })
+        .runner(|_args, matches| download_drivers(_args, matches)
+        )
+}
+
 pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
     let multi_cmd: MultiCommand<str, str> = Commander::new()
         .add_cmd(get_cmd())
         .add_cmd(get_install_cmd())
+        .add_cmd(get_download_cmd())
         .into_cmd("driver")
 
         // Optionally specify a description
