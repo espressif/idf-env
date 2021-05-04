@@ -10,7 +10,6 @@ clap-nested = "*"
 dirs = "*"
 json = "*"
 md5 = "*"
-native-windows-gui = "*"
 num_cpus = "*"
 reqwest = "*"
 tokio = { version = "1", features = ["full"] }

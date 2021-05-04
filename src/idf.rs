@@ -233,6 +233,44 @@ pub fn get_install_cmd<'a>() -> Command<'a, str> {
         })
 }
 
+#[cfg(unix)]
+fn get_shell() -> String {
+    "/bin/bash".to_string()
+}
+
+#[cfg(unix)]
+fn get_initializer() -> String {
+    format!("{}/export.sh", get_selected_idf_path())
+}
+
+#[cfg(unix)]
+fn get_initializer_arguments() -> Vec<String> {
+    let mut arguments: Vec<String> = [].to_vec();
+    arguments.push("-c".to_string());
+    arguments.push(". ./export.sh;cd examples/get-started/blink;idf.py fullclean; idf.py build".to_string());
+    arguments
+}
+
+#[cfg(windows)]
+fn get_shell() -> String {
+    "powershell".to_string()
+}
+
+#[cfg(windows)]
+fn get_initializer() -> String {
+    format!("{}/Initialize-Idf.ps1", get_tools_path())
+}
+
+#[cfg(windows)]
+fn get_initializer_arguments() -> Vec<String> {
+    let mut arguments: Vec<String> = [].to_vec();
+    arguments.push("-ExecutionPolicy".to_string());
+    arguments.push("Bypass".to_string());
+    arguments.push("-NoExit".to_string());
+    arguments.push("-File".to_string());
+    arguments.push(get_initializer());
+    arguments
+}
 
 fn get_shell_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
     println!("Starting process");
@@ -240,16 +278,9 @@ fn get_shell_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result:
     // assert!(env::set_current_dir(&root).is_ok());
     // println!("Successfully changed working directory to {}!", root.display());
 
-    let mut arguments: Vec<String> = [].to_vec();
-    arguments.push("-ExecutionPolicy".to_string());
-    arguments.push("Bypass".to_string());
-    arguments.push("-NoExit".to_string());
-    arguments.push("-File".to_string());
-    arguments.push("C:/projects/tmp/.espressif/Initialize-Idf.ps1".to_string());
 
-
-    let process = std::process::Command::new("powershell")
-        .args(arguments)
+    let process = std::process::Command::new(get_shell())
+        .args(get_initializer_arguments())
         .stdin(Stdio::inherit())
         .stdout(Stdio::inherit())
         .spawn().unwrap();
@@ -278,21 +309,35 @@ pub fn get_shell_cmd<'a>() -> Command<'a, str> {
         .runner(|_args, matches| get_shell_runner(_args, matches) )
 }
 
-
+#[cfg(unix)]
 fn run_build(idf_path: &String, shell_initializer: &String) -> std::result::Result<(), clap::Error> {
     // println!("Starting process");
     let root = Path::new(&idf_path);
     assert!(env::set_current_dir(&root).is_ok());
 
-    let mut arguments: Vec<String> = [].to_vec();
-    arguments.push("-ExecutionPolicy".to_string());
-    arguments.push("Bypass".to_string());
-    arguments.push("-NoExit".to_string());
-    arguments.push("-File".to_string());
-    arguments.push(shell_initializer.to_string());
+    let mut child_process = std::process::Command::new(get_shell())
+        .args(get_initializer_arguments())
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()?;
+    {
 
-    let mut child_process = std::process::Command::new("powershell")
-        .args(arguments)
+    }
+    let output = child_process.wait_with_output()?;
+
+    //println!("output = {:?}", output);
+    Ok(())
+}
+
+#[cfg(windows)]
+fn run_build(idf_path: &String, shell_initializer: &String) -> std::result::Result<(), clap::Error> {
+    // println!("Starting process");
+    let root = Path::new(&idf_path);
+    assert!(env::set_current_dir(&root).is_ok());
+
+    let mut child_process = std::process::Command::new(get_shell())
+        .args(get_initializer_arguments())
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -306,7 +351,7 @@ fn run_build(idf_path: &String, shell_initializer: &String) -> std::result::Resu
     }
     let output = child_process.wait_with_output()?;
 
-    // println!("output = {:?}", output);
+    //println!("output = {:?}", output);
     Ok(())
 }
 
@@ -314,15 +359,14 @@ fn get_build_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result:
     let build_repetitions:i32 = matches.value_of("repeat").unwrap().to_string().parse().unwrap();
     let idf_path = matches.value_of("idf-path")
         .unwrap_or(&*get_selected_idf_path()).to_string();
-    let tools_path = format!("{}/Initialize-Idf.ps1", matches.value_of("tools-path")
-        .unwrap_or(&*get_tools_path()).to_string());
 
+    let initializer = get_initializer();
     println!("Number of CPU cores: {}", num_cpus::get());
-    println!("ESP-IDF Shell Initializer: {}", tools_path);
+    println!("ESP-IDF Shell Initializer: {}", initializer);
     println!("ESP-IDF Path: {}", idf_path);
     for build_number in 0..build_repetitions {
         let start = Instant::now();
-        run_build(&idf_path, &tools_path);
+        run_build(&idf_path, &initializer);
         let duration = start.elapsed();
         println!("Time elapsed in build: {:?}", duration);
     }
