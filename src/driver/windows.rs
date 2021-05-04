@@ -14,7 +14,7 @@ use std::os::windows::prelude::*;
 use std::iter::once;
 
 use std::process::Stdio;
-use std::io::{self, Write};
+use std::io::{Write};
 
 /// Based on: https://users.rust-lang.org/t/how-do-i-determine-if-i-have-admin-rights-on-windows/35710/8
 /// Returns true if the current process has admin rights, otherwise false.

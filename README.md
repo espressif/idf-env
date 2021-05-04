@@ -66,6 +66,12 @@ Tools will request elevated privileges by UAC if necessary.
 idf-env driver install --espressif --ftdi --silabs
 ```
 
+Download drivers without installation:
+
+```
+idf-env driver download --espressif --ftdi --silabs
+```
+
 ### Web IDE Companion
 
 ```

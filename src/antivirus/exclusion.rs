@@ -1,14 +1,10 @@
 use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
 
-use std::process::Stdio;
-use std::io::{self, Write};
-
 use crate::driver::windows;
 use crate::config;
 
-use walkdir::{WalkDir, DirEntry};
-use std::{thread, time};
+use walkdir::{WalkDir};
 
 fn get_tool_files(tool_name: String, filter: String) -> Vec<String> {
     let tool_path = config::get_tool_path(tool_name);

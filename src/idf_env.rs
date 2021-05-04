@@ -2,7 +2,6 @@ extern crate json;
 extern crate clap;
 
 use clap_nested::{Commander};
-use clap::Arg;
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
