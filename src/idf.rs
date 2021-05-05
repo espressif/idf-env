@@ -138,13 +138,12 @@ fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::resul
         get_dist_path("idf-python-3.8.7-embed-win64.zip".to_string()),
         get_tool_path("idf-python/3.8.7".to_string())
     );
-    let git_path = get_tool_path("idf-git/2.30.1/bin/git.exe".to_string());
+    let git_path = get_tool_path("idf-git/2.30.1/cmd/git.exe".to_string());
     update_property("gitPath".to_string(), git_path.clone());
     let python_path = get_tool_path("idf-python/3.8.7/python.exe".to_string());
     let virtual_env_path = get_python_env_path("4.4".to_string(), "3.8".to_string());
 
     if !Path::new(&esp_idf).exists() {
-        println!("Cloning");
         // let clone_command = format!("git clone --shallow-since=2020-01-01 --jobs 8 --recursive git@github.com:espressif/esp-idf.git ");
         let mut arguments: Vec<String> = [].to_vec();
         arguments.push("clone".to_string());
@@ -152,8 +151,10 @@ fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::resul
         arguments.push("--jobs".to_string());
         arguments.push("8".to_string());
         arguments.push("--recursive".to_string());
-        arguments.push("git@github.com:espressif/esp-idf.git".to_string());
+        arguments.push("https://github.com/espressif/esp-idf.git".to_string());
+        // arguments.push("git@github.com:espressif/esp-idf.git".to_string());
         arguments.push(esp_idf.clone());
+        println!("Cloning: {} {:?}", git_path, arguments);
         run_command(git_path, arguments, "".to_string());
     }
 
@@ -161,7 +162,7 @@ fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::resul
         println!("Creating virtual environment: {}", virtual_env_path);
         let mut arguments: Vec<String> = [].to_vec();
         arguments.push("-m".to_string());
-        arguments.push("venv".to_string());
+        arguments.push("virtualenv".to_string());
         arguments.push(virtual_env_path.clone());
         run_command(python_path, arguments, "".to_string());
     }
