@@ -1,6 +1,5 @@
 use std::process::Stdio;
 use std::io::{Write};
-use std::io::Read;
 
 #[cfg(windows)]
 pub fn run_command(shell: String, arguments: Vec<String>, command: String) -> std::result::Result<(), clap::Error> {
@@ -27,9 +26,12 @@ pub fn run_command(shell: String, arguments: Vec<String>, command: String) -> st
 
 
 #[cfg(unix)]
-pub fn run_command(shell: String, arguments: Vec<String>, command: String) {
+pub fn run_command(shell: String, arguments: Vec<String>, command: String) -> std::result::Result<(), clap::Error> {
     // Unix - pass command as parameter for initializer
-    arguments.push(command);
+    let mut arguments = arguments.clone();
+    if !command.is_empty() {
+        arguments.push(command);
+    }
     let mut child_process = std::process::Command::new(shell)
         .args(arguments)
         .stdin(Stdio::piped())
@@ -40,4 +42,5 @@ pub fn run_command(shell: String, arguments: Vec<String>, command: String) {
 
     }
     let output = child_process.wait_with_output()?;
+    Ok(())
 }

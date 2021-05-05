@@ -14,6 +14,7 @@ use std::io::{Write};
 use std::io::Read;
 
 use std::time::{Duration, Instant};
+use dirs::home_dir;
 
 use crate::config::{add_idf_config, get_git_path, get_tool_path, get_dist_path, get_python_env_path, update_property};
 use crate::config::get_tools_path;
@@ -113,8 +114,14 @@ fn get_reset_cmd<'a>() -> Command<'a, str> {
         })
 }
 
+#[cfg(windows)]
 fn get_idf_base_directory() -> String {
     "C:/esp".to_string()
+}
+
+#[cfg(unix)]
+fn get_idf_base_directory() -> String {
+    home_dir().unwrap().display().to_string() + "/esp"
 }
 
 #[cfg(windows)]
@@ -130,17 +137,30 @@ fn get_esp_idf_directory(idf_name:String) -> String {
 fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
     let esp_idf = get_esp_idf_directory("esp-idf-master/".to_string());
     println!("ESP-IDF Path: {}", esp_idf);
+
+    #[cfg(windows)]
     prepare_package("https://dl.espressif.com/dl/idf-git/idf-git-2.30.1-win64.zip".to_string(),
         get_dist_path("idf-git-2.30.1-win64.zip".to_string()),
         get_tool_path("idf-git/2.30.1".to_string())
     );
+    #[cfg(windows)]
     prepare_package("https://dl.espressif.com/dl/idf-python/idf-python-3.8.7-embed-win64.zip".to_string(),
         get_dist_path("idf-python-3.8.7-embed-win64.zip".to_string()),
         get_tool_path("idf-python/3.8.7".to_string())
     );
+
+    #[cfg(windows)]
     let git_path = get_tool_path("idf-git/2.30.1/cmd/git.exe".to_string());
+    #[cfg(unix)]
+    let git_path = "/usr/bin/git".to_string();
+
     update_property("gitPath".to_string(), git_path.clone());
+
+    #[cfg(windows)]
     let python_path = get_tool_path("idf-python/3.8.7/python.exe".to_string());
+    #[cfg(unix)]
+    let python_path = "/usr/bin/python".to_string();
+
     let virtual_env_path = get_python_env_path("4.4".to_string(), "3.8".to_string());
 
     if !Path::new(&esp_idf).exists() {
@@ -166,7 +186,11 @@ fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::resul
         arguments.push(virtual_env_path.clone());
         run_command(python_path, arguments, "".to_string());
     }
+    #[cfg(windows)]
     let python_path = format!("{}/Scripts/python.exe", virtual_env_path);
+    #[cfg(unix)]
+    let python_path = format!("{}/bin/python", virtual_env_path);
+
     let idf_tools = format!("{}/tools/idf_tools.py", esp_idf);
 
     let mut arguments: Vec<String> = [].to_vec();
