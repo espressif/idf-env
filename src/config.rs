@@ -7,6 +7,7 @@ use std::path::Path;
 use md5;
 use std::env;
 use dirs::home_dir;
+use json::JsonValue;
 
 
 fn print_path(property_path: &std::string::String) {
@@ -26,6 +27,16 @@ pub fn get_tool_path(tool_name:String) -> String {
     format!("{}/tools/{}", tools_path, tool_name)
 }
 
+pub fn get_dist_path(tool_name:String) -> String {
+    let tools_path = get_tools_path();
+    format!("{}/dist/{}", tools_path, tool_name)
+}
+
+pub fn get_python_env_path(idf_version: String, python_version: String) -> String {
+    let tools_path = get_tools_path();
+    format!("{}/python_env/idf{}_py{}_env", tools_path, idf_version, python_version)
+}
+
 pub fn get_selected_idf_path() -> String {
     let selected_idf_id = get_property("idfSelectedId".to_string());
     get_property_with_idf_id("path".to_string(), selected_idf_id)
@@ -42,8 +53,28 @@ fn get_idf_id(idf_path: String) -> String {
     return format!("esp-idf-{:x}", digest);
 }
 
+fn bootstrap_json(json_path: String, tools_path: String) {
+    let template = json::object!{
+        "$schema": "http://json-schema.org/schema#",
+        "$id": "http://dl.espressif.com/dl/schemas/esp_idf",
+        "_comment": "Configuration file for ESP-IDF Eclipse plugin.",
+        "_warning": "Use / or \\ when specifying path. Single backslash is not allowed by JSON format.",
+        "gitPath": "",
+        "idfToolsPath": tools_path,
+        "idfSelectedId": "",
+        "idfInstalled": json::JsonValue::new_object()
+    };
+    fs::write(get_json_path(), template.to_string()).unwrap();
+}
+
 fn load_json() -> json::JsonValue {
-    let content = fs::read_to_string(get_json_path())
+    let json_path = get_json_path();
+    if !Path::new(&json_path).exists() {
+        println!("Configuration file not found, creating new one: {}", json_path);
+        bootstrap_json(json_path.clone(), get_tools_path());
+    }
+
+    let content = fs::read_to_string(json_path)
         .expect("Failure");
     return json::parse(&content.to_string()).unwrap();
 }
@@ -77,7 +108,13 @@ fn print_property_with_path(property_name: String, idf_path: String) {
     print_path(&get_property_with_path(property_name, idf_path));
 }
 
-fn add_idf_config(idf_path: String, version: String, python_path: String) {
+pub fn update_property(property_name: String, property_value: String) {
+    let mut parsed_json = load_json();
+    parsed_json[property_name] = JsonValue::String(property_value);
+    fs::write(get_json_path(), format!("{:#}", parsed_json)).unwrap();
+}
+
+pub fn add_idf_config(idf_path: String, version: String, python_path: String) {
     let idf_id = get_idf_id(idf_path.clone());
     let _data = json::object! {
         version: version,
@@ -87,6 +124,7 @@ fn add_idf_config(idf_path: String, version: String, python_path: String) {
 
     let mut parsed_json = load_json();
     parsed_json["idfInstalled"].insert(&idf_id, _data).unwrap();
+    parsed_json["idfSelectedId"] = JsonValue::String(idf_id);
 
     fs::write(get_json_path(), format!("{:#}", parsed_json)).unwrap();
 }

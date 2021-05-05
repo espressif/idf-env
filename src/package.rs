@@ -65,7 +65,7 @@ async fn download_zip(url: String, output: String) -> Result<()> {
         println!("Using cached archive: {}", output);
         return Ok(());
     }
-    println!("Downloading: {}", url);
+    println!("Downloading {} to {}", url, output);
     fetch_url(url, output).await
 }
 

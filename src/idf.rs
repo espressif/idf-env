@@ -15,9 +15,10 @@ use std::io::Read;
 
 use std::time::{Duration, Instant};
 
-use crate::config::get_git_path;
+use crate::config::{add_idf_config, get_git_path, get_tool_path, get_dist_path, get_python_env_path, update_property};
 use crate::config::get_tools_path;
 use crate::config::get_selected_idf_path;
+use crate::package::prepare_package;
 
 fn get_installer(matches: &clap::ArgMatches) -> String {
     if matches.is_present("installer") {
@@ -111,6 +112,150 @@ fn get_reset_cmd<'a>() -> Command<'a, str> {
         })
 }
 
+fn get_idf_base_directory() -> String {
+    "C:/esp".to_string()
+}
+
+fn get_esp_idf_directory(idf_name:String) -> String {
+    format!("{}/{}", get_idf_base_directory(), idf_name)
+}
+
+fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+    let esp_idf = get_esp_idf_directory("esp-idf-master".to_string());
+    println!("ESP-IDF Path: {}", esp_idf);
+    prepare_package("https://dl.espressif.com/dl/idf-git/idf-git-2.30.1-win64.zip".to_string(),
+        get_dist_path("idf-git-2.30.1-win64.zip".to_string()),
+        get_tool_path("idf-git/2.30.1".to_string())
+    );
+    prepare_package("https://dl.espressif.com/dl/idf-python/idf-python-3.8.7-embed-win64.zip".to_string(),
+        get_dist_path("idf-python-3.8.7-embed-win64.zip".to_string()),
+        get_tool_path("idf-python/3.8.7".to_string())
+    );
+    let git_path = get_tool_path("idf-git/2.30.1/bin/git.exe".to_string());
+    update_property("gitPath".to_string(), git_path.clone());
+    let python_path = get_tool_path("idf-python/3.8.7/python.exe".to_string());
+    let virtual_env_path = get_python_env_path("4.4".to_string(), "3.8".to_string());
+
+    if !Path::new(&esp_idf).exists() {
+        println!("Cloning");
+        // let clone_command = format!("git clone --shallow-since=2020-01-01 --jobs 8 --recursive git@github.com:espressif/esp-idf.git ");
+        let mut arguments: Vec<String> = [].to_vec();
+        arguments.push("clone".to_string());
+        arguments.push("--shallow-since=2020-01-01".to_string());
+        arguments.push("--jobs".to_string());
+        arguments.push("8".to_string());
+        arguments.push("--recursive".to_string());
+        arguments.push("git@github.com:espressif/esp-idf.git".to_string());
+        arguments.push(esp_idf.clone());
+        run_command(git_path, arguments, "".to_string());
+    }
+
+    if !Path::new(&virtual_env_path).exists() {
+        println!("Creating virtual environment: {}", virtual_env_path);
+        let mut arguments: Vec<String> = [].to_vec();
+        arguments.push("-m".to_string());
+        arguments.push("venv".to_string());
+        arguments.push(virtual_env_path.clone());
+        run_command(python_path, arguments, "".to_string());
+    }
+    let python_path = format!("{}/Scripts/python.exe", virtual_env_path);
+    let idf_tools = format!("{}/tools/idf_tools.py", esp_idf);
+
+    let mut arguments: Vec<String> = [].to_vec();
+    arguments.push(idf_tools.clone());
+    arguments.push("install".to_string());
+    run_command(python_path.clone(), arguments, "".to_string());
+
+    let mut arguments: Vec<String> = [].to_vec();
+    arguments.push(idf_tools);
+    arguments.push("install-python-env".to_string());
+    run_command(python_path.clone(), arguments, "".to_string());
+
+    add_idf_config(esp_idf, "4.4".to_string(), python_path);
+    Ok(())
+}
+
+fn get_install_inno_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+    let mut arguments: Vec<String> = [].to_vec();
+
+    if !matches.is_present("installer") {
+        download_installer().unwrap();
+    }
+
+    if !matches.is_present("interactive") {
+        arguments.push("/VERYSILENT".to_string());
+        arguments.push("/SUPPRESSMSGBOXES".to_string());
+        arguments.push("/SP-".to_string());
+        arguments.push("/NOCANCEL".to_string());
+    }
+
+    if matches.is_present("idf-version") {
+        let version = matches.value_of("idf-version").unwrap();
+        let parameter = String::from("/IDFVERSION=") + version;
+        arguments.push(parameter);
+    }
+
+    if matches.is_present("verbose") {
+        arguments.push("/LOG=log.txt".to_string());
+    }
+
+    if matches.value_of("idf-path").is_some() {
+        let dir = matches.value_of("idf-path").unwrap();
+        let parameter = String::from("/IDFDIR=") + dir;
+        arguments.push(parameter);
+        let path_exists = Path::new(dir).exists();
+
+        if matches.is_present("upgrade") {
+            if !path_exists {
+                println!("Unable to upgrade, path does not exist: {}", dir);
+                println!("Specify path to existing idf, or install new one without --upgrade parameter.");
+                process::exit(1);
+            }
+            arguments.push("/IDFUSEEXISTING=yes".to_string());
+        } else {
+            if path_exists {
+                println!("Unable to install fresh version of IDF to existing directory: {}", dir);
+                println!("Options:");
+                println!("* specify --upgrade parameter to update existing installation");
+                println!("* specify --idf-path to directory which does not exit");
+                process::exit(1);
+            }
+        }
+    }
+
+    let output = if cfg!(target_os = "windows") {
+        println!("{} {:?}", get_installer(matches), arguments);
+        std::process::Command::new(get_installer(matches))
+            .args(arguments)
+            .output()
+            .expect("failed to execute process")
+    } else {
+        std::process::Command::new("sh")
+            .arg("-c")
+            .arg("echo hello")
+            .output()
+            .expect("failed to execute process")
+    };
+    let _data = output.stdout;
+    if matches.is_present("verbose") {
+        if cfg!(target_os = "windows") {
+            std::process::Command::new("notepad.exe")
+                .args(&["log.txt"])
+                .output()
+                .expect("failed to execute process")
+        } else {
+            std::process::Command::new("sh")
+                .arg("-c")
+                .arg("echo hello")
+                .output()
+                .expect("failed to execute process")
+        };
+    }
+
+    Ok(())
+
+}
+
 pub fn get_install_cmd<'a>() -> Command<'a, str> {
     Command::new("install")
         .description("Install new instance of IDF")
@@ -152,85 +297,9 @@ pub fn get_install_cmd<'a>() -> Command<'a, str> {
                         .takes_value(false)
                         .help("display diagnostic log after installation"))
         })
-        .runner(|_args, matches| {
-            let mut arguments: Vec<String> = [].to_vec();
-
-            if !matches.is_present("installer") {
-                download_installer().unwrap();
-            }
-
-            if !matches.is_present("interactive") {
-                arguments.push("/VERYSILENT".to_string());
-                arguments.push("/SUPPRESSMSGBOXES".to_string());
-                arguments.push("/SP-".to_string());
-                arguments.push("/NOCANCEL".to_string());
-            }
-
-            if matches.is_present("idf-version") {
-                let version = matches.value_of("idf-version").unwrap();
-                let parameter = String::from("/IDFVERSION=") + version;
-                arguments.push(parameter);
-            }
-
-            if matches.is_present("verbose") {
-                arguments.push("/LOG=log.txt".to_string());
-            }
-
-            if matches.value_of("idf-path").is_some() {
-                let dir = matches.value_of("idf-path").unwrap();
-                let parameter = String::from("/IDFDIR=") + dir;
-                arguments.push(parameter);
-                let path_exists = Path::new(dir).exists();
-
-                if matches.is_present("upgrade") {
-                    if !path_exists {
-                        println!("Unable to upgrade, path does not exist: {}", dir);
-                        println!("Specify path to existing idf, or install new one without --upgrade parameter.");
-                        process::exit(1);
-                    }
-                    arguments.push("/IDFUSEEXISTING=yes".to_string());
-                } else {
-                    if path_exists {
-                        println!("Unable to install fresh version of IDF to existing directory: {}", dir);
-                        println!("Options:");
-                        println!("* specify --upgrade parameter to update existing installation");
-                        println!("* specify --idf-path to directory which does not exit");
-                        process::exit(1);
-                    }
-                }
-            }
-
-            let output = if cfg!(target_os = "windows") {
-                println!("{} {:?}", get_installer(matches), arguments);
-                std::process::Command::new(get_installer(matches))
-                    .args(arguments)
-                    .output()
-                    .expect("failed to execute process")
-            } else {
-                std::process::Command::new("sh")
-                    .arg("-c")
-                    .arg("echo hello")
-                    .output()
-                    .expect("failed to execute process")
-            };
-            let _data = output.stdout;
-            if matches.is_present("verbose") {
-                if cfg!(target_os = "windows") {
-                    std::process::Command::new("notepad.exe")
-                        .args(&["log.txt"])
-                        .output()
-                        .expect("failed to execute process")
-                } else {
-                    std::process::Command::new("sh")
-                        .arg("-c")
-                        .arg("echo hello")
-                        .output()
-                        .expect("failed to execute process")
-                };
-            }
-
-            Ok(())
-        })
+        .runner(|_args, matches|
+            get_install_runner(_args, matches)
+        )
 }
 
 #[cfg(unix)]
@@ -315,8 +384,36 @@ fn run_build(idf_path: &String, shell_initializer: &String) -> std::result::Resu
     let root = Path::new(&idf_path);
     assert!(env::set_current_dir(&root).is_ok());
 
-    let mut child_process = std::process::Command::new(get_shell())
-        .args(get_initializer_arguments())
+
+    //println!("output = {:?}", output);
+    Ok(())
+}
+
+#[cfg(windows)]
+fn run_command(shell: String, arguments: Vec<String>, command: String) -> std::result::Result<(), clap::Error> {
+    let mut child_process = std::process::Command::new(shell)
+        .args(arguments)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()?;
+    {
+        let child_stdin = child_process.stdin.as_mut().unwrap();
+        child_stdin.write_all(&*command.into_bytes())?;
+        // Close stdin to finish and avoid indefinite blocking
+        drop(child_stdin);
+
+    }
+    let output = child_process.wait_with_output()?;
+    Ok(())
+}
+
+#[cfg(unix)]
+fn run_command(shell: String, arguments: Vec<String>, command: String) {
+    // Unix - pass command as parameter for initializer
+    arguments.push(command);
+    let mut child_process = std::process::Command::new(shell)
+        .args(arguments)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -325,9 +422,10 @@ fn run_build(idf_path: &String, shell_initializer: &String) -> std::result::Resu
 
     }
     let output = child_process.wait_with_output()?;
+}
 
-    //println!("output = {:?}", output);
-    Ok(())
+fn run_idf_command(command: String) {
+    run_command(get_shell(), get_initializer_arguments(), command);
 }
 
 #[cfg(windows)]
@@ -336,20 +434,7 @@ fn run_build(idf_path: &String, shell_initializer: &String) -> std::result::Resu
     let root = Path::new(&idf_path);
     assert!(env::set_current_dir(&root).is_ok());
 
-    let mut child_process = std::process::Command::new(get_shell())
-        .args(get_initializer_arguments())
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()?;
-    {
-        let child_stdin = child_process.stdin.as_mut().unwrap();
-        child_stdin.write_all(b"cd examples/get-started/blink; idf.py fullclean; idf.py build\n")?;
-        // Close stdin to finish and avoid indefinite blocking
-        drop(child_stdin);
-
-    }
-    let output = child_process.wait_with_output()?;
+    run_idf_command("cd examples/get-started/blink; idf.py fullclean; idf.py build\n".to_string());
 
     //println!("output = {:?}", output);
     Ok(())
