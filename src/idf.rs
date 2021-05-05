@@ -416,6 +416,7 @@ fn run_build(idf_path: &String, shell_initializer: &String) -> std::result::Resu
     let root = Path::new(&idf_path);
     assert!(env::set_current_dir(&root).is_ok());
 
+    run_idf_command("cd examples/get-started/blink; idf.py fullclean; idf.py build".to_string());
 
     //println!("output = {:?}", output);
     Ok(())

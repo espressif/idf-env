@@ -32,6 +32,8 @@ pub fn run_command(shell: String, arguments: Vec<String>, command: String) -> st
     if !command.is_empty() {
         arguments.push(command);
     }
+
+    //println!("arguments = {:?}", arguments);
     let mut child_process = std::process::Command::new(shell)
         .args(arguments)
         .stdin(Stdio::piped())
@@ -42,5 +44,6 @@ pub fn run_command(shell: String, arguments: Vec<String>, command: String) -> st
 
     }
     let output = child_process.wait_with_output()?;
+    //println!("output = {:?}", output);
     Ok(())
 }
