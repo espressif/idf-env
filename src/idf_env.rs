@@ -11,6 +11,7 @@ mod companion;
 mod driver;
 mod idf;
 mod package;
+mod shell;
 
 async fn app() -> Result<()> {
     Commander::new()

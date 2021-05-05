@@ -8,7 +8,7 @@ use md5;
 use std::env;
 use dirs::home_dir;
 use json::JsonValue;
-
+use crate::shell::run_command;
 
 fn print_path(property_path: &std::string::String) {
     let path = Path::new(&property_path);
@@ -166,6 +166,20 @@ pub fn get_cmd<'a>() -> Command<'a, str> {
         })
 }
 
+fn open_idf_config() {
+    let mut arguments: Vec<String> = [].to_vec();
+    arguments.push(get_json_path());
+    run_command("notepad".to_string(), arguments, "".to_string());
+}
+
+pub fn get_edit_cmd<'a>() -> Command<'a, str> {
+    Command::new("edit")
+        .description("Open configuration file in editor")
+        .runner(|_args, matches| {
+            open_idf_config();
+            Ok(())
+        })
+}
 
 pub fn get_add_cmd<'a>() -> Command<'a, str> {
     Command::new("add")
@@ -220,6 +234,7 @@ pub fn get_add_cmd<'a>() -> Command<'a, str> {
 pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
     let multi_cmd: MultiCommand<str, str> = Commander::new()
         .add_cmd(get_cmd())
+        .add_cmd(get_edit_cmd())
         .add_cmd(get_add_cmd())
         .into_cmd("config")
 

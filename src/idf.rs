@@ -19,6 +19,7 @@ use crate::config::{add_idf_config, get_git_path, get_tool_path, get_dist_path, 
 use crate::config::get_tools_path;
 use crate::config::get_selected_idf_path;
 use crate::package::prepare_package;
+use crate::shell::run_command;
 
 fn get_installer(matches: &clap::ArgMatches) -> String {
     if matches.is_present("installer") {
@@ -116,12 +117,18 @@ fn get_idf_base_directory() -> String {
     "C:/esp".to_string()
 }
 
+#[cfg(windows)]
+fn get_esp_idf_directory(idf_name:String) -> String {
+    format!("{}/{}", get_idf_base_directory(), idf_name).replace("/", "\\")
+}
+
+#[cfg(unix)]
 fn get_esp_idf_directory(idf_name:String) -> String {
     format!("{}/{}", get_idf_base_directory(), idf_name)
 }
 
 fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
-    let esp_idf = get_esp_idf_directory("esp-idf-master".to_string());
+    let esp_idf = get_esp_idf_directory("esp-idf-master/".to_string());
     println!("ESP-IDF Path: {}", esp_idf);
     prepare_package("https://dl.espressif.com/dl/idf-git/idf-git-2.30.1-win64.zip".to_string(),
         get_dist_path("idf-git-2.30.1-win64.zip".to_string()),
@@ -389,41 +396,6 @@ fn run_build(idf_path: &String, shell_initializer: &String) -> std::result::Resu
     Ok(())
 }
 
-#[cfg(windows)]
-fn run_command(shell: String, arguments: Vec<String>, command: String) -> std::result::Result<(), clap::Error> {
-    let mut child_process = std::process::Command::new(shell)
-        .args(arguments)
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()?;
-    {
-        let child_stdin = child_process.stdin.as_mut().unwrap();
-        child_stdin.write_all(&*command.into_bytes())?;
-        // Close stdin to finish and avoid indefinite blocking
-        drop(child_stdin);
-
-    }
-    let output = child_process.wait_with_output()?;
-    Ok(())
-}
-
-#[cfg(unix)]
-fn run_command(shell: String, arguments: Vec<String>, command: String) {
-    // Unix - pass command as parameter for initializer
-    arguments.push(command);
-    let mut child_process = std::process::Command::new(shell)
-        .args(arguments)
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()?;
-    {
-
-    }
-    let output = child_process.wait_with_output()?;
-}
-
 fn run_idf_command(command: String) {
     run_command(get_shell(), get_initializer_arguments(), command);
 }
@@ -436,7 +408,6 @@ fn run_build(idf_path: &String, shell_initializer: &String) -> std::result::Resu
 
     run_idf_command("cd examples/get-started/blink; idf.py fullclean; idf.py build\n".to_string());
 
-    //println!("output = {:?}", output);
     Ok(())
 }
 
