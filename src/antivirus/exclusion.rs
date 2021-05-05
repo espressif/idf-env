@@ -1,6 +1,7 @@
 use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
 
+#[cfg(windows)]
 use crate::driver::windows;
 use crate::config;
 
@@ -39,6 +40,7 @@ fn process_exclusion(operation: String, file_list:Vec<String>, chunk_size: usize
         arguments.push("-ExclusionProcess".to_string());
         arguments.push(path.clone());
 
+        #[cfg(windows)]
         windows::run("powershell".to_string(), arguments);
     }
     // thread::sleep(time::Duration::from_millis(100000));
@@ -50,12 +52,16 @@ fn add_exclusions(file_list:Vec<String>, chunk_size: usize) {
 }
 
 fn nuke_exclusions() {
+    #[cfg(windows)]
     windows::run_with_stdin("powershell".to_string(), "foreach ($Path in (Get-MpPreference).ExclusionPath) { Remove-MpPreference -ExclusionPath $Path }".to_string());
+     #[cfg(windows)]
     windows::run_with_stdin("powershell".to_string(), "foreach ($Process in (Get-MpPreference).ExclusionProcess) { Remove-MpPreference -ExclusionProcess $Process }".to_string());
 }
 
 fn get_add_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+    #[cfg(windows)]
     if !windows::is_app_elevated() {
+        #[cfg(windows)]
         windows::run_self_elevated();
         return Ok(());
     }
@@ -86,7 +92,9 @@ fn remove_exclusions(file_list:Vec<String>, chunk_size:usize) {
 }
 
 fn get_remove_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+    #[cfg(windows)]
     if !windows::is_app_elevated() {
+        #[cfg(windows)]
         windows::run_self_elevated();
         return Ok(());
     }

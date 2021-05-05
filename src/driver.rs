@@ -155,6 +155,11 @@ pub fn get_driver_path(driver_name:String) -> String {
     format!("{}/{}", drivers_path, driver_name)
 }
 
+#[cfg(unix)]
+fn download_drivers(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+    Ok(())
+}
+
 #[cfg(windows)]
 fn download_drivers(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
     if _matches.is_present("silabs") {
