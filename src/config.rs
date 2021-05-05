@@ -6,7 +6,9 @@ use std::fs;
 use std::path::Path;
 use md5;
 use std::env;
-
+use dirs::home_dir;
+use json::JsonValue;
+use crate::shell::run_command;
 
 fn print_path(property_path: &std::string::String) {
     let path = Path::new(&property_path);
@@ -14,13 +16,34 @@ fn print_path(property_path: &std::string::String) {
     print!("{}", parent.unwrap());
 }
 
-fn get_json_path() -> String {
-    let idf_tools_path_env = "IDF_TOOLS_PATH";
+pub fn get_tools_path() -> String {
+    env::var("IDF_TOOLS_PATH").unwrap_or_else(|e|
+        home_dir().unwrap().display().to_string() + "/.espressif"
+    )
+}
 
-    let idf_tools_path = env::var(idf_tools_path_env).unwrap_or_else(|e| {
-        panic!("could not find {}: {}", idf_tools_path_env, e)
-    });
-    let idf_json_path = idf_tools_path + "/esp_idf.json";
+pub fn get_tool_path(tool_name:String) -> String {
+    let tools_path = get_tools_path();
+    format!("{}/tools/{}", tools_path, tool_name)
+}
+
+pub fn get_dist_path(tool_name:String) -> String {
+    let tools_path = get_tools_path();
+    format!("{}/dist/{}", tools_path, tool_name)
+}
+
+pub fn get_python_env_path(idf_version: String, python_version: String) -> String {
+    let tools_path = get_tools_path();
+    format!("{}/python_env/idf{}_py{}_env", tools_path, idf_version, python_version)
+}
+
+pub fn get_selected_idf_path() -> String {
+    let selected_idf_id = get_property("idfSelectedId".to_string());
+    get_property_with_idf_id("path".to_string(), selected_idf_id)
+}
+
+fn get_json_path() -> String {
+    let idf_json_path = format!("{}/esp_idf.json", get_tools_path());
     return idf_json_path;
 }
 
@@ -30,8 +53,28 @@ fn get_idf_id(idf_path: String) -> String {
     return format!("esp-idf-{:x}", digest);
 }
 
+fn bootstrap_json(json_path: String, tools_path: String) {
+    let template = json::object!{
+        "$schema": "http://json-schema.org/schema#",
+        "$id": "http://dl.espressif.com/dl/schemas/esp_idf",
+        "_comment": "Configuration file for ESP-IDF Eclipse plugin.",
+        "_warning": "Use / or \\ when specifying path. Single backslash is not allowed by JSON format.",
+        "gitPath": "",
+        "idfToolsPath": tools_path,
+        "idfSelectedId": "",
+        "idfInstalled": json::JsonValue::new_object()
+    };
+    fs::write(get_json_path(), template.to_string()).unwrap();
+}
+
 fn load_json() -> json::JsonValue {
-    let content = fs::read_to_string(get_json_path())
+    let json_path = get_json_path();
+    if !Path::new(&json_path).exists() {
+        println!("Configuration file not found, creating new one: {}", json_path);
+        bootstrap_json(json_path.clone(), get_tools_path());
+    }
+
+    let content = fs::read_to_string(json_path)
         .expect("Failure");
     return json::parse(&content.to_string()).unwrap();
 }
@@ -49,6 +92,12 @@ pub fn get_git_path() -> String {
     get_property("gitPath".to_string())
 }
 
+pub fn get_property_with_idf_id(property_name: String, idf_id: String) -> String {
+    let parsed_json = load_json();
+    return parsed_json["idfInstalled"][idf_id][property_name].to_string();
+}
+
+
 pub fn get_property_with_path(property_name: String, idf_path: String) -> String {
     let parsed_json = load_json();
     let idf_id = get_idf_id(idf_path);
@@ -59,7 +108,13 @@ fn print_property_with_path(property_name: String, idf_path: String) {
     print_path(&get_property_with_path(property_name, idf_path));
 }
 
-fn add_idf_config(idf_path: String, version: String, python_path: String) {
+pub fn update_property(property_name: String, property_value: String) {
+    let mut parsed_json = load_json();
+    parsed_json[property_name] = JsonValue::String(property_value);
+    fs::write(get_json_path(), format!("{:#}", parsed_json)).unwrap();
+}
+
+pub fn add_idf_config(idf_path: String, version: String, python_path: String) {
     let idf_id = get_idf_id(idf_path.clone());
     let _data = json::object! {
         version: version,
@@ -69,6 +124,7 @@ fn add_idf_config(idf_path: String, version: String, python_path: String) {
 
     let mut parsed_json = load_json();
     parsed_json["idfInstalled"].insert(&idf_id, _data).unwrap();
+    parsed_json["idfSelectedId"] = JsonValue::String(idf_id);
 
     fs::write(get_json_path(), format!("{:#}", parsed_json)).unwrap();
 }
@@ -110,6 +166,20 @@ pub fn get_cmd<'a>() -> Command<'a, str> {
         })
 }
 
+fn open_idf_config() {
+    let mut arguments: Vec<String> = [].to_vec();
+    arguments.push(get_json_path());
+    run_command("notepad".to_string(), arguments, "".to_string());
+}
+
+pub fn get_edit_cmd<'a>() -> Command<'a, str> {
+    Command::new("edit")
+        .description("Open configuration file in editor")
+        .runner(|_args, matches| {
+            open_idf_config();
+            Ok(())
+        })
+}
 
 pub fn get_add_cmd<'a>() -> Command<'a, str> {
     Command::new("add")
@@ -164,6 +234,7 @@ pub fn get_add_cmd<'a>() -> Command<'a, str> {
 pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
     let multi_cmd: MultiCommand<str, str> = Commander::new()
         .add_cmd(get_cmd())
+        .add_cmd(get_edit_cmd())
         .add_cmd(get_add_cmd())
         .into_cmd("config")
 

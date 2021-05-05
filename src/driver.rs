@@ -2,18 +2,15 @@ use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
 #[cfg(windows)]
 use std::collections::HashMap;
-use std::env;
 
 use crate::package::prepare_package;
+use crate::config;
 
 #[cfg(windows)]
 use core::ptr::null_mut;
 
 #[cfg(windows)]
-mod windows;
-
-#[cfg(windows)]
-use windows::to_wchar;
+pub mod windows;
 
 use std::{thread, time};
 
@@ -106,7 +103,6 @@ fn install_driver(driver_inf: String) {
     //     &DestinationInfFileNameComponent))
     // Rust: https://docs.rs/winapi/0.3.9/winapi/um/setupapi/fn.SetupCopyOEMInfW.html
     let driver_inf = driver_inf.replace("/", "\\");
-    let driver_inf = format!("{}\\{}", env::current_dir().unwrap().display(), driver_inf);
     print!("Installing driver with INF {} ", driver_inf);
     let mut destination_inf_filename_vec: Vec<winapi::um::winnt::WCHAR> = vec![0; 255];
     let destination_inf_filename:winapi::um::winnt::PWSTR = destination_inf_filename_vec.as_mut_ptr();
@@ -154,38 +150,56 @@ fn get_install_runner(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::resu
     Ok(())
 }
 
+pub fn get_driver_path(driver_name:String) -> String {
+    let drivers_path = config::get_tool_path("idf-driver".to_string());
+    format!("{}/{}", drivers_path, driver_name)
+}
+
+#[cfg(unix)]
+fn download_drivers(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+    Ok(())
+}
+
+#[cfg(windows)]
+fn download_drivers(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+    if _matches.is_present("silabs") {
+        prepare_package("https://www.silabs.com/documents/public/software/CP210x_Universal_Windows_Driver.zip".to_string(),
+                        "cp210x.zip".to_string(),
+                        get_driver_path("silabs-2021-05-03".to_string()));
+    }
+    if _matches.is_present("ftdi") {
+        prepare_package("https://www.ftdichip.com/Drivers/CDM/CDM%20v2.12.28%20WHQL%20Certified.zip".to_string(),
+                        "ftdi.zip".to_string(),
+                        get_driver_path("ftdi-2021-05-03".to_string()));
+    }
+    if _matches.is_present("espressif") {
+        prepare_package("https://dl.espressif.com/dl/idf-driver/idf-driver-esp32-c3-2021-04-21.zip".to_string(),
+                        "idf-driver-esp32-c3.zip".to_string(),
+                        get_driver_path("espressif-esp32-c3-2021-04-21".to_string()));
+    }
+    Ok(())
+}
+
+
 #[cfg(windows)]
 fn get_install_runner(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+
     // Download drivers, if app is self-elevated this flag serves to avoid downloading in elevated mode.
     if !_matches.is_present("no-download") {
-        if _matches.is_present("silabs") {
-            prepare_package("https://www.silabs.com/documents/public/software/CP210x_Universal_Windows_Driver.zip".to_string(),
-                           "cp210x.zip".to_string(),
-                           "tmp/silabs".to_string());
-        }
-        if _matches.is_present("ftdi") {
-            prepare_package("https://www.ftdichip.com/Drivers/CDM/CDM%20v2.12.28%20WHQL%20Certified.zip".to_string(),
-                           "ftdi.zip".to_string(),
-                           "tmp/ftdi".to_string());
-        }
-        if _matches.is_present("espressif") {
-            prepare_package("https://dl.espressif.com/dl/idf-driver/idf-driver-esp32-c3-2021-04-21.zip".to_string(),
-                           "idf-driver-esp32-c3.zip".to_string(),
-                           "tmp/espressif".to_string());
-        }
+        download_drivers(_args, _matches);
     }
 
     if windows::is_app_elevated() {
         if _matches.is_present("silabs") {
-            install_driver("tmp/silabs/silabser.inf".to_string());
+            install_driver(get_driver_path("silabs-2021-05-03/silabser.inf".to_string()));
         }
 
         if _matches.is_present("ftdi") {
-            install_driver("tmp/ftdi/ftdiport.inf".to_string());
+            install_driver(get_driver_path("ftdi-2021-05-03/ftdiport.inf".to_string()));
         }
 
         if _matches.is_present("espressif") {
-            install_driver("tmp/espressif/usb_jtag_debug_unit.inf".to_string());
+            install_driver(get_driver_path("espressif-esp32-c3-2021-04-21/usb_jtag_debug_unit.inf".to_string()));
         }
 
         if _matches.is_present("wait") {
@@ -193,63 +207,10 @@ fn get_install_runner(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::resu
             thread::sleep(time::Duration::from_millis(100000));
         }
     } else {
-        let mut arguments: Vec<String> = [].to_vec();
-
-        if _matches.is_present("silabs") {
-            arguments.push("--silabs".to_string());
-        }
-
-        if _matches.is_present("ftdi") {
-            arguments.push("--ftdi".to_string());
-        }
-
-        if _matches.is_present("espressif") {
-            arguments.push("--espressif".to_string());
-        }
-
-        if arguments.len() == 0 {
-            println!("No driver specified.");
+        if !windows::is_app_elevated() {
+            windows::run_self_elevated_with_extra_argument("--no-download".to_string());
             return Ok(());
         }
-
-        if _matches.is_present("wait") {
-            arguments.push("--wait".to_string());
-        }
-
-        arguments.push("--no-download".to_string());
-
-        // Based on https://github.com/rust-lang/rustup/pull/1117/files
-        println!("Installation requires elevated privileges.");
-        let current_exe = std::env::current_exe().unwrap().display().to_string();
-        let argument_string = arguments.clone().into_iter().map(|i| format!("{} ", i.to_string())).collect::<String>();
-        let parameters_string = format!("driver install {}", argument_string);
-        let operation = to_wchar("runas");
-        let path = to_wchar(&current_exe);
-        let parameters = to_wchar(&parameters_string);
-        let sw_showminnoactive = 7;
-        println!("Requesting elevation for: {} {}", current_exe, parameters_string);
-
-        let result = unsafe {
-            // https://docs.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shellexecutew
-            winapi::um::shellapi::ShellExecuteW(null_mut(),
-                                                operation.as_ptr(),
-                                                path.as_ptr(),
-                                                parameters.as_ptr(),
-                                                null_mut(),
-                                                sw_showminnoactive)
-        };
-
-        match result {
-            _ => { println!("Exit code: {:?}", result); }
-        }
-        // pub fn ShellExecuteA(
-        //     hwnd: HWND,
-        //     lpOperation: LPCSTR,
-        //     lpFile: LPCSTR,
-        //     lpParameters: LPCSTR,
-        //     lpDirectory: LPCSTR,
-        //     nShowCmd: c_int,
-        // ) -> HINSTANCE;
     }
     Ok(())
 }
@@ -300,10 +261,39 @@ pub fn get_install_cmd<'a>() -> Command<'a, str> {
 }
 
 
+pub fn get_download_cmd<'a>() -> Command<'a, str> {
+    Command::new("download")
+        .description("Download drivers")
+        .options(|app| {
+            app.arg(
+                Arg::with_name("ftdi")
+                    .short("f")
+                    .long("ftdi")
+                    .help("Install FTDI driver"),
+            )
+                .arg(
+                    Arg::with_name("silabs")
+                        .short("s")
+                        .long("silabs")
+                        .help("Install Silabs driver"),
+                )
+                .arg(
+                    Arg::with_name("espressif")
+                        .short("e")
+                        .long("espressif")
+                        .help("Install Espressif driver"),
+                )
+
+        })
+        .runner(|_args, matches| download_drivers(_args, matches)
+        )
+}
+
 pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
     let multi_cmd: MultiCommand<str, str> = Commander::new()
         .add_cmd(get_cmd())
         .add_cmd(get_install_cmd())
+        .add_cmd(get_download_cmd())
         .into_cmd("driver")
 
         // Optionally specify a description
