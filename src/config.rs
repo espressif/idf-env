@@ -9,6 +9,8 @@ use std::env;
 use dirs::home_dir;
 use json::JsonValue;
 use crate::shell::run_command;
+use std::fs::File;
+use std::io::Read;
 
 fn print_path(property_path: &std::string::String) {
     let path = Path::new(&property_path);
@@ -35,6 +37,10 @@ pub fn get_dist_path(tool_name:String) -> String {
 pub fn get_python_env_path(idf_version: String, python_version: String) -> String {
     let tools_path = get_tools_path();
     format!("{}/python_env/idf{}_py{}_env", tools_path, idf_version, python_version)
+}
+
+pub fn get_python_interpreter_path(idf_version: String, python_version: String) -> String {
+    format!("{}/Scripts/python.exe", get_python_env_path(idf_version, python_version))
 }
 
 pub fn get_selected_idf_path() -> String {
@@ -115,15 +121,18 @@ pub fn update_property(property_name: String, property_value: String) {
 }
 
 pub fn add_idf_config(idf_path: String, version: String, python_path: String) {
+    let idf_path = idf_path.replace("\\", "/");
+    let python_path = python_path.replace("\\", "/");
     let idf_id = get_idf_id(idf_path.clone());
-    let _data = json::object! {
+    let data = json::object! {
         version: version,
         python: python_path,
         path: idf_path
     };
 
+    println!("Adding: {:#}", data);
     let mut parsed_json = load_json();
-    parsed_json["idfInstalled"].insert(&idf_id, _data).unwrap();
+    parsed_json["idfInstalled"].insert(&idf_id, data).unwrap();
     parsed_json["idfSelectedId"] = JsonValue::String(idf_id);
 
     fs::write(get_json_path(), format!("{:#}", parsed_json)).unwrap();
@@ -181,6 +190,57 @@ pub fn get_edit_cmd<'a>() -> Command<'a, str> {
         })
 }
 
+fn get_idf_version_from_header_file(idf_path: String) -> String {
+    let header_path = format!("{}/components/esp_common/include/esp_idf_version.h", idf_path);
+    let mut file = File::open(header_path).expect("Open File");
+    let mut text = String::new();
+    file.read_to_string(&mut text).expect("reading file");
+
+    let major_prefix = "#define ESP_IDF_VERSION_MAJOR";
+    let minor_prefix = "#define ESP_IDF_VERSION_MINOR";
+    let mut major = "";
+    let mut minor = "";
+    for line in text.lines() {
+        if line.starts_with(major_prefix) {
+            major = line.strip_prefix(major_prefix).unwrap().trim();
+        } else if line.starts_with(minor_prefix) {
+            minor = line.strip_prefix(minor_prefix).unwrap().trim();
+        }
+
+        if !major.is_empty() && !minor.is_empty() {
+            break;
+        }
+    }
+    format!("{}.{}", major, minor)
+}
+
+fn get_add_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+    let mut idf_path:String;
+    if matches.is_present("idf-path") {
+        idf_path = matches.value_of("idf-path".to_string()).unwrap().to_string();
+    } else {
+        let path = env::current_dir()?;
+        idf_path = format!("{}/",path.display().to_string());
+    }
+
+    let mut idf_version;
+    if matches.is_present("idf-version") {
+        idf_version = matches.value_of("idf-version").unwrap().to_string();
+    } else {
+        idf_version = get_idf_version_from_header_file(idf_path.clone());
+    }
+
+    let mut python_path;
+    if matches.is_present("python") {
+        python_path = matches.value_of("python").unwrap().to_string();
+    } else {
+        python_path = get_python_interpreter_path(idf_version.clone(), "3.8".to_string());
+    }
+
+    add_idf_config(idf_path, idf_version, python_path);
+    Ok(())
+}
+
 pub fn get_add_cmd<'a>() -> Command<'a, str> {
     Command::new("add")
         .description("Add configuration")
@@ -221,13 +281,9 @@ pub fn get_add_cmd<'a>() -> Command<'a, str> {
                         .takes_value(true)
                 )
         })
-        .runner(|_args, matches| {
-            let python_path = matches.value_of("python").unwrap().to_string();
-            let version = matches.value_of("idf-version").unwrap().to_string();
-            let idf_path = matches.value_of("idf-path").unwrap().to_string();
-            add_idf_config(idf_path, version, python_path);
-            Ok(())
-        })
+        .runner(|_args, matches| get_add_runner(_args, matches)
+
+        )
 }
 
 
