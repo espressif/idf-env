@@ -1,13 +1,68 @@
 use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
-use iced::Sandbox;
 
+use iced::{button, Align, Button, Column, Element, Sandbox, Settings, Text, Checkbox};
+use std::fs;
 
-impl Sandbox for Defender {
+use crate::config::get_tool_path;
+use std::ptr::null;
+
+#[derive(Default)]
+struct Counter {
+    value: i32,
+    increment_button: button::State,
+    decrement_button: button::State,
+    toggle_value: bool,
+}
+
+#[derive(Debug, Clone, Copy)]
+enum Message {
+    IncrementPressed,
+    DecrementPressed,
+    CheckboxToggled(bool),
+}
+
+impl Sandbox for Counter {
+    type Message = Message;
+
+    fn new() -> Self {
+        Self::default()
+    }
+
+    fn title(&self) -> String {
+        String::from("idv-env gui")
+    }
+
+    fn update(&mut self, message: Message) {
+        match message {
+            Message::CheckboxToggled(value) => self.toggle_value = value,
+            _ => {}
+        }
+    }
+
     fn view(&mut self) -> Element<Message> {
+        let paths = fs::read_dir(get_tool_path("".to_string())).unwrap();
+        let tasks: Element<_> = {
+            paths
+                .enumerate()
+                .fold(Column::new().spacing(20), |column, (i, task)| {
+                    column.push(
+                        Checkbox::new(self.toggle_value, task.unwrap().path().display().to_string(),Message::CheckboxToggled)
+                    )
+                })
+                .into()
+        };
+
+        Column::new()
+            .padding(20)
+            .align_items(Align::Center)
+            .push(Text::new("Tools"))
+            .push(tasks)
+            .into()
 
     }
 }
+
 
 pub fn get_cmd<'a>() -> Command<'a, str> {
     Command::new("start")
@@ -23,18 +78,7 @@ pub fn get_cmd<'a>() -> Command<'a, str> {
 
         })
         .runner(|_args, matches| {
-            let app = App::default();
-            let mut wind = DoubleWindow::new(100, 100, 400, 300, "Hello from rust");
-            let mut but = Button::new(160, 210, 80, 40, "Click me!");
-            wind.shape()
-            wind.end();
-            wind.show();
-            app.run().unwrap();
-            // nwg::init().expect("Failed to init Native Windows GUI");
-            //
-            // let _app = BasicApp::build_ui(Default::default()).expect("Failed to build UI");
-            //
-            // nwg::dispatch_thread_events();
+            Counter::run(Settings::default());
             Ok(())
         })
 }
