@@ -7,7 +7,7 @@ Tool for maintaining ESP-IDF environment.
 Install serial drivers for ESP boards on Windows. Execute following command in PowerShell:
 
 ```
-Invoke-WebRequest 'https://dl.espressif.com/dl/idf-env/idf-env.exe' -OutFile .\idf-env.exe; .\idf-env.exe driver install --ftdi --silabs
+Invoke-WebRequest 'https://dl.espressif.com/dl/idf-env/idf-env.exe' -OutFile .\idf-env.exe; .\idf-env.exe driver install --espressif --ftdi --silabs
 ```
 
 # Commands
