@@ -6,6 +6,7 @@ use std::fs;
 
 use crate::config::get_tool_path;
 use std::ptr::null;
+use std::collections::HashMap;
 
 #[derive(Default)]
 struct Counter {
@@ -13,7 +14,26 @@ struct Counter {
     increment_button: button::State,
     decrement_button: button::State,
     toggle_value: bool,
+    tools_model: HashMap<String, Tool>,
 }
+
+use iced::checkbox;
+
+struct Tool {
+    name: String,
+    observed_state: bool,
+    desired_state: bool,
+}
+
+impl Tool {
+    pub fn view(&mut self) -> Element<Message> {
+        let checkbox = Checkbox::new(self.desired_state, self.name.clone(),
+                                     Message::CheckboxToggled);
+        checkbox.into()
+    }
+}
+
+
 
 #[derive(Debug, Clone, Copy)]
 enum Message {
@@ -26,7 +46,22 @@ impl Sandbox for Counter {
     type Message = Message;
 
     fn new() -> Self {
-        Self::default()
+        let mut app = Self::default();
+        app.tools_model = HashMap::new();
+        let paths = fs::read_dir(get_tool_path("".to_string())).unwrap();
+
+        for path in paths {
+            let file_name = path.unwrap().file_name().to_string_lossy().into_owned();
+            // let string_path = path.unwrap().path().display().to_string();
+            let model = Tool {
+                name: file_name.clone(),
+                observed_state: false,
+                desired_state: false
+            };
+            app.tools_model.insert(file_name, model);
+        }
+
+        return app
     }
 
     fn title(&self) -> String {
@@ -43,11 +78,10 @@ impl Sandbox for Counter {
     fn view(&mut self) -> Element<Message> {
         let paths = fs::read_dir(get_tool_path("".to_string())).unwrap();
         let tasks: Element<_> = {
-            paths
-                .enumerate()
-                .fold(Column::new().spacing(20), |column, (i, task)| {
+            self.tools_model.iter_mut()
+                .fold(Column::new().spacing(20), |column, (key, task)| {
                     column.push(
-                        Checkbox::new(self.toggle_value, task.unwrap().path().display().to_string(),Message::CheckboxToggled)
+                        task.view()
                     )
                 })
                 .into()
