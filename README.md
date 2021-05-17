@@ -76,7 +76,9 @@ idf-env driver download --espressif --ftdi --silabs
 ### Web IDE Companion
 
 ```
+idf-env companion start
 idf-env companion start --port COM7
+idf-env companion update
 ```
 
 ### Launching shell

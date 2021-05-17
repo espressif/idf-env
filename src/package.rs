@@ -84,3 +84,13 @@ pub fn prepare_package(package_url: String, package_archive: String, output_dire
     }
     Ok(())
 }
+
+pub fn remove_package(package_archive: String, output_directory: String) -> Result<()> {
+    if Path::new(&package_archive).exists() {
+        fs::remove_file(&package_archive);
+    }
+    if Path::new(&output_directory).exists() {
+        fs::remove_dir_all(output_directory).unwrap();
+    }
+    Ok(())
+}
