@@ -10,6 +10,7 @@ mod config;
 mod companion;
 mod driver;
 mod idf;
+mod launcher;
 mod package;
 mod shell;
 
@@ -28,6 +29,7 @@ async fn app() -> Result<()> {
         .add_cmd(config::get_multi_cmd())
         .add_cmd(driver::get_multi_cmd())
         .add_cmd(idf::get_multi_cmd())
+        .add_cmd(launcher::get_multi_cmd())
         .no_cmd(|_args, _matches| {
             println!("No command matched. Use parameter --help");
             Ok(())

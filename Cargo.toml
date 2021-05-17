@@ -13,6 +13,9 @@ json = "*"
 md5 = "*"
 num_cpus = "*"
 reqwest = "*"
+# Fixed HJSON version, because of failed parsing of HJSON on latest version
+# https://github.com/hjson/hjson-rust/issues/23#issuecomment-775520018
+serde-hjson = { version = "0.9", default-features = false }
 tokio = { version = "1", features = ["full"] }
 walkdir = "*"
 wmi = "*"
