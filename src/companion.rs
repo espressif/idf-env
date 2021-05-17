@@ -12,8 +12,8 @@ fn prepare_companion() {
 }
 
 fn remove_companion() {
-    remove_package("esp-iwidc.zip".to_string(),
-                    "tmp/esp-iwidc".to_string());
+    remove_package("esp-iwidc.zip",
+                    "tmp/esp-iwidc");
 }
 
 fn get_update_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
