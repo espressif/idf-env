@@ -4,6 +4,9 @@ use clap_nested::{Command, Commander, MultiCommand};
 use crate::package::{prepare_package, remove_package};
 use std::process::Stdio;
 use std::io::Read;
+use std::error::Error;
+
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 fn prepare_companion() {
     prepare_package("https://dl.espressif.com/dl/esp-iwidc/esp-iwidc.zip".to_string(),
@@ -11,15 +14,20 @@ fn prepare_companion() {
                     "tmp/esp-iwidc".to_string());
 }
 
-fn remove_companion() {
+fn remove_companion() -> Result<()> {
     remove_package("esp-iwidc.zip",
-                    "tmp/esp-iwidc");
+                    "tmp/esp-iwidc")
 }
 
 fn get_update_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
-    remove_companion();
-    prepare_companion();
-    println!("Web Companion updated");
+    match remove_companion() {
+        Ok(content) => {
+            prepare_companion();
+            println!("Web Companion updated");
+        }
+        Err(error) => { println!("{}", error);  }
+    }
+
     Ok(())
 }
 

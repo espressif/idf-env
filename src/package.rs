@@ -1,3 +1,4 @@
+use anyhow::Context;
 use std::{fs, io};
 use std::path::Path;
 use std::io::Cursor;
@@ -87,10 +88,10 @@ pub fn prepare_package(package_url: String, package_archive: String, output_dire
 
 pub fn remove_package(package_archive: &str, output_directory: &str) -> Result<()> {
     if Path::new(package_archive).exists() {
-        fs::remove_file(package_archive);
+        fs::remove_file(package_archive).with_context(|| format!("Unable to delete `{}`", package_archive))?;
     }
     if Path::new(output_directory).exists() {
-        fs::remove_dir_all(output_directory).unwrap();
+        fs::remove_dir_all(output_directory).with_context(|| format!("Unable to delete `{}`", output_directory))?;
     }
     Ok(())
 }
