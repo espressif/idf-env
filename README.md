@@ -27,10 +27,7 @@ idf-env config rm id
 
 ### Working with launchers of ESP-IDF
 ```
-idf-env launcher add --shell powershell --to windows-terminal
-idf-env launcher add --shell powershell --to desktop
-idf-env launcher add --shell cmd --to startmenu
-idf-env launcher add --shell powershell --to windows-terminal --title "ESP-IDF v4.4" --idf-path "C:/esp/"
+idf-env launcher add --shell powershell --to windows-terminal --title "ESP-IDF 4.4" --idf-path "C:/esp/"
 ```
 
 ### Working with installations of ESP-IDF
