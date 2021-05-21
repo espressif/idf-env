@@ -17,7 +17,7 @@ mod shell;
 async fn app() -> Result<()> {
     Commander::new()
         .options(|app| {
-            app.version("1.1.6")
+            app.version("1.1.7")
                 .name("idf-env")
                 .author("Espressif Systems - https://www.espressif.com")
                 .about("Tool for maintaining ESP-IDF environment on computer.")

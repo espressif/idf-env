@@ -3,41 +3,43 @@ use clap_nested::{Command, Commander, MultiCommand};
 
 use std::{env, fs};
 use std::path::Path;
-//#![feature(custom_derive, plugin)]
-//#![plugin(serde_macros)]
-extern crate serde_hjson;
-use serde_hjson::{Map,Value};
 
+use crate::config::get_tools_path;
 
-fn get_json_path() -> String {
+fn get_windows_terminal_fragments_path(title: &str) -> String {
     let local_app_data = env::var("LocalAppData").unwrap();
-    format!("{}/Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json", local_app_data)
+    format!("{}/Microsoft/Windows Terminal/Fragments/{}", local_app_data, title)
 }
 
-fn load_json() -> Result<String, String> {
-    let json_path = get_json_path();
-    println!("Loading configuration of Windows Terminal: {}", json_path);
-    if !Path::new(&json_path).exists() {
-        let result = Err(format!("Windows Terminal configuration not found: {}", json_path));
-        return result
-    }
+fn get_add_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+    let title = matches.value_of("title").unwrap();
+    let idf_path = matches.value_of("idf-path").unwrap();
+    let fragments_path = get_windows_terminal_fragments_path(title);
+    let tools_path = get_tools_path();
 
+    // After fresh installation of Windows Terminal the fragment path does not exist.
+    // Microsoft recommends to create one
+    // if !Path::new(&fragments_path).exists() {
+    fs::create_dir_all(&fragments_path)?;
+    let fragment_json_path = format!("{}/fragment.json", fragments_path);
+    println!("Updating Windows Terminal Fragment: {}", fragment_json_path);
 
-    let content = fs::read_to_string(json_path)
-        .expect("Failure");
+    let command_line = format!("C:/WINDOWS/System32/WindowsPowerShell/v1.0/powershell.exe -ExecutionPolicy Bypass -NoExit -File {}/Initialize-Idf.ps1", tools_path);
 
-    let mut out: Value = serde_hjson::from_str(&content.to_string()).unwrap();
-    let sample2 = serde_hjson::to_string(&out).unwrap();
-    // let data: Value = serde_hjson::from_str("{foo: 13, bar: \"baz\"}").unwrap();
-    println!("{}", sample2);
-    Ok("Done".to_string())
-}
+    let profile_json = json::object! {
+        "name": title,
+        "startingDirectory": idf_path,
+        "commandline": command_line
+    };
 
-fn get_add_runner(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
-    match load_json() {
-        Err(e) => { println!("{}", e); }
-        Ok(v) => { println!("ok") }
-    }
+    let json_value = json::object!{
+        "profiles": [ profile_json ]
+    };
+
+    let json_string = json_value.to_string();
+    println!("{}", json_string);
+    fs::write(fragment_json_path, json_string).unwrap();
+
     Ok(())
 }
 
