@@ -25,8 +25,13 @@ idf-env config edit
 idf-env config rm id
 ```
 
-### Working with installations of ESP-IDF
+### Working with launchers of ESP-IDF
 ```
+idf-env launcher add --shell powershell --to windows-terminal --title "ESP-IDF 4.4" --idf-path "C:/esp/"
+```
+
+### Working with installations of ESP-IDF
+``` 
 idf-env idf install
 idf-env idf install --idf-version "master" --installer "G:\idf-installer\build\esp-idf-tools-setup-online-unsigned.exe"
 idf-env idf uninstall
