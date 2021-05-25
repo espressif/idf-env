@@ -9,6 +9,11 @@ fn get_windows_terminal_fragments_path(title: &str) -> String {
     format!("{}/Microsoft/Windows Terminal/Fragments/{}", local_app_data, title)
 }
 
+fn get_powershell_path() -> String {
+    let windir = env::var("windir").unwrap();
+    format!("{}/System32/WindowsPowerShell/v1.0/powershell.exe", windir)
+}
+
 fn get_add_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
     let title = matches.value_of("title").unwrap();
     let idf_path = matches.value_of("idf-path").unwrap();
@@ -21,7 +26,7 @@ fn get_add_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::R
     let fragment_json_path = format!("{}/fragment.json", fragments_path);
     println!("Updating Windows Terminal Fragment: {}", fragment_json_path);
 
-    let command_line = format!("C:/WINDOWS/System32/WindowsPowerShell/v1.0/powershell.exe -ExecutionPolicy Bypass -NoExit -File {}/Initialize-Idf.ps1", tools_path);
+    let command_line = format!("{} -ExecutionPolicy Bypass -NoExit -File {}/Initialize-Idf.ps1", get_powershell_path(), tools_path);
 
     let profile_json = json::object! {
         "name": title,
