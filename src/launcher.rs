@@ -2,8 +2,6 @@ use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
 
 use std::{env, fs};
-use std::path::Path;
-
 use crate::config::get_tools_path;
 
 fn get_windows_terminal_fragments_path(title: &str) -> String {
@@ -19,7 +17,6 @@ fn get_add_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::R
 
     // After fresh installation of Windows Terminal the fragment path does not exist.
     // Microsoft recommends to create one
-    // if !Path::new(&fragments_path).exists() {
     fs::create_dir_all(&fragments_path)?;
     let fragment_json_path = format!("{}/fragment.json", fragments_path);
     println!("Updating Windows Terminal Fragment: {}", fragment_json_path);
