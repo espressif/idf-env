@@ -13,6 +13,7 @@ mod idf;
 mod launcher;
 mod package;
 mod shell;
+mod chip;
 
 async fn app() -> Result<()> {
     Commander::new()
@@ -25,6 +26,7 @@ async fn app() -> Result<()> {
         })
         .args(|_args, matches| matches.value_of("environment").unwrap_or("dev"))
         .add_cmd(antivirus::get_multi_cmd())
+        .add_cmd(chip::get_multi_cmd())
         .add_cmd(companion::get_multi_cmd())
         .add_cmd(config::get_multi_cmd())
         .add_cmd(driver::get_multi_cmd())

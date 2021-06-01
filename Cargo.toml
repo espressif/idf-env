@@ -6,9 +6,11 @@ edition = "2018"
 
 [dependencies]
 anyhow = "*"
+bardecoder = "*"
 clap = "*"
 clap-nested = "*"
 dirs = "*"
+image = "*"
 json = "*"
 md5 = "*"
 num_cpus = "*"
