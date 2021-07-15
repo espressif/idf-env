@@ -173,9 +173,9 @@ fn download_drivers(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result
                         get_driver_path("ftdi-2021-05-03".to_string()));
     }
     if _matches.is_present("espressif") {
-        prepare_package("https://dl.espressif.com/dl/idf-driver/idf-driver-esp32-c3-2021-04-21.zip".to_string(),
-                        "idf-driver-esp32-c3.zip".to_string(),
-                        get_driver_path("espressif-esp32-c3-2021-04-21".to_string()));
+        prepare_package("https://dl.espressif.com/dl/idf-driver/idf-driver-esp32-usb-jtag-2021-07-15.zip".to_string(),
+                        "idf-driver-esp32-usb-jtag-2021-07-15.zip".to_string(),
+                        get_driver_path("idf-driver-esp32-usb-jtag-2021-07-15".to_string()));
     }
     Ok(())
 }
@@ -199,7 +199,7 @@ fn get_install_runner(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::resu
         }
 
         if _matches.is_present("espressif") {
-            install_driver(get_driver_path("espressif-esp32-c3-2021-04-21/usb_jtag_debug_unit.inf".to_string()));
+            install_driver(get_driver_path("idf-driver-esp32-usb-jtag-2021-07-15/usb_jtag_debug_unit.inf".to_string()));
         }
 
         if _matches.is_present("wait") {
