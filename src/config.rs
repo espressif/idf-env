@@ -41,7 +41,7 @@ fn get_json_path() -> String {
     return idf_json_path;
 }
 
-fn get_idf_id(idf_path: String) -> String {
+pub fn get_idf_id(idf_path: &str) -> String {
     let idf_path_with_slash = format!("{}", idf_path.replace("\\", "/"));
     let digest = md5::compute(idf_path_with_slash);
     return format!("esp-idf-{:x}", digest);
@@ -94,7 +94,7 @@ pub fn get_property_with_idf_id(property_name: String, idf_id: String) -> String
 
 pub fn get_property_with_path(property_name: String, idf_path: String) -> String {
     let parsed_json = load_json();
-    let idf_id = get_idf_id(idf_path);
+    let idf_id = get_idf_id(&idf_path);
     return parsed_json["idfInstalled"][idf_id][property_name].to_string();
 }
 
@@ -113,7 +113,7 @@ pub fn update_property(property_name: String, property_value: String) {
 }
 
 pub fn add_idf_config(idf_path: String, version: String, python_path: String) {
-    let idf_id = get_idf_id(idf_path.clone());
+    let idf_id = get_idf_id(&idf_path);
     let _data = json::object! {
         version: version,
         python: python_path,

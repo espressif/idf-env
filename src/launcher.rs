@@ -2,7 +2,7 @@ use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
 
 use std::{env, fs};
-use crate::config::get_tools_path;
+use crate::config::{get_tools_path, get_idf_id};
 
 fn get_windows_terminal_fragments_path(title: &str) -> String {
     let local_app_data = env::var("LocalAppData").unwrap();
@@ -19,6 +19,7 @@ fn get_add_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::R
     let idf_path = matches.value_of("idf-path").unwrap();
     let fragments_path = get_windows_terminal_fragments_path(title);
     let tools_path = get_tools_path();
+    let idf_id = get_idf_id(idf_path);
 
     // After fresh installation of Windows Terminal the fragment path does not exist.
     // Microsoft recommends to create one
@@ -26,7 +27,7 @@ fn get_add_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::R
     let fragment_json_path = format!("{}/fragment.json", fragments_path);
     println!("Updating Windows Terminal Fragment: {}", fragment_json_path);
 
-    let command_line = format!("{} -ExecutionPolicy Bypass -NoExit -File {}/Initialize-Idf.ps1", get_powershell_path(), tools_path);
+    let command_line = format!("{} -ExecutionPolicy Bypass -NoExit -File {}/Initialize-Idf.ps1 -IdfId {}", get_powershell_path(), tools_path, idf_id);
 
     let profile_json = json::object! {
         "name": title,
