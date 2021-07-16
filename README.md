@@ -18,6 +18,7 @@ File stored in esp_idf.json
 ```
 idf-env config get
 idf-env config get --property gitPath
+idf-env config get --property python --idf-id esp-idf-618cf3b908db7b2ed74540bde5ba6605
 idf-env config get --property python --idf-path "C:/esp/"
 idf-env config add --idf-version "v4.2" --idf-path "C:/esp/" --python "C:/python/python.exe"
 idf-env config add --name idf --idf-version "v4.2" --idf-path "C:/esp/" --python "C:/python/python.exe"
