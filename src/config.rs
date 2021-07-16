@@ -10,12 +10,6 @@ use dirs::home_dir;
 use json::JsonValue;
 use crate::shell::run_command;
 
-fn print_parent_path(property_path: &std::string::String) {
-    let path = Path::new(&property_path);
-    let parent = path.parent().unwrap().to_str();
-    print!("{}", parent.unwrap());
-}
-
 pub fn get_tools_path() -> String {
     env::var("IDF_TOOLS_PATH").unwrap_or_else(|e|
         home_dir().unwrap().display().to_string() + "/.espressif"
@@ -85,7 +79,7 @@ pub fn get_property(property_name: String) -> String {
 }
 
 fn print_property(property_name: String) {
-    print_parent_path(&get_property(property_name));
+    print!("{}", &get_property(property_name));
 }
 
 pub fn get_git_path() -> String {
@@ -105,11 +99,11 @@ pub fn get_property_with_path(property_name: String, idf_path: String) -> String
 }
 
 fn print_property_with_path(property_name: String, idf_path: String) {
-    print_parent_path(&get_property_with_path(property_name, idf_path));
+    print!("{}", get_property_with_path(property_name, idf_path));
 }
 
 fn print_property_with_id(property_name: String, idf_id: String) {
-    print!("{}", &get_property_with_idf_id(property_name, idf_id));
+    print!("{}", get_property_with_idf_id(property_name, idf_id));
 }
 
 pub fn update_property(property_name: String, property_value: String) {
