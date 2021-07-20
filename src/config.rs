@@ -10,12 +10,6 @@ use dirs::home_dir;
 use json::JsonValue;
 use crate::shell::run_command;
 
-fn print_path(property_path: &std::string::String) {
-    let path = Path::new(&property_path);
-    let parent = path.parent().unwrap().to_str();
-    print!("{}", parent.unwrap());
-}
-
 pub fn get_tools_path() -> String {
     env::var("IDF_TOOLS_PATH").unwrap_or_else(|e|
         home_dir().unwrap().display().to_string() + "/.espressif"
@@ -47,7 +41,7 @@ fn get_json_path() -> String {
     return idf_json_path;
 }
 
-fn get_idf_id(idf_path: String) -> String {
+pub fn get_idf_id(idf_path: &str) -> String {
     let idf_path_with_slash = format!("{}", idf_path.replace("\\", "/"));
     let digest = md5::compute(idf_path_with_slash);
     return format!("esp-idf-{:x}", digest);
@@ -85,7 +79,7 @@ pub fn get_property(property_name: String) -> String {
 }
 
 fn print_property(property_name: String) {
-    print_path(&get_property(property_name));
+    print!("{}", &get_property(property_name));
 }
 
 pub fn get_git_path() -> String {
@@ -100,12 +94,16 @@ pub fn get_property_with_idf_id(property_name: String, idf_id: String) -> String
 
 pub fn get_property_with_path(property_name: String, idf_path: String) -> String {
     let parsed_json = load_json();
-    let idf_id = get_idf_id(idf_path);
+    let idf_id = get_idf_id(&idf_path);
     return parsed_json["idfInstalled"][idf_id][property_name].to_string();
 }
 
 fn print_property_with_path(property_name: String, idf_path: String) {
-    print_path(&get_property_with_path(property_name, idf_path));
+    print!("{}", get_property_with_path(property_name, idf_path));
+}
+
+fn print_property_with_id(property_name: String, idf_id: String) {
+    print!("{}", get_property_with_idf_id(property_name, idf_id));
 }
 
 pub fn update_property(property_name: String, property_value: String) {
@@ -115,7 +113,7 @@ pub fn update_property(property_name: String, property_value: String) {
 }
 
 pub fn add_idf_config(idf_path: String, version: String, python_path: String) {
-    let idf_id = get_idf_id(idf_path.clone());
+    let idf_id = get_idf_id(&idf_path);
     let _data = json::object! {
         version: version,
         python: python_path,
@@ -147,12 +145,22 @@ pub fn get_cmd<'a>() -> Command<'a, str> {
                         .help("Path to ESP-IDF")
                         .takes_value(true),
                 )
+                .arg(
+                    Arg::with_name("idf-id")
+                        .short("j")
+                        .long("idf-id")
+                        .help("ESP-IDF installation ID")
+                        .takes_value(true),
+                )
         })
         .runner(|_args, matches| {
             if matches.is_present("property") {
                 let property_name = matches.value_of("property").unwrap().to_string();
 
-                if matches.is_present("idf-path") {
+                if matches.is_present("idf-id") {
+                    let idf_id = matches.value_of("idf-id").unwrap().to_string();
+                    print_property_with_id(property_name, idf_id);
+                } else if matches.is_present("idf-path") {
                     let idf_path = matches.value_of("idf-path").unwrap().to_string();
                     print_property_with_path(property_name, idf_path);
                 } else {
