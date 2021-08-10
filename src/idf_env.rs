@@ -13,6 +13,7 @@ mod idf;
 mod launcher;
 mod package;
 mod shell;
+mod gui;
 
 async fn app() -> Result<()> {
     Commander::new()
@@ -28,6 +29,7 @@ async fn app() -> Result<()> {
         .add_cmd(companion::get_multi_cmd())
         .add_cmd(config::get_multi_cmd())
         .add_cmd(driver::get_multi_cmd())
+        .add_cmd(gui::get_multi_cmd())
         .add_cmd(idf::get_multi_cmd())
         .add_cmd(launcher::get_multi_cmd())
         .no_cmd(|_args, _matches| {

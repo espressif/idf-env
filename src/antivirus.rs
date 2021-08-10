@@ -8,13 +8,13 @@ use std::collections::HashMap;
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 #[cfg(unix)]
-fn get_antivirus_property(_property_name: String, _include_inactive: bool) -> Result<()> {
+pub fn get_antivirus_property(_property_name: String, _include_inactive: bool) -> Result<()> {
     println!("None");
     Ok(())
 }
 
 #[cfg(windows)]
-fn get_antivirus_property(property_name: String, include_inactive: bool) -> Result<()> {
+pub fn get_antivirus_property(property_name: String, include_inactive: bool) -> Result<()> {
     use wmi::*;
     use wmi::Variant;
 
