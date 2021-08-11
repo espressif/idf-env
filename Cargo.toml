@@ -9,6 +9,8 @@ anyhow = "*"
 clap = "*"
 clap-nested = "*"
 dirs = "*"
+# Using Druid from source code, because of issue with 0.7 https://github.com/linebender/druid/issues/1739
+druid = { git = "https://github.com/linebender/druid.git" }
 json = "*"
 md5 = "*"
 num_cpus = "*"
