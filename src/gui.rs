@@ -6,16 +6,11 @@ use clap_nested::{Command, Commander, MultiCommand};
 
 use crate::config::get_git_path;
 
-use druid::widget::{Flex, Label, TextBox, Button};
+use druid::widget::{Flex, Label, TextBox, Button, Checkbox};
 use druid::{AppLauncher, Data, Lens, UnitPoint, WidgetExt, WindowDesc, Widget, Env};
 
 const VERTICAL_WIDGET_SPACING: f64 = 20.0;
 const TEXT_BOX_WIDTH: f64 = 200.0;
-
-#[derive(Clone, Data, Lens)]
-struct HelloState {
-    git: String,
-}
 
 pub fn get_cmd<'a>() -> Command<'a, str> {
     Command::new("start")
@@ -37,53 +32,83 @@ pub fn get_cmd<'a>() -> Command<'a, str> {
                 .title("idf-env")
                 .window_size((800.0, 600.0));
 
-            // create the initial app state
-            let initial_state: HelloState = HelloState {
-                git: get_git_path(),
+            let data = AppData {
+                target: "esp32".into(),
+                is_target_esp32: true,
+                is_target_esp32c3: true,
+                is_target_esp32s2: false,
+                is_target_esp32s3: true
             };
 
             // start the application. Here we pass in the application state.
             AppLauncher::with_window(main_window)
-                .launch(initial_state)
+                .launch(data)
                 .expect("Failed to launch application");
             Ok(())
         })
 }
 
 
+#[derive(Clone, Data, Lens)]
+struct AppData {
+    target: String,
+    is_target_esp32: bool,
+    is_target_esp32c3: bool,
+    is_target_esp32s2: bool,
+    is_target_esp32s3: bool,
+}
 
-fn build_root_widget() -> impl Widget<HelloState> {
+fn build_root_widget() -> impl Widget<AppData> {
     // a label that will determine its text based on the current app data.
-    let label = Label::new(|data: &HelloState, _env: &Env| {
-        if data.git.is_empty() {
-            "Not found!".to_string()
+    let label = Label::new(|data: &AppData, _env: &Env| {
+        if data.target.is_empty() {
+            "Not set!".to_string()
         } else {
-            format!("Git: {}", data.git)
+            format!("Target: {}", data.target)
         }
     })
         .with_text_size(32.0);
 
     // a textbox that modifies `name`.
-    let textbox = TextBox::new()
-        .with_placeholder("Who are we greeting?")
-        .with_text_size(18.0)
-        .fix_width(TEXT_BOX_WIDTH)
-        .lens(HelloState::git);
+    // let textbox = TextBox::new()
+    //     .with_placeholder("Who are we greeting?")
+    //     .with_text_size(18.0)
+    //     .fix_width(TEXT_BOX_WIDTH);
+    //     // .lens(HelloState::git);
 
-    let button_esp32 = Button::new("ESP32");
-    let button_esp32c3 = Button::new("ESP32-C3");
-    let button_esp32s2 = Button::new("ESP32-S2");
-    let button_esp32s3 = Button::new("ESP32-S3");
+    let button_esp32 = Button::new("ESP32").on_click(|_ctx, data: &mut AppData, _env| {
+        data.target = "esp32".into();
+    });
+    let button_esp32c3 = Button::new("ESP32-C3").on_click(|_ctx, data: &mut AppData, _env| {
+        data.target = "esp32c3".into();
+    });
+    let button_esp32s2 = Button::new("ESP32-S2").on_click(|_ctx, data: &mut AppData, _env| {
+        data.target = "esp32s2".into();
+    });
+    let button_esp32s3 = Button::new("ESP32-S3").on_click(|_ctx, data: &mut AppData, _env| {
+        data.target = "esp32s3".into();
+    });
+
+
+    let checkbox_esp32 = Checkbox::new("ESP32").lens(AppData::is_target_esp32);
+    let checkbox_esp32c3 = Checkbox::new("ESP32-C3").lens(AppData::is_target_esp32c3);
+    let checkbox_esp32s2 = Checkbox::new("ESP32-S2").lens(AppData::is_target_esp32s2);
+    let checkbox_esp32s3 = Checkbox::new("ESP32-S3").lens(AppData::is_target_esp32s3);
+
 
     // arrange the two widgets vertically, with some padding
     Flex::column()
         .with_child(label)
         .with_spacer(VERTICAL_WIDGET_SPACING)
-        .with_child(textbox)
+        // .with_child(textbox)
         .with_child(button_esp32)
         .with_child(button_esp32c3)
         .with_child(button_esp32s2)
         .with_child(button_esp32s3)
+        .with_child(checkbox_esp32)
+        .with_child(checkbox_esp32c3)
+        .with_child(checkbox_esp32s2)
+        .with_child(checkbox_esp32s3)
         .align_vertical(UnitPoint::CENTER)
 }
 
