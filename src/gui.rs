@@ -81,6 +81,9 @@ fn build_root_widget() -> impl Widget<HelloState> {
         .with_spacer(VERTICAL_WIDGET_SPACING)
         .with_child(textbox)
         .with_child(button_esp32)
+        .with_child(button_esp32c3)
+        .with_child(button_esp32s2)
+        .with_child(button_esp32s3)
         .align_vertical(UnitPoint::CENTER)
 }
 
