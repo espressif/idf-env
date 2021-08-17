@@ -10,9 +10,13 @@ use dirs::home_dir;
 use json::JsonValue;
 use crate::shell::run_command;
 
+pub fn get_home_dir() -> String {
+    return home_dir().unwrap().display().to_string();
+}
+
 pub fn get_tools_path() -> String {
     env::var("IDF_TOOLS_PATH").unwrap_or_else(|e|
-        home_dir().unwrap().display().to_string() + "/.espressif"
+        format!("{}/.espressif", get_home_dir())
     )
 }
 

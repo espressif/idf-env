@@ -3,8 +3,9 @@
 
 use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
+use std::path::Path;
 
-use crate::config::get_git_path;
+use crate::config::{ get_git_path, get_selected_idf_path, get_home_dir };
 use crate::shell::{ run_command, start_terminal };
 
 use druid::widget::{Flex, Label, TextBox, Button, Checkbox};
@@ -12,6 +13,14 @@ use druid::{AppLauncher, Data, Lens, UnitPoint, WidgetExt, WindowDesc, Widget, E
 
 const VERTICAL_WIDGET_SPACING: f64 = 20.0;
 const TEXT_BOX_WIDTH: f64 = 200.0;
+
+fn get_idf_suggested_path() -> String {
+    let idf_path = get_selected_idf_path();
+    if idf_path == "null" {
+        return format!("{}/esp/esp-idf", get_home_dir());
+    }
+    return idf_path;
+}
 
 pub fn get_cmd<'a>() -> Command<'a, str> {
     Command::new("start")
@@ -38,7 +47,8 @@ pub fn get_cmd<'a>() -> Command<'a, str> {
                 is_target_esp32: true,
                 is_target_esp32c3: true,
                 is_target_esp32s2: false,
-                is_target_esp32s3: true
+                is_target_esp32s3: true,
+                idf_path: get_idf_suggested_path()
             };
 
             // start the application. Here we pass in the application state.
@@ -57,6 +67,7 @@ struct AppData {
     is_target_esp32c3: bool,
     is_target_esp32s2: bool,
     is_target_esp32s3: bool,
+    idf_path: String,
 }
 
 fn build_root_widget() -> impl Widget<AppData> {
@@ -71,10 +82,11 @@ fn build_root_widget() -> impl Widget<AppData> {
         .with_text_size(32.0);
 
     // a textbox that modifies `name`.
-    // let textbox = TextBox::new()
-    //     .with_placeholder("Who are we greeting?")
-    //     .with_text_size(18.0)
-    //     .fix_width(TEXT_BOX_WIDTH);
+    let textbox = TextBox::new()
+        .with_placeholder("~/esp/esp-idf")
+        .with_text_size(18.0)
+        .fix_width(TEXT_BOX_WIDTH)
+        .lens(AppData::idf_path);
     //     // .lens(HelloState::git);
 
     let button_esp32 = Button::new("ESP32").on_click(|_ctx, data: &mut AppData, _env| {
@@ -90,8 +102,26 @@ fn build_root_widget() -> impl Widget<AppData> {
         data.target = "esp32s3".into();
     });
 
-    let button_idf_rust= Button::new("idf-rust").on_click(|_ctx, data: &mut AppData, _env| {
-        start_terminal();
+    let button_apply = Button::new("Apply changes").on_click(|_ctx, data: &mut AppData, _env| {
+        let idf_path = Path::new(data.idf_path.as_str());
+        let idf_path_str = idf_path.display().to_string();
+        let idf_parent = idf_path.parent().unwrap().display().to_string();
+
+        if !idf_path.exists() {
+            let clone_command = format!("mkdir -p '{}'; cd '{}'; git clone https://github.com/espressif/esp-idf --depth 1 --recursive '{}'", idf_parent, idf_parent, idf_path_str);
+            start_terminal(clone_command.as_str());
+        }
+
+        let install_command = format!("cd '{}'; ./install.sh && . ./export.sh", idf_path_str);
+        start_terminal(install_command.as_str());
+
+    });
+
+    let button_terminal = Button::new("ESP-IDF Terminal").on_click(|_ctx, data: &mut AppData, _env| {
+        let idf_path = Path::new(data.idf_path.as_str());
+        let idf_path_str = idf_path.display().to_string();
+        let command = format!("cd {}; . ./export.sh", idf_path_str);
+        start_terminal(command.as_str());
         // let mut arguments: Vec<&str> = [].to_vec();
         // arguments.push("-a");
         // arguments.push("iTerm");
@@ -111,7 +141,7 @@ fn build_root_widget() -> impl Widget<AppData> {
     Flex::column()
         .with_child(label)
         .with_spacer(VERTICAL_WIDGET_SPACING)
-        // .with_child(textbox)
+        .with_child(textbox)
         .with_child(button_esp32)
         .with_child(button_esp32c3)
         .with_child(button_esp32s2)
@@ -120,7 +150,8 @@ fn build_root_widget() -> impl Widget<AppData> {
         .with_child(checkbox_esp32c3)
         .with_child(checkbox_esp32s2)
         .with_child(checkbox_esp32s3)
-        .with_child(button_idf_rust)
+        .with_child(button_apply)
+        .with_child(button_terminal)
         .align_vertical(UnitPoint::CENTER)
 }
 

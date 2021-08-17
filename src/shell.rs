@@ -49,17 +49,17 @@ pub fn run_command(shell: &str, arguments: Vec<&str>, command: &str) -> std::res
 }
 
 #[cfg(target_os = "macos")]
-pub fn start_terminal() {
+pub fn start_terminal(command: &str) {
 
-    let script = "tell application \"iTerm2\"
+    let script = format!("tell application \"iTerm2\"
     set newWindow to (create window with default profile)
     tell current session of newWindow
-        write text \"cd ~/projects/esp-idf; . ./export.sh\"
+        write text \"{}\"
     end tell
-end tell";
+end tell", command);
     let mut arguments: Vec<&str> = [].to_vec();
     arguments.push("-e");
-    run_command("/usr/bin/osascript", arguments, script);
+    run_command("/usr/bin/osascript", arguments, script.as_str());
 }
 
 #[cfg(target_os = "linux")]
