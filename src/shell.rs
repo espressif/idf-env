@@ -47,3 +47,27 @@ pub fn run_command(shell: &str, arguments: Vec<&str>, command: &str) -> std::res
     //println!("output = {:?}", output);
     Ok(())
 }
+
+#[cfg(target_os = "macos")]
+pub fn start_terminal() {
+
+    let script = "tell application \"iTerm2\"
+    set newWindow to (create window with default profile)
+    tell current session of newWindow
+        write text \"cd ~/projects/esp-idf; . ./export.sh\"
+    end tell
+end tell";
+    let mut arguments: Vec<&str> = [].to_vec();
+    arguments.push("-e");
+    run_command("/usr/bin/osascript", arguments, script);
+}
+
+#[cfg(target_os = "linux")]
+pub fn start_terminal() {
+
+}
+
+#[cfg(target_os = "windows")]
+pub fn start_terminal() {
+
+}

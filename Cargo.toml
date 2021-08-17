@@ -22,6 +22,9 @@ widestring = "*"
 winapi = { version = "*", features = ["setupapi", "handleapi", "processthreadsapi", "winnt", "securitybaseapi", "impl-default", "shellapi"] }
 zip = "*"
 
+#[target.'cfg(target_os = "macos")'.dependencies]
+
+
 [[bin]]
 name = "idf-env"
 path = "src/idf_env.rs"

@@ -5,7 +5,7 @@ use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
 
 use crate::config::get_git_path;
-use crate::shell::run_command;
+use crate::shell::{ run_command, start_terminal };
 
 use druid::widget::{Flex, Label, TextBox, Button, Checkbox};
 use druid::{AppLauncher, Data, Lens, UnitPoint, WidgetExt, WindowDesc, Widget, Env};
@@ -91,10 +91,11 @@ fn build_root_widget() -> impl Widget<AppData> {
     });
 
     let button_idf_rust= Button::new("idf-rust").on_click(|_ctx, data: &mut AppData, _env| {
-        let mut arguments: Vec<&str> = [].to_vec();
-        arguments.push("-a");
-        arguments.push("iTerm");
-        run_command("/usr/bin/open", arguments, ".");
+        start_terminal();
+        // let mut arguments: Vec<&str> = [].to_vec();
+        // arguments.push("-a");
+        // arguments.push("iTerm");
+        // run_command("/usr/bin/open", arguments, ".");
         // arguments.push("-c");
         // run_command("/bin/bash", arguments, "open -a iTerm .");
     });
