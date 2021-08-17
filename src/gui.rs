@@ -5,6 +5,7 @@ use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
 
 use crate::config::get_git_path;
+use crate::shell::run_command;
 
 use druid::widget::{Flex, Label, TextBox, Button, Checkbox};
 use druid::{AppLauncher, Data, Lens, UnitPoint, WidgetExt, WindowDesc, Widget, Env};
@@ -89,6 +90,15 @@ fn build_root_widget() -> impl Widget<AppData> {
         data.target = "esp32s3".into();
     });
 
+    let button_idf_rust= Button::new("idf-rust").on_click(|_ctx, data: &mut AppData, _env| {
+        let mut arguments: Vec<&str> = [].to_vec();
+        arguments.push("-a");
+        arguments.push("iTerm");
+        run_command("/usr/bin/open", arguments, ".");
+        // arguments.push("-c");
+        // run_command("/bin/bash", arguments, "open -a iTerm .");
+    });
+
 
     let checkbox_esp32 = Checkbox::new("ESP32").lens(AppData::is_target_esp32);
     let checkbox_esp32c3 = Checkbox::new("ESP32-C3").lens(AppData::is_target_esp32c3);
@@ -109,6 +119,7 @@ fn build_root_widget() -> impl Widget<AppData> {
         .with_child(checkbox_esp32c3)
         .with_child(checkbox_esp32s2)
         .with_child(checkbox_esp32s3)
+        .with_child(button_idf_rust)
         .align_vertical(UnitPoint::CENTER)
 }
 

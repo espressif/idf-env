@@ -47,7 +47,7 @@ pub fn get_idf_id(idf_path: &str) -> String {
     return format!("esp-idf-{:x}", digest);
 }
 
-fn bootstrap_json(json_path: String, tools_path: String) {
+fn bootstrap_json(json_path: &str, tools_path: String) {
     let template = json::object!{
         "$schema": "http://json-schema.org/schema#",
         "$id": "http://dl.espressif.com/dl/schemas/esp_idf",
@@ -58,14 +58,14 @@ fn bootstrap_json(json_path: String, tools_path: String) {
         "idfSelectedId": "",
         "idfInstalled": json::JsonValue::new_object()
     };
-    fs::write(get_json_path(), template.to_string()).unwrap();
+    fs::write(json_path, template.to_string()).unwrap();
 }
 
 fn load_json() -> json::JsonValue {
     let json_path = get_json_path();
     if !Path::new(&json_path).exists() {
         println!("Configuration file not found, creating new one: {}", json_path);
-        bootstrap_json(json_path.clone(), get_tools_path());
+        bootstrap_json(&json_path, get_tools_path());
     }
 
     let content = fs::read_to_string(json_path)
@@ -175,9 +175,10 @@ pub fn get_cmd<'a>() -> Command<'a, str> {
 }
 
 fn open_idf_config() {
-    let mut arguments: Vec<String> = [].to_vec();
-    arguments.push(get_json_path());
-    run_command("notepad".to_string(), arguments, "".to_string());
+    let mut arguments: Vec<&str> = [].to_vec();
+    let json_path = get_json_path();
+    arguments.push(json_path.as_str());
+    run_command("notepad", arguments, "");
 }
 
 pub fn get_edit_cmd<'a>() -> Command<'a, str> {

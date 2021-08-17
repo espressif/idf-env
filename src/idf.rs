@@ -152,39 +152,39 @@ fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::resul
     #[cfg(windows)]
     let git_path = get_tool_path("idf-git/2.30.1/cmd/git.exe".to_string());
     #[cfg(unix)]
-    let git_path = "/usr/bin/git".to_string();
+    let git_path = "/usr/bin/git";
 
-    update_property("gitPath".to_string(), git_path.clone());
+    update_property("gitPath".to_string(), git_path.parse().unwrap());
 
     #[cfg(windows)]
     let python_path = get_tool_path("idf-python/3.8.7/python.exe".to_string());
     #[cfg(unix)]
-    let python_path = "/usr/bin/python".to_string();
+    let python_path = "/usr/bin/python";
 
     let virtual_env_path = get_python_env_path("4.4".to_string(), "3.8".to_string());
 
     if !Path::new(&esp_idf).exists() {
         // let clone_command = format!("git clone --shallow-since=2020-01-01 --jobs 8 --recursive git@github.com:espressif/esp-idf.git ");
-        let mut arguments: Vec<String> = [].to_vec();
-        arguments.push("clone".to_string());
-        arguments.push("--shallow-since=2020-01-01".to_string());
-        arguments.push("--jobs".to_string());
-        arguments.push("8".to_string());
-        arguments.push("--recursive".to_string());
-        arguments.push("https://github.com/espressif/esp-idf.git".to_string());
+        let mut arguments: Vec<&str> = [].to_vec();
+        arguments.push("clone");
+        arguments.push("--shallow-since=2020-01-01");
+        arguments.push("--jobs");
+        arguments.push("8");
+        arguments.push("--recursive");
+        arguments.push("https://github.com/espressif/esp-idf.git");
         // arguments.push("git@github.com:espressif/esp-idf.git".to_string());
-        arguments.push(esp_idf.clone());
+        arguments.push(&esp_idf);
         println!("Cloning: {} {:?}", git_path, arguments);
-        run_command(git_path, arguments, "".to_string());
+        run_command(git_path, arguments, "");
     }
 
     if !Path::new(&virtual_env_path).exists() {
         println!("Creating virtual environment: {}", virtual_env_path);
-        let mut arguments: Vec<String> = [].to_vec();
-        arguments.push("-m".to_string());
-        arguments.push("virtualenv".to_string());
-        arguments.push(virtual_env_path.clone());
-        run_command(python_path, arguments, "".to_string());
+        let mut arguments: Vec<&str> = [].to_vec();
+        arguments.push("-m");
+        arguments.push("virtualenv");
+        arguments.push(virtual_env_path.as_str());
+        run_command(python_path, arguments, "");
     }
     #[cfg(windows)]
     let python_path = format!("{}/Scripts/python.exe", virtual_env_path);
@@ -193,15 +193,15 @@ fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::resul
 
     let idf_tools = format!("{}/tools/idf_tools.py", esp_idf);
 
-    let mut arguments: Vec<String> = [].to_vec();
-    arguments.push(idf_tools.clone());
-    arguments.push("install".to_string());
-    run_command(python_path.clone(), arguments, "".to_string());
+    let mut arguments: Vec<&str> = [].to_vec();
+    arguments.push(idf_tools.as_str());
+    arguments.push("install");
+    run_command(python_path.as_str(), arguments, "");
 
-    let mut arguments: Vec<String> = [].to_vec();
-    arguments.push(idf_tools);
-    arguments.push("install-python-env".to_string());
-    run_command(python_path.clone(), arguments, "".to_string());
+    let mut arguments: Vec<&str> = [].to_vec();
+    arguments.push(idf_tools.as_str());
+    arguments.push("install-python-env");
+    run_command(python_path.as_str(), arguments, "");
 
     add_idf_config(esp_idf, "4.4".to_string(), python_path);
     Ok(())
@@ -345,10 +345,10 @@ fn get_initializer() -> String {
 }
 
 #[cfg(unix)]
-fn get_initializer_arguments() -> Vec<String> {
-    let mut arguments: Vec<String> = [].to_vec();
-    arguments.push("-c".to_string());
-    arguments.push(". ./export.sh;cd examples/get-started/blink;idf.py fullclean; idf.py build".to_string());
+fn get_initializer_arguments() -> Vec<&'static str> {
+    let mut arguments: Vec<&str> = [].to_vec();
+    arguments.push("-c");
+    arguments.push(". ./export.sh;cd examples/get-started/blink;idf.py fullclean; idf.py build");
     arguments
 }
 
@@ -416,14 +416,14 @@ fn run_build(idf_path: &String, shell_initializer: &String) -> std::result::Resu
     let root = Path::new(&idf_path);
     assert!(env::set_current_dir(&root).is_ok());
 
-    run_idf_command("cd examples/get-started/blink; idf.py fullclean; idf.py build".to_string());
+    run_idf_command("cd examples/get-started/blink; idf.py fullclean; idf.py build");
 
     //println!("output = {:?}", output);
     Ok(())
 }
 
-fn run_idf_command(command: String) {
-    run_command(get_shell(), get_initializer_arguments(), command);
+fn run_idf_command(command: &str) {
+    run_command(get_shell().as_str(), get_initializer_arguments(), command);
 }
 
 #[cfg(windows)]

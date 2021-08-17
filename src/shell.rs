@@ -26,7 +26,7 @@ pub fn run_command(shell: String, arguments: Vec<String>, command: String) -> st
 
 
 #[cfg(unix)]
-pub fn run_command(shell: String, arguments: Vec<String>, command: String) -> std::result::Result<(), clap::Error> {
+pub fn run_command(shell: &str, arguments: Vec<&str>, command: &str) -> std::result::Result<(), clap::Error> {
     // Unix - pass command as parameter for initializer
     let mut arguments = arguments.clone();
     if !command.is_empty() {
