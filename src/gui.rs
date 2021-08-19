@@ -108,7 +108,7 @@ fn build_root_widget() -> impl Widget<AppData> {
         let idf_parent = idf_path.parent().unwrap().display().to_string();
 
         if !idf_path.exists() {
-            let clone_command = format!("mkdir -p '{}'; cd '{}'; git clone https://github.com/espressif/esp-idf --depth 1 --recursive '{}'", idf_parent, idf_parent, idf_path_str);
+            let clone_command = format!("mkdir -p '{}'; cd '{}'; git clone https://github.com/espressif/esp-idf --depth 1 --recursive '{}' --jobs=8", idf_parent, idf_parent, idf_path_str);
             start_terminal(clone_command.as_str());
         }
 
