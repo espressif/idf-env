@@ -112,7 +112,7 @@ fn build_root_widget() -> impl Widget<AppData> {
             start_terminal(clone_command.as_str());
         }
 
-        let install_command = format!("cd '{}'; ./install.sh && . ./export.sh", idf_path_str);
+        let install_command = format!("cd {}; ./install.sh && . ./export.sh", idf_path_str);
         start_terminal(install_command.as_str());
 
     });

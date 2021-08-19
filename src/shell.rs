@@ -32,17 +32,13 @@ pub fn run_command(shell: &str, arguments: Vec<&str>, command: &str) -> std::res
     if !command.is_empty() {
         arguments.push(command);
     }
+    println!("{} {:?}", shell, arguments);
 
-    //println!("arguments = {:?}", arguments);
     let mut child_process = std::process::Command::new(shell)
-        .args(arguments)
         .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()?;
-    {
-
-    }
+        .args(arguments)
+        .spawn().unwrap();
+    // writeln!(child_process.stdin.unwrap(), command ).unwrap();
     let output = child_process.wait_with_output()?;
     //println!("output = {:?}", output);
     Ok(())
@@ -63,8 +59,16 @@ end tell", command);
 }
 
 #[cfg(target_os = "linux")]
-pub fn start_terminal() {
+pub fn start_terminal(command: &str) {
+    let script = format!("{}; $SHELL", command);
+    let mut arguments: Vec<&str> = [].to_vec();
+    // arguments.push("--new-tab");
+    // arguments.push("--noclose");
+    arguments.push("-e");
+    arguments.push("/bin/bash");
+    arguments.push("-c");
 
+    run_command("/usr/bin/konsole", arguments, script.as_str());
 }
 
 #[cfg(target_os = "windows")]
