@@ -12,7 +12,7 @@ use druid::widget::{Flex, Label, TextBox, Button, Checkbox};
 use druid::{AppLauncher, Data, Lens, UnitPoint, WidgetExt, WindowDesc, Widget, Env};
 
 const VERTICAL_WIDGET_SPACING: f64 = 20.0;
-const TEXT_BOX_WIDTH: f64 = 200.0;
+const TEXT_BOX_WIDTH: f64 = 400.0;
 
 fn get_idf_suggested_path() -> String {
     let idf_path = get_selected_idf_path();
@@ -102,7 +102,7 @@ fn build_root_widget() -> impl Widget<AppData> {
         data.target = "esp32s3".into();
     });
 
-    let button_apply = Button::new("Apply changes").on_click(|_ctx, data: &mut AppData, _env| {
+    let button_apply = Button::new("Modify installation").on_click(|_ctx, data: &mut AppData, _env| {
         let idf_path = Path::new(data.idf_path.as_str());
         let idf_path_str = idf_path.display().to_string();
         let idf_parent = idf_path.parent().unwrap().display().to_string();
@@ -149,14 +149,14 @@ fn build_root_widget() -> impl Widget<AppData> {
         .with_child(label)
         .with_spacer(VERTICAL_WIDGET_SPACING)
         .with_child(textbox)
-        .with_child(button_esp32)
-        .with_child(button_esp32c3)
-        .with_child(button_esp32s2)
-        .with_child(button_esp32s3)
+        // .with_child(button_esp32)
+        // .with_child(button_esp32c3)
+        // .with_child(button_esp32s2)
+        // .with_child(button_esp32s3)
         .with_child(checkbox_esp32)
-        .with_child(checkbox_esp32c3)
-        .with_child(checkbox_esp32s2)
-        .with_child(checkbox_esp32s3)
+        // .with_child(checkbox_esp32c3)
+        // .with_child(checkbox_esp32s2)
+        // .with_child(checkbox_esp32s3)
         .with_child(button_apply)
         .with_child(button_terminal)
         .align_vertical(UnitPoint::CENTER)
