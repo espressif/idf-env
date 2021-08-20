@@ -152,14 +152,14 @@ fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::resul
     #[cfg(windows)]
     let git_path = get_tool_path("idf-git/2.30.1/cmd/git.exe");
     #[cfg(unix)]
-    let git_path = "/usr/bin/git";
+    let git_path = String::from("/usr/bin/git");
 
     update_property("gitPath".to_string(), git_path.as_str());
 
     #[cfg(windows)]
     let python_path = get_tool_path("idf-python/3.8.7/python.exe");
     #[cfg(unix)]
-    let python_path = "/usr/bin/python";
+    let python_path = String::from("/usr/bin/python");
 
     let virtual_env_path = get_python_env_path("4.4".to_string(), "3.8".to_string());
 
