@@ -141,23 +141,23 @@ fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::resul
     #[cfg(windows)]
     prepare_package("https://dl.espressif.com/dl/idf-git/idf-git-2.30.1-win64.zip".to_string(),
         get_dist_path("idf-git-2.30.1-win64.zip".to_string()),
-        get_tool_path("idf-git/2.30.1".to_string())
+        get_tool_path("idf-git/2.30.1")
     );
     #[cfg(windows)]
     prepare_package("https://dl.espressif.com/dl/idf-python/idf-python-3.8.7-embed-win64.zip".to_string(),
         get_dist_path("idf-python-3.8.7-embed-win64.zip".to_string()),
-        get_tool_path("idf-python/3.8.7".to_string())
+        get_tool_path("idf-python/3.8.7")
     );
 
     #[cfg(windows)]
-    let git_path = get_tool_path("idf-git/2.30.1/cmd/git.exe".to_string());
+    let git_path = get_tool_path("idf-git/2.30.1/cmd/git.exe");
     #[cfg(unix)]
     let git_path = "/usr/bin/git";
 
-    update_property("gitPath".to_string(), git_path.parse().unwrap());
+    update_property("gitPath".to_string(), git_path.as_str());
 
     #[cfg(windows)]
-    let python_path = get_tool_path("idf-python/3.8.7/python.exe".to_string());
+    let python_path = get_tool_path("idf-python/3.8.7/python.exe");
     #[cfg(unix)]
     let python_path = "/usr/bin/python";
 
@@ -175,7 +175,7 @@ fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::resul
         // arguments.push("git@github.com:espressif/esp-idf.git".to_string());
         arguments.push(&esp_idf);
         println!("Cloning: {} {:?}", git_path, arguments);
-        run_command(git_path, arguments, "");
+        run_command(git_path.as_str(), arguments, "");
     }
 
     if !Path::new(&virtual_env_path).exists() {
@@ -184,7 +184,7 @@ fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::resul
         arguments.push("-m");
         arguments.push("virtualenv");
         arguments.push(virtual_env_path.as_str());
-        run_command(python_path, arguments, "");
+        run_command(python_path.as_str(), arguments, "");
     }
     #[cfg(windows)]
     let python_path = format!("{}/Scripts/python.exe", virtual_env_path);
@@ -423,7 +423,7 @@ fn run_build(idf_path: &String, shell_initializer: &String) -> std::result::Resu
 }
 
 fn run_idf_command(command: &str) {
-    run_command(get_shell().as_str(), get_initializer_arguments(), command);
+    // run_command(get_shell().as_str(), get_initializer_arguments(), command);
 }
 
 #[cfg(windows)]
@@ -432,7 +432,7 @@ fn run_build(idf_path: &String, shell_initializer: &String) -> std::result::Resu
     let root = Path::new(&idf_path);
     assert!(env::set_current_dir(&root).is_ok());
 
-    run_idf_command("cd examples/get-started/blink; idf.py fullclean; idf.py build\n".to_string());
+    run_idf_command("cd examples/get-started/blink; idf.py fullclean; idf.py build\n");
 
     Ok(())
 }

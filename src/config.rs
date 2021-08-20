@@ -20,7 +20,7 @@ pub fn get_tools_path() -> String {
     )
 }
 
-pub fn get_tool_path(tool_name:String) -> String {
+pub fn get_tool_path(tool_name:&str) -> String {
     let tools_path = get_tools_path();
     format!("{}/tools/{}", tools_path, tool_name)
 }
@@ -110,9 +110,9 @@ fn print_property_with_id(property_name: String, idf_id: String) {
     print!("{}", get_property_with_idf_id(property_name, idf_id));
 }
 
-pub fn update_property(property_name: String, property_value: String) {
+pub fn update_property(property_name: String, property_value: &str) {
     let mut parsed_json = load_json();
-    parsed_json[property_name] = JsonValue::String(property_value);
+    parsed_json[property_name] = JsonValue::String(String::from(property_value));
     fs::write(get_json_path(), format!("{:#}", parsed_json)).unwrap();
 }
 

@@ -112,7 +112,11 @@ fn build_root_widget() -> impl Widget<AppData> {
             start_terminal(clone_command.as_str());
         }
 
+        #[cfg(windows)]
+        let install_command = format!("cd {}\\; ./install.bat\\; ./export.ps1", idf_path_str);
+        #[cfg(unix)]
         let install_command = format!("cd {}; ./install.sh && . ./export.sh", idf_path_str);
+
         start_terminal(install_command.as_str());
 
     });
@@ -120,6 +124,9 @@ fn build_root_widget() -> impl Widget<AppData> {
     let button_terminal = Button::new("ESP-IDF Terminal").on_click(|_ctx, data: &mut AppData, _env| {
         let idf_path = Path::new(data.idf_path.as_str());
         let idf_path_str = idf_path.display().to_string();
+        #[cfg(windows)]
+        let command = format!("cd {}\\; . ./export.ps1", idf_path_str);
+        #[cfg(unix)]
         let command = format!("cd {}; . ./export.sh", idf_path_str);
         start_terminal(command.as_str());
         // let mut arguments: Vec<&str> = [].to_vec();

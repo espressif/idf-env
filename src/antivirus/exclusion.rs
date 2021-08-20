@@ -7,7 +7,7 @@ use crate::config;
 
 use walkdir::{WalkDir};
 
-fn get_tool_files(tool_name: String, filter: String) -> Vec<String> {
+fn get_tool_files(tool_name: &str, filter: &str) -> Vec<String> {
     let tool_path = config::get_tool_path(tool_name);
     let mut result_list: Vec<String> = [].to_vec();
     for e in WalkDir::new(tool_path).into_iter().filter_map(|e| e.ok()) {
@@ -69,13 +69,13 @@ fn get_add_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::R
     let chunk_size:usize = matches.value_of("chunk").unwrap().to_string().parse().unwrap();
 
     if matches.is_present("all") {
-        let file_list = get_tool_files("".to_string(), ".exe".to_string());
+        let file_list = get_tool_files("", ".exe");
         add_exclusions(file_list, chunk_size);
     }
 
     if matches.is_present("tool") {
-        let tool_name = matches.value_of("tool").unwrap().to_string();
-        let file_list = get_tool_files(tool_name, ".exe".to_string());
+        let tool_name = matches.value_of("tool").unwrap();
+        let file_list = get_tool_files(tool_name, ".exe");
         add_exclusions(file_list, chunk_size);
     }
 
@@ -102,13 +102,13 @@ fn get_remove_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result
     let chunk_size:usize = matches.value_of("chunk").unwrap().to_string().parse().unwrap();
 
     if matches.is_present("all") {
-        let file_list = get_tool_files("".to_string(), ".exe".to_string());
+        let file_list = get_tool_files("", ".exe");
         remove_exclusions(file_list, chunk_size);
     }
 
     if matches.is_present("tool") {
-        let tool_name = matches.value_of("tool").unwrap().to_string();
-        let file_list = get_tool_files(tool_name, ".exe".to_string());
+        let tool_name = matches.value_of("tool").unwrap();
+        let file_list = get_tool_files(tool_name, ".exe");
         remove_exclusions(file_list, chunk_size);
     }
 
