@@ -9,8 +9,7 @@ use crate::config::{get_git_path, get_selected_idf_path, get_home_dir, get_tools
 use crate::shell::{ run_command, start_terminal };
 
 use druid::widget::{Flex, Label, TextBox, Button, Checkbox};
-use druid::{ commands, AppLauncher, AppDelegate, Data, DelegateCtx, FileDialogOptions, Handled, Lens,
-             Target, UnitPoint, WidgetExt, WindowDesc, Widget, Env};
+use druid::{commands, AppLauncher, AppDelegate, Data, DelegateCtx, FileDialogOptions, Handled, Lens, Target, UnitPoint, WidgetExt, WindowDesc, Widget, Env, Selector, FileInfo};
 
 const VERTICAL_WIDGET_SPACING: f64 = 20.0;
 const TEXT_BOX_WIDTH: f64 = 400.0;
@@ -77,6 +76,9 @@ struct AppData {
     idf_tools_path: String
 }
 
+pub const OPEN_IDF_PATH: Selector<FileInfo> = Selector::new("idf-env.open-idf-path");
+pub const OPEN_IDF_TOOLS_PATH: Selector<FileInfo> = Selector::new("idf-env.open-idf-tools-path");
+
 impl AppDelegate<AppData> for Delegate {
     fn command(
         &mut self,
@@ -86,14 +88,14 @@ impl AppDelegate<AppData> for Delegate {
         data: &mut AppData,
         _env: &Env,
     ) -> Handled {
-        if let Some(file_info) = cmd.get(commands::SAVE_FILE_AS) {
+        if let Some(file_info) = cmd.get(OPEN_IDF_PATH) {
             // if let Err(e) = std::fs::write(file_info.path(), &data[..]) {
             //     println!("Error writing file: {}", e);
             // }
             data.idf_path = file_info.path.display().to_string();
             return Handled::Yes;
         }
-        if let Some(file_info) = cmd.get(commands::OPEN_FILE) {
+        if let Some(file_info) = cmd.get(OPEN_IDF_TOOLS_PATH) {
             // match std::fs::read_to_string(file_info.path()) {
             //     Ok(s) => {
             //         let first_line = s.lines().next().unwrap_or("");
@@ -103,7 +105,7 @@ impl AppDelegate<AppData> for Delegate {
             //         println!("Error opening file: {}", e);
             //     }
             // }
-            data.idf_path = file_info.path.display().to_string();
+            data.idf_tools_path = file_info.path.display().to_string();
             return Handled::Yes;
         }
         Handled::No
@@ -187,7 +189,9 @@ fn build_root_widget() -> impl Widget<AppData> {
 
     let browse_idf_path_options = FileDialogOptions::new()
         .name_label("ESP-IDF - Source")
+        .select_directories()
         .title("Where to store ESP-IDF source code")
+        .accept_command(OPEN_IDF_PATH)
         .button_text("Select");
 
     let browse_idf_path_button = Button::new("Browse").on_click(move |ctx, data: &mut AppData, _env| {
@@ -196,7 +200,9 @@ fn build_root_widget() -> impl Widget<AppData> {
 
     let browse_idf_tools_path_options = FileDialogOptions::new()
         .name_label("ESP-IDF - Tools")
+        .select_directories()
         .title("Where to store ESP-IDF tools")
+        .accept_command(OPEN_IDF_TOOLS_PATH)
         .button_text("Select");
 
     let browse_idf_tools_path_button = Button::new("Browse").on_click(move |ctx, data: &mut AppData, _env| {
