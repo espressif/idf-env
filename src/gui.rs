@@ -5,11 +5,11 @@ use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
 use std::path::Path;
 
-use crate::config::{ get_git_path, get_selected_idf_path, get_home_dir };
+use crate::config::{get_git_path, get_selected_idf_path, get_home_dir, get_tools_path};
 use crate::shell::{ run_command, start_terminal };
 
 use druid::widget::{Flex, Label, TextBox, Button, Checkbox};
-use druid::{AppLauncher, Data, Lens, UnitPoint, WidgetExt, WindowDesc, Widget, Env};
+use druid::{ commands, AppLauncher, Data, FileDialogOptions, Lens, UnitPoint, WidgetExt, WindowDesc, Widget, Env};
 
 const VERTICAL_WIDGET_SPACING: f64 = 20.0;
 const TEXT_BOX_WIDTH: f64 = 400.0;
@@ -48,7 +48,8 @@ pub fn get_cmd<'a>() -> Command<'a, str> {
                 is_target_esp32c3: true,
                 is_target_esp32s2: false,
                 is_target_esp32s3: true,
-                idf_path: get_idf_suggested_path()
+                idf_path: get_idf_suggested_path(),
+                idf_tools_path: get_tools_path()
             };
 
             // start the application. Here we pass in the application state.
@@ -68,6 +69,7 @@ struct AppData {
     is_target_esp32s2: bool,
     is_target_esp32s3: bool,
     idf_path: String,
+    idf_tools_path: String
 }
 
 fn build_root_widget() -> impl Widget<AppData> {
@@ -82,12 +84,18 @@ fn build_root_widget() -> impl Widget<AppData> {
         .with_text_size(32.0);
 
     // a textbox that modifies `name`.
-    let textbox = TextBox::new()
+    let textbox_esp_idf_path = TextBox::new()
         .with_placeholder("~/esp/esp-idf")
         .with_text_size(18.0)
         .fix_width(TEXT_BOX_WIDTH)
         .lens(AppData::idf_path);
     //     // .lens(HelloState::git);
+
+    let textbox_esp_idf_tools_path = TextBox::new()
+        .with_placeholder("~/.espressif")
+        .with_text_size(18.0)
+        .fix_width(TEXT_BOX_WIDTH)
+        .lens(AppData::idf_tools_path);
 
     let button_esp32 = Button::new("ESP32").on_click(|_ctx, data: &mut AppData, _env| {
         data.target = "esp32".into();
@@ -138,6 +146,24 @@ fn build_root_widget() -> impl Widget<AppData> {
     });
 
 
+    let browse_idf_path_options = FileDialogOptions::new()
+        .name_label("ESP-IDF - Source")
+        .title("Where to store ESP-IDF source code")
+        .button_text("Select");
+
+    let browse_idf_path_button = Button::new("Browse").on_click(move |ctx, data: &mut AppData, _env| {
+        ctx.submit_command(druid::commands::SHOW_OPEN_PANEL.with(browse_idf_path_options.clone()))
+    });
+
+    let browse_idf_tools_path_options = FileDialogOptions::new()
+        .name_label("ESP-IDF - Tools")
+        .title("Where to store ESP-IDF tools")
+        .button_text("Select");
+
+    let browse_idf_tools_path_button = Button::new("Browse").on_click(move |ctx, data: &mut AppData, _env| {
+        ctx.submit_command(druid::commands::SHOW_OPEN_PANEL.with(browse_idf_tools_path_options.clone()))
+    });
+
     let checkbox_esp32 = Checkbox::new("ESP32").lens(AppData::is_target_esp32);
     let checkbox_esp32c3 = Checkbox::new("ESP32-C3").lens(AppData::is_target_esp32c3);
     let checkbox_esp32s2 = Checkbox::new("ESP32-S2").lens(AppData::is_target_esp32s2);
@@ -145,21 +171,40 @@ fn build_root_widget() -> impl Widget<AppData> {
 
 
     // arrange the two widgets vertically, with some padding
+    // Flex::column()
+    //     .with_child(label)
+    //     .with_spacer(VERTICAL_WIDGET_SPACING)
+    //     .with_child(textbox)
+    //     // .with_child(button_esp32)
+    //     // .with_child(button_esp32c3)
+    //     // .with_child(button_esp32s2)
+    //     // .with_child(button_esp32s3)
+    //     .with_child(checkbox_esp32)
+    //     // .with_child(checkbox_esp32c3)
+    //     // .with_child(checkbox_esp32s2)
+    //     // .with_child(checkbox_esp32s3)
+    //     .with_child(button_apply)
+    //     .with_child(button_terminal)
+    //     .align_vertical(UnitPoint::CENTER);
+
     Flex::column()
-        .with_child(label)
-        .with_spacer(VERTICAL_WIDGET_SPACING)
-        .with_child(textbox)
-        // .with_child(button_esp32)
-        // .with_child(button_esp32c3)
-        // .with_child(button_esp32s2)
-        // .with_child(button_esp32s3)
-        .with_child(checkbox_esp32)
-        // .with_child(checkbox_esp32c3)
-        // .with_child(checkbox_esp32s2)
-        // .with_child(checkbox_esp32s3)
-        .with_child(button_apply)
-        .with_child(button_terminal)
-        .align_vertical(UnitPoint::CENTER)
+        .with_flex_child(
+            Flex::row()
+                .with_flex_child(Label::new("ESP-IDF Path: "), 1.0)
+                .with_flex_child(textbox_esp_idf_path, 1.0)
+                .with_flex_child(browse_idf_path_button, 1.0),
+            1.0)
+        .with_flex_child(
+            Flex::row()
+                .with_flex_child(Label::new("ESP-IDF Tools Path: "), 1.0)
+                .with_flex_child(textbox_esp_idf_tools_path, 1.0)
+                .with_flex_child(browse_idf_tools_path_button, 1.0),
+            1.0)
+        .with_flex_child(
+            Flex::row()
+                .with_flex_child(button_apply, 1.0)
+                .with_flex_child(button_terminal, 1.0),
+            1.0)
 }
 
 pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
