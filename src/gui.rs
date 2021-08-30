@@ -9,10 +9,14 @@ use crate::config::{get_git_path, get_selected_idf_path, get_home_dir, get_tools
 use crate::shell::{ run_command, start_terminal };
 
 use druid::widget::{Flex, Label, TextBox, Button, Checkbox};
-use druid::{ commands, AppLauncher, Data, FileDialogOptions, Lens, UnitPoint, WidgetExt, WindowDesc, Widget, Env};
+use druid::{ commands, AppLauncher, AppDelegate, Data, DelegateCtx, FileDialogOptions, Handled, Lens,
+             Target, UnitPoint, WidgetExt, WindowDesc, Widget, Env};
 
 const VERTICAL_WIDGET_SPACING: f64 = 20.0;
 const TEXT_BOX_WIDTH: f64 = 400.0;
+
+struct Delegate;
+
 
 fn get_idf_suggested_path() -> String {
     let idf_path = get_selected_idf_path();
@@ -54,6 +58,7 @@ pub fn get_cmd<'a>() -> Command<'a, str> {
 
             // start the application. Here we pass in the application state.
             AppLauncher::with_window(main_window)
+                .delegate(Delegate)
                 .launch(data)
                 .expect("Failed to launch application");
             Ok(())
@@ -71,6 +76,40 @@ struct AppData {
     idf_path: String,
     idf_tools_path: String
 }
+
+impl AppDelegate<AppData> for Delegate {
+    fn command(
+        &mut self,
+        _ctx: &mut DelegateCtx,
+        _target: Target,
+        cmd: &druid::Command,
+        data: &mut AppData,
+        _env: &Env,
+    ) -> Handled {
+        if let Some(file_info) = cmd.get(commands::SAVE_FILE_AS) {
+            // if let Err(e) = std::fs::write(file_info.path(), &data[..]) {
+            //     println!("Error writing file: {}", e);
+            // }
+            data.idf_path = file_info.path.display().to_string();
+            return Handled::Yes;
+        }
+        if let Some(file_info) = cmd.get(commands::OPEN_FILE) {
+            // match std::fs::read_to_string(file_info.path()) {
+            //     Ok(s) => {
+            //         let first_line = s.lines().next().unwrap_or("");
+            //         *data = first_line.to_owned();
+            //     }
+            //     Err(e) => {
+            //         println!("Error opening file: {}", e);
+            //     }
+            // }
+            data.idf_path = file_info.path.display().to_string();
+            return Handled::Yes;
+        }
+        Handled::No
+    }
+}
+
 
 fn build_root_widget() -> impl Widget<AppData> {
     // a label that will determine its text based on the current app data.
