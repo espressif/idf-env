@@ -3,9 +3,9 @@ use clap_nested::{Command, Commander, MultiCommand};
 
 use dirs::home_dir;
 use std::path::Path;
-use fsutils::mkdir;
+use std::fs::create_dir_all;
 use crate::config::get_tool_path;
-use crate::package::prepare_package;
+use crate::package::{prepare_package, prepare_package_strip_prefix};
 
 fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
     // let arch = "aarch64-apple-darwin";
@@ -42,14 +42,16 @@ fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::resul
         return Ok(())
     }
 
-    mkdir(toolchain_destination_dir);
+    create_dir_all(toolchain_destination_dir.clone());
     prepare_package(rust_dist_url,
                     rust_dist_file,
                     toolchain_destination_dir.to_string());
 
-    prepare_package(llvm_url,
+    prepare_package_strip_prefix(llvm_url,
                     llvm_file,
-                    idf_tool_xtensa_elf_clang);
+                    idf_tool_xtensa_elf_clang.clone(),
+                    "xtensa-esp32-elf-clang"
+    );
 
     println!("Add following command to PowerShell profile");
     println!("$env:PATH+=\";{}/bin\"", idf_tool_xtensa_elf_clang);
