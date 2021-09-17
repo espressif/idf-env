@@ -42,10 +42,11 @@ fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::resul
         return Ok(())
     }
 
-    create_dir_all(toolchain_destination_dir.clone());
-    prepare_package(rust_dist_url,
+    // create_dir_all(toolchain_destination_dir.clone());
+    prepare_package_strip_prefix(rust_dist_url,
                     rust_dist_file,
-                    toolchain_destination_dir.to_string());
+                    toolchain_destination_dir.to_string(),
+                    "esp");
 
     prepare_package_strip_prefix(llvm_url,
                     llvm_file,
