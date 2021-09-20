@@ -3,61 +3,126 @@ use clap_nested::{Command, Commander, MultiCommand};
 
 use dirs::home_dir;
 use std::path::Path;
-use std::fs::create_dir_all;
+use std::fs::{create_dir_all, remove_dir_all};
 use crate::config::get_tool_path;
 use crate::package::{prepare_package, prepare_package_strip_prefix};
 
-fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
-    // let arch = "aarch64-apple-darwin";
-    let arch = "x86_64-pc-windows-msvc";
-    let llvm_release = "esp-12.0.1-20210823";
-    let mut llvm_arch = llvm_release;
-    let mut archive_extension = "tar.xz";
+struct RustToolchain {
+    arch: String,
+    llvm_release: String,
+    llvm_arch: String,
+    artifact_file_extension: String,
+    version: String,
+    rust_dist: String,
+    rust_src_dist: String,
+    rust_dist_file: String,
+    rust_dist_url: String,
+    destination_dir: String,
+    llvm_file: String,
+    llvm_url: String,
+    idf_tool_xtensa_elf_clang: String
+}
 
-    if arch == "x86_64-apple-darwin" {
-        llvm_arch = "macos";
-    } else if arch == "x86_64-unknown-linux-gnu" {
-        llvm_arch = "linux-amd64";
-    } else if arch == "x86_64-pc-windows-msvc" {
-        llvm_arch = "win64";
-        archive_extension = "zip";
+fn get_llvm_arch(arch:&str) -> &str {
+    match arch {
+        "x86_64-apple-darwin" => "macos",
+        "x86_64-unknown-linux-gnu" => "linux-amd64",
+        "x86_64-pc-windows-msvc" => "x86_64-pc-windows-msvc",
+        _ => arch
     }
+}
 
-    let version="1.55.0-dev";
+fn get_artifact_file_extension(arch:&str) -> &str {
+    match arch {
+        "x86_64-pc-windows-msvc" => "zip",
+        _ => "tar.xz"
+    }
+}
+
+fn build_rust_toolchain(version:&str, arch:&str) -> RustToolchain {
+    let llvm_release = "esp-12.0.1-20210823".to_string();
+    let artifact_file_extension = get_artifact_file_extension(arch).to_string();
+    let llvm_file = format!("xtensa-esp32-elf-llvm12_0_1-{}-{}.{}", llvm_release, arch, artifact_file_extension);
     let rust_dist = format!("rust-{}-{}", version, arch);
-    let rust_src_dist = format!("rust-src-{}", version);
-    let toolchain_destination_dir = format!("{}/.rustup/toolchains/esp", home_dir().unwrap().display().to_string());
-    let llvm_file = format!("xtensa-esp32-elf-llvm12_0_1-{}-{}.{}", llvm_release, llvm_arch, archive_extension);
-    // IDF_TOOLS_PATH="$HOME/.espressif"
-    let idf_tool_xtensa_elf_clang = format!("{}/{}-${}", get_tool_path("xtensa-esp32-elf-clang".to_string()), llvm_release, arch);
-    let rust_dist_file = format!("{}.{}", rust_dist, archive_extension);
+    let rust_dist_file = format!("{}.{}", rust_dist, artifact_file_extension);
     let rust_dist_url = format!("https://github.com/esp-rs/rust-build/releases/download/v{}/{}", version, rust_dist_file);
-    let llvm_file= format!("xtensa-esp32-elf-llvm12_0_1-{}-{}.{}", llvm_release, llvm_arch, archive_extension);
-    let llvm_url= format!("https://github.com/espressif/llvm-project/releases/download/{}/{}", llvm_release, llvm_file);
-    let idf_tool_xtensa_elf_clang= format!("{}/{}-{}", get_tool_path("xtensa-esp32-elf-clang".to_string()), llvm_release, arch);
+    let llvm_url = format!("https://github.com/espressif/llvm-project/releases/download/{}/{}", llvm_release, llvm_file);
+    let idf_tool_xtensa_elf_clang = format!("{}/{}-{}", get_tool_path("xtensa-esp32-elf-clang".to_string()), llvm_release, arch);
 
-    if Path::new(toolchain_destination_dir.as_str()).exists() {
-        println!("Previous installation of toolchain exist in: {}", toolchain_destination_dir);
+    RustToolchain {
+        arch: arch.to_string(),
+        llvm_release,
+        llvm_arch: get_llvm_arch(arch).to_string(),
+        artifact_file_extension,
+        version: "1.55.0-dev".to_string(),
+        rust_dist,
+        rust_src_dist: format!("rust-src-{}", version),
+        rust_dist_file,
+        rust_dist_url,
+        destination_dir: format!("{}/.rustup/toolchains/esp", home_dir().unwrap().display().to_string()),
+        llvm_file,
+        llvm_url,
+        idf_tool_xtensa_elf_clang
+    }
+}
+
+fn install_rust_toolchain(toolchain:RustToolchain) {
+
+    if Path::new(toolchain.destination_dir.as_str()).exists() {
+        println!("Previous installation of toolchain exist in: {}", toolchain.destination_dir);
         println!("Please, remove the directory before new installation.");
-        return Ok(())
+        return
     }
 
     // create_dir_all(toolchain_destination_dir.clone());
-    prepare_package_strip_prefix(rust_dist_url,
-                    rust_dist_file,
-                    toolchain_destination_dir.to_string(),
-                    "esp");
+    prepare_package_strip_prefix(toolchain.rust_dist_url,
+                                 toolchain.rust_dist_file,
+                                 toolchain.destination_dir.to_string(),
+                                 "esp");
 
-    prepare_package_strip_prefix(llvm_url,
-                    llvm_file,
-                    idf_tool_xtensa_elf_clang.clone(),
-                    "xtensa-esp32-elf-clang"
+    prepare_package_strip_prefix(toolchain.llvm_url,
+                                 toolchain.llvm_file,
+                                 toolchain.idf_tool_xtensa_elf_clang.clone(),
+                                 "xtensa-esp32-elf-clang"
     );
 
     println!("Add following command to PowerShell profile");
-    println!("$env:PATH+=\";{}/bin\"", idf_tool_xtensa_elf_clang);
-    println!("$env:LIBCLANG_PATH=\"{}/bin/libclang.dll\"",idf_tool_xtensa_elf_clang);
+    println!("$env:PATH+=\";{}/bin\"", toolchain.idf_tool_xtensa_elf_clang);
+    println!("$env:LIBCLANG_PATH=\"{}/bin/libclang.dll\"",toolchain.idf_tool_xtensa_elf_clang);
 
+}
+
+fn uninstall_rust_toolchain(toolchain:RustToolchain) {
+    if Path::new(toolchain.destination_dir.as_str()).exists() {
+        println!("Removing: {}", toolchain.destination_dir);
+        remove_dir_all(toolchain.destination_dir);
+    }
+
+    if Path::new(toolchain.idf_tool_xtensa_elf_clang.as_str()).exists() {
+        println!("Removing: {}", toolchain.idf_tool_xtensa_elf_clang);
+        remove_dir_all(toolchain.idf_tool_xtensa_elf_clang);
+    }
+}
+
+fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+    let toolchain = build_rust_toolchain("1.55.0-dev", "x86_64-pc-windows-msvc");
+
+    install_rust_toolchain(toolchain);
+    Ok(())
+}
+
+fn get_reinstall_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+    let toolchain = build_rust_toolchain("1.55.0-dev", "x86_64-pc-windows-msvc");
+
+    uninstall_rust_toolchain(toolchain);
+    // install_rust_toolchain(toolchain);
+    Ok(())
+}
+
+fn get_uninstall_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+    let toolchain = build_rust_toolchain("1.55.0-dev", "x86_64-pc-windows-msvc");
+
+    uninstall_rust_toolchain(toolchain);
     Ok(())
 }
 
@@ -69,9 +134,27 @@ pub fn get_install_cmd<'a>() -> Command<'a, str> {
         )
 }
 
+pub fn get_reinstall_cmd<'a>() -> Command<'a, str> {
+    Command::new("reinstall")
+        .description("Re-install Rust environment for Xtensa")
+        .runner(|_args, matches|
+            get_reinstall_runner(_args, matches)
+        )
+}
+
+pub fn get_uninstall_cmd<'a>() -> Command<'a, str> {
+    Command::new("uninstall")
+        .description("Uninstall Rust environment for Xtensa")
+        .runner(|_args, matches|
+            get_uninstall_runner(_args, matches)
+        )
+}
+
 pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
     let multi_cmd: MultiCommand<str, str> = Commander::new()
         .add_cmd(get_install_cmd())
+        .add_cmd(get_reinstall_cmd())
+        .add_cmd(get_uninstall_cmd())
         .into_cmd("rust")
 
         // Optionally specify a description
