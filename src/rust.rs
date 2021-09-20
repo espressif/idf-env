@@ -68,11 +68,24 @@ fn build_rust_toolchain(version:&str, arch:&str) -> RustToolchain {
 }
 
 #[cfg(windows)]
-fn set_env_variable(key:String, value:String) {
+fn set_env_variable(key:&str, value:String) {
     use winreg::{enums::HKEY_CURRENT_USER, RegKey};
     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
     let (env, _) = hkcu.create_subkey("Environment").unwrap(); // create_subkey opens with write permissions
     env.set_value(key, &value).unwrap();
+}
+
+#[cfg(windows)]
+fn update_env_path(value: &str) {
+    let path_key = "PATH";
+    use winreg::{enums::HKEY_CURRENT_USER, RegKey};
+    let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+    let env = hkcu.open_subkey("Environment").unwrap();
+    let env_path:String = env.get_value(path_key).unwrap();
+    if !env_path.contains(&value) {
+        let updated_env_path = format!("{};{}", env_path, value);
+        set_env_variable(path_key, updated_env_path);
+    }
 }
 
 #[cfg(unix)]
@@ -104,12 +117,15 @@ fn install_rust_toolchain(toolchain:&RustToolchain) {
         );
     }
 
-    println!("Add following command to your shell profile");
-    println!("$env:PATH+=\";{}/bin\"", toolchain.idf_tool_xtensa_elf_clang);
+    println!("Updating environment variables:");
+    let libclang_bin = format!("{}/bin/", toolchain.idf_tool_xtensa_elf_clang);
+    println!("PATH+=\";{}\"", libclang_bin);
+    update_env_path(&libclang_bin);
 
-    let libclang_path = format!("{}/bin/libclang.dll", toolchain.idf_tool_xtensa_elf_clang);
-    println!("$env:LIBCLANG_PATH=\"{}\"", libclang_path);
-    set_env_variable("LIBCLANG_PATH".to_string(), libclang_path);
+    // It seems that LIBCLANG_PATH is not necessary for Windows
+    // let libclang_path = format!("{}/libclang.dll", libclang_bin);
+    // println!("LIBCLANG_PATH=\"{}\"", libclang_path);
+    // set_env_variable("LIBCLANG_PATH", libclang_path);
 
 }
 
