@@ -133,10 +133,10 @@ pub fn prepare_package(package_url: String, package_archive: String, output_dire
     Ok(())
 }
 
-pub fn prepare_package_strip_prefix(package_url: String, package_archive: String, output_directory: String, strip_prefix: &str) -> Result<()> {
-    download_package(package_url, package_archive.clone());
+pub fn prepare_package_strip_prefix(package_url: &str, package_archive: &str, output_directory: String, strip_prefix: &str) -> Result<()> {
+    download_package(package_url.to_string(), package_archive.to_string());
     if !Path::new(&output_directory).exists() {
-        unzip_strip_prefix(package_archive, output_directory, strip_prefix).unwrap();
+        unzip_strip_prefix(package_archive.to_string(), output_directory, strip_prefix).unwrap();
     }
     Ok(())
 }

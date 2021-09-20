@@ -20,6 +20,9 @@ widestring = "*"
 winapi = { version = "*", features = ["setupapi", "handleapi", "processthreadsapi", "winnt", "securitybaseapi", "impl-default", "shellapi"] }
 zip = "*"
 
+[target.'cfg(windows)'.dependencies]
+winreg = "0.7"
+
 [[bin]]
 name = "idf-env"
 path = "src/idf_env.rs"
