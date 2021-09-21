@@ -89,6 +89,10 @@ fn update_env_path(value: &str) {
 }
 
 #[cfg(unix)]
+fn update_env_path(value: &str) {
+}
+
+#[cfg(unix)]
 fn set_env_variable(key:&str, value:&str) {
 
 }
@@ -141,15 +145,20 @@ fn uninstall_rust_toolchain(toolchain:&RustToolchain) {
     }
 }
 
+fn get_default_rust_toolchain() -> RustToolchain {
+    let triple = guess_host_triple::guess_host_triple().unwrap();
+    build_rust_toolchain("1.55.0-dev", triple)
+}
+
 fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
-    let toolchain = build_rust_toolchain("1.55.0-dev", "x86_64-pc-windows-msvc");
+    let toolchain = get_default_rust_toolchain();
 
     install_rust_toolchain(&toolchain);
     Ok(())
 }
 
 fn get_reinstall_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
-    let toolchain = build_rust_toolchain("1.55.0-dev", "x86_64-pc-windows-msvc");
+    let toolchain = get_default_rust_toolchain();
 
     uninstall_rust_toolchain(&toolchain);
     install_rust_toolchain(&toolchain);
@@ -157,7 +166,7 @@ fn get_reinstall_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::res
 }
 
 fn get_uninstall_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
-    let toolchain = build_rust_toolchain("1.55.0-dev", "x86_64-pc-windows-msvc");
+    let toolchain = get_default_rust_toolchain();
 
     uninstall_rust_toolchain(&toolchain);
     Ok(())
