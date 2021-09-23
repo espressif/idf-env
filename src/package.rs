@@ -2,6 +2,11 @@ use anyhow::Context;
 use std::{fs, io};
 use std::path::Path;
 use std::io::Cursor;
+use std::fs::File;
+use std::path::PathBuf;
+use flate2::read::GzDecoder;
+use tar::Archive;
+use xz2::read::XzDecoder;
 
 use tokio::runtime::Handle;
 
@@ -100,6 +105,24 @@ pub fn unzip_strip_prefix(file_path: String, output_directory: String, strip_pre
     Ok(())
 }
 
+pub fn untar_strip_prefix(file_path: String, output_directory: String, strip_prefix: &str) -> Result<()> {
+    let tar_xz = File::open(file_path)?;
+    let tar = XzDecoder::new(tar_xz);
+    let mut archive = Archive::new(tar);
+    archive.entries()?
+        .filter_map(|e| e.ok())
+        .map(|mut entry| -> Result<PathBuf> {
+            let path = entry.path()?.strip_prefix(strip_prefix)?.to_owned();
+            let full_path = format!("{}/{}", output_directory, path.display().to_string());
+            entry.unpack(&full_path)?;
+            Ok(path)
+        })
+        .filter_map(|e| e.ok())
+        .for_each(|x| println!("> {}", x.display()));
+    // archive.unpack(output_directory)?;
+    Ok(())
+}
+
 async fn fetch_url(url: String, output: String) -> Result<()> {
     let response = reqwest::get(url).await?;
     let mut file = std::fs::File::create(output)?;
@@ -136,7 +159,12 @@ pub fn prepare_package(package_url: String, package_archive: String, output_dire
 pub fn prepare_package_strip_prefix(package_url: &str, package_archive: &str, output_directory: String, strip_prefix: &str) -> Result<()> {
     download_package(package_url.to_string(), package_archive.to_string());
     if !Path::new(&output_directory).exists() {
-        unzip_strip_prefix(package_archive.to_string(), output_directory, strip_prefix).unwrap();
+        let package_archive = package_archive.to_string();
+        if package_archive.ends_with(".zip") {
+            unzip_strip_prefix(package_archive, output_directory, strip_prefix).unwrap();
+        } else {
+            untar_strip_prefix(package_archive, output_directory, strip_prefix).unwrap();
+        }
     }
     Ok(())
 }

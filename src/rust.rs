@@ -123,7 +123,12 @@ fn install_rust_toolchain(toolchain:&RustToolchain) {
 
     println!("Updating environment variables:");
     let libclang_bin = format!("{}/bin/", toolchain.idf_tool_xtensa_elf_clang);
+
+    #[cfg(windows)]
     println!("PATH+=\";{}\"", libclang_bin);
+    #[cfg(unix)]
+    println!("export PATH=\"{}:$PATH\"", libclang_bin);
+
     update_env_path(&libclang_bin);
 
     // It seems that LIBCLANG_PATH is not necessary for Windows
