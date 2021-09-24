@@ -79,6 +79,17 @@ Download drivers without installation:
 idf-env driver download --espressif --ftdi --silabs
 ```
 
+### Working with Rust language for Xtensa
+
+Requires: installed rustup
+
+```
+idf-env rust install
+idf-env rust reinstall
+idf-env rust uninstall
+```
+
+
 ### Web IDE Companion
 
 ```
