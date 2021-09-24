@@ -6,6 +6,7 @@ use std::path::Path;
 use std::fs::{create_dir_all, remove_dir_all};
 use crate::config::get_tool_path;
 use crate::package::{prepare_package, prepare_package_strip_prefix};
+use crate::shell::run_command;
 
 struct RustToolchain {
     arch: String,
@@ -14,9 +15,14 @@ struct RustToolchain {
     artifact_file_extension: String,
     version: String,
     rust_dist: String,
+    rust_dist_temp: String,
     rust_src_dist: String,
+    rust_src_dist_temp: String,
+    rust_src_dist_file: String,
     rust_dist_file: String,
     rust_dist_url: String,
+    rust_src_dist_url: String,
+    rust_installer: String,
     destination_dir: String,
     llvm_file: String,
     llvm_url: String,
@@ -39,14 +45,24 @@ fn get_artifact_file_extension(arch:&str) -> &str {
     }
 }
 
+fn get_rust_installer(arch:&str) -> &str {
+    match arch {
+        "x86_64-pc-windows-msvc" => "",
+        _ => "./install.sh"
+    }
+}
+
 fn build_rust_toolchain(version:&str, arch:&str) -> RustToolchain {
     let llvm_release = "esp-12.0.1-20210823".to_string();
     let artifact_file_extension = get_artifact_file_extension(arch).to_string();
     let llvm_arch = get_llvm_arch(arch).to_string();
     let llvm_file = format!("xtensa-esp32-elf-llvm12_0_1-{}-{}.{}", llvm_release, llvm_arch, artifact_file_extension);
     let rust_dist = format!("rust-{}-{}", version, arch);
+    let rust_src_dist = format!("rust-src-{}", version);
     let rust_dist_file = format!("{}.{}", rust_dist, artifact_file_extension);
+    let rust_src_dist_file =  format!("{}.{}", rust_src_dist, artifact_file_extension);
     let rust_dist_url = format!("https://github.com/esp-rs/rust-build/releases/download/v{}/{}", version, rust_dist_file);
+    let rust_src_dist_url = format!("https://github.com/esp-rs/rust-build/releases/download/v{}/{}", version, rust_src_dist_file);
     let llvm_url = format!("https://github.com/espressif/llvm-project/releases/download/{}/{}", llvm_release, llvm_file);
     let idf_tool_xtensa_elf_clang = format!("{}/{}-{}", get_tool_path("xtensa-esp32-elf-clang".to_string()), llvm_release, arch);
 
@@ -57,9 +73,14 @@ fn build_rust_toolchain(version:&str, arch:&str) -> RustToolchain {
         artifact_file_extension,
         version: "1.55.0-dev".to_string(),
         rust_dist,
-        rust_src_dist: format!("rust-src-{}", version),
+        rust_dist_temp: "/tmp/rust".to_string(),
+        rust_src_dist,
+        rust_src_dist_temp: "/tmp/rust-src".to_string(),
+        rust_src_dist_file,
         rust_dist_file,
         rust_dist_url,
+        rust_src_dist_url,
+        rust_installer: get_rust_installer(version).to_string(),
         destination_dir: format!("{}/.rustup/toolchains/esp", home_dir().unwrap().display().to_string()),
         llvm_file,
         llvm_url,
@@ -103,11 +124,40 @@ fn install_rust_toolchain(toolchain:&RustToolchain) {
         println!("Previous installation of Rust Toolchain exist in: {}", toolchain.destination_dir);
         println!("Please, remove the directory before new installation.");
     } else {
-        // create_dir_all(toolchain_destination_dir.clone());
-        prepare_package_strip_prefix(&toolchain.rust_dist_url,
-                                     &toolchain.rust_dist_file,
-                                     toolchain.destination_dir.to_string(),
-                                     "esp");
+
+        // Some platfroms like Windows are available in single bundle rust + src, because install
+        // script in dist is not available for the plaform. It's sufficient to extract the toolchain
+        if toolchain.rust_installer.is_empty() {
+            prepare_package_strip_prefix(&toolchain.rust_dist_url,
+                                         &toolchain.rust_dist_file,
+                                         toolchain.destination_dir.to_string(),
+                                         "esp");
+        } else {
+            prepare_package_strip_prefix(&toolchain.rust_dist_url,
+                                         &toolchain.rust_dist_file,
+                                         toolchain.rust_dist_temp.to_string(),
+                                         "rust-1.55.0-dev-aarch64-apple-darwin");
+
+            let mut arguments: Vec<String> = [].to_vec();
+
+            arguments.push("-c".to_string());
+            arguments.push(format!("/tmp/rust/install.sh --destdir={} --prefix='' --without=rust-docs", toolchain.destination_dir));
+
+            run_command("/bin/bash".to_string(), arguments.clone(), "".to_string());
+
+            prepare_package_strip_prefix(&toolchain.rust_src_dist_url,
+                                         &toolchain.rust_src_dist_file,
+                                         toolchain.rust_src_dist_temp.to_string(),
+                                         "rust-src-1.55.0-dev");
+
+            let mut arguments: Vec<String> = [].to_vec();
+
+            arguments.push("-c".to_string());
+            arguments.push(format!("/tmp/rust-src/install.sh --destdir={} --prefix='' --without=rust-docs", toolchain.destination_dir));
+
+            run_command("/tmp/rust-src/install.sh".to_string(), arguments, "".to_string());
+
+        }
     }
 
     if Path::new(toolchain.idf_tool_xtensa_elf_clang.as_str()).exists() {
