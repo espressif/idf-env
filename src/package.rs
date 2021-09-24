@@ -115,11 +115,10 @@ pub fn untar_strip_prefix(file_path: String, output_directory: String, strip_pre
             let path = entry.path()?.strip_prefix(strip_prefix)?.to_owned();
             let full_path = format!("{}/{}", output_directory, path.display().to_string());
             entry.unpack(&full_path)?;
-            Ok(path)
+            Ok(full_path.parse().unwrap())
         })
         .filter_map(|e| e.ok())
         .for_each(|x| println!("> {}", x.display()));
-    // archive.unpack(output_directory)?;
     Ok(())
 }
 
