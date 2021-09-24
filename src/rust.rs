@@ -155,7 +155,7 @@ fn install_rust_toolchain(toolchain:&RustToolchain) {
             arguments.push("-c".to_string());
             arguments.push(format!("/tmp/rust-src/install.sh --destdir={} --prefix='' --without=rust-docs", toolchain.destination_dir));
 
-            run_command("/tmp/rust-src/install.sh".to_string(), arguments, "".to_string());
+            run_command("/bin/bash".to_string(), arguments, "".to_string());
 
         }
     }
