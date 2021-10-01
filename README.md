@@ -7,7 +7,7 @@ Tool for maintaining ESP-IDF environment.
 ### Quick start with `cargo`
 
 ```shell
-cargo install idf_env --git https://github.com/espressif/idf-env 
+cargo install idf-env --git https://github.com/espressif/idf-env 
 ```
 
 ### Quick start with `PowerShell`
