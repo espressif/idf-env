@@ -4,6 +4,14 @@ Tool for maintaining ESP-IDF environment.
 
 ## Quick start
 
+### Quick start with `cargo`
+
+```shell
+cargo install idf-env --git https://github.com/espressif/idf-env 
+```
+
+### Quick start with `PowerShell`
+
 Install serial drivers for ESP boards on Windows. Execute following command in PowerShell:
 
 ```
@@ -78,6 +86,17 @@ Download drivers without installation:
 ```
 idf-env driver download --espressif --ftdi --silabs
 ```
+
+### Working with Rust language for Xtensa
+
+Requires: installed rustup
+
+```
+idf-env rust install
+idf-env rust reinstall
+idf-env rust uninstall
+```
+
 
 ### Web IDE Companion
 
