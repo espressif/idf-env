@@ -4,6 +4,14 @@ Tool for maintaining ESP-IDF environment.
 
 ## Quick start
 
+### Quick start with `cargo`
+
+```shell
+cargo install idf_env --git https://github.com/espressif/idf-env 
+```
+
+### Quick start with `PowerShell`
+
 Install serial drivers for ESP boards on Windows. Execute following command in PowerShell:
 
 ```
