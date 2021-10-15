@@ -9,6 +9,7 @@ use tar::Archive;
 use xz2::read::XzDecoder;
 
 use tokio::runtime::Handle;
+use crate::config::get_dist_path;
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
@@ -148,6 +149,7 @@ pub fn download_package(package_url: String, package_archive: String) -> Result<
 }
 
 pub fn prepare_package(package_url: String, package_archive: String, output_directory: String) -> Result<()> {
+    let package_archive = get_dist_path(package_archive);
     download_package(package_url, package_archive.clone());
     if !Path::new(&output_directory).exists() {
         unzip(package_archive, output_directory).unwrap();

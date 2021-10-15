@@ -90,6 +90,7 @@ pub fn get_cmd<'a>() -> Command<'a, str> {
 fn install_driver(driver_inf: String, driver_url: String, _driver_archive: String) {}
 
 use widestring::WideCString;
+
 #[cfg(windows)]
 fn install_driver(driver_inf: String) {
     // Reference: https://github.com/microsoft/Windows-driver-samples/tree/master/setup/devcon
