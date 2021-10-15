@@ -149,11 +149,13 @@ pub fn download_package(package_url: String, package_archive: String) -> Result<
 }
 
 pub fn prepare_package(package_url: String, package_archive: String, output_directory: String) -> Result<()> {
+    if Path::new(&output_directory).exists() {
+        println!("Using cached directory: {}", output_directory);
+        return Ok(());
+    }
     let package_archive = get_dist_path(package_archive);
     download_package(package_url, package_archive.clone());
-    if !Path::new(&output_directory).exists() {
-        unzip(package_archive, output_directory).unwrap();
-    }
+    unzip(package_archive, output_directory).unwrap();
     Ok(())
 }
 
