@@ -21,7 +21,7 @@ pub fn get_tool_path(tool_name:String) -> String {
     format!("{}/tools/{}", tools_path, tool_name)
 }
 
-pub fn get_dist_path(tool_name:String) -> String {
+pub fn get_dist_path(tool_name:&str) -> String {
     let tools_path = get_tools_path();
     format!("{}/dist/{}", tools_path, tool_name)
 }

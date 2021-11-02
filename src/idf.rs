@@ -140,12 +140,12 @@ fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::resul
 
     #[cfg(windows)]
     prepare_package("https://dl.espressif.com/dl/idf-git/idf-git-2.30.1-win64.zip".to_string(),
-        get_dist_path("idf-git-2.30.1-win64.zip".to_string()),
+        get_dist_path("idf-git-2.30.1-win64.zip").as_str(),
         get_tool_path("idf-git/2.30.1".to_string())
     );
     #[cfg(windows)]
     prepare_package("https://dl.espressif.com/dl/idf-python/idf-python-3.8.7-embed-win64.zip".to_string(),
-        get_dist_path("idf-python-3.8.7-embed-win64.zip".to_string()),
+        get_dist_path("idf-python-3.8.7-embed-win64.zip").as_str(),
         get_tool_path("idf-python/3.8.7".to_string())
     );
 

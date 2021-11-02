@@ -10,7 +10,7 @@ type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>
 
 fn prepare_companion() {
     prepare_package("https://dl.espressif.com/dl/esp-iwidc/esp-iwidc.zip".to_string(),
-                    "esp-iwidc.zip".to_string(),
+                    "esp-iwidc.zip",
                     "tmp/esp-iwidc".to_string());
 }
 
