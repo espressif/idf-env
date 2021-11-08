@@ -53,7 +53,7 @@ fn get_rust_installer(arch:&str) -> &str {
 }
 
 fn build_rust_toolchain(version:&str, arch:&str) -> RustToolchain {
-    let llvm_release = "esp-12.0.1-20210823".to_string();
+    let llvm_release = "esp-12.0.1-20210914".to_string();
     let artifact_file_extension = get_artifact_file_extension(arch).to_string();
     let llvm_arch = get_llvm_arch(arch).to_string();
     let llvm_file = format!("xtensa-esp32-elf-llvm12_0_1-{}-{}.{}", llvm_release, llvm_arch, artifact_file_extension);
