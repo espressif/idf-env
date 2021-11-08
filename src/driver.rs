@@ -165,17 +165,17 @@ fn download_drivers(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result
 fn download_drivers(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
     if _matches.is_present("silabs") {
         prepare_package("https://www.silabs.com/documents/public/software/CP210x_Universal_Windows_Driver.zip".to_string(),
-                        "cp210x.zip".to_string(),
+                        "cp210x.zip",
                         get_driver_path("silabs-2021-05-03".to_string()));
     }
     if _matches.is_present("ftdi") {
         prepare_package("https://www.ftdichip.com/Drivers/CDM/CDM%20v2.12.28%20WHQL%20Certified.zip".to_string(),
-                        "ftdi.zip".to_string(),
+                        "ftdi.zip",
                         get_driver_path("ftdi-2021-05-03".to_string()));
     }
     if _matches.is_present("espressif") {
         prepare_package("https://dl.espressif.com/dl/idf-driver/idf-driver-esp32-usb-jtag-2021-07-15.zip".to_string(),
-                        "idf-driver-esp32-usb-jtag-2021-07-15.zip".to_string(),
+                        "idf-driver-esp32-usb-jtag-2021-07-15.zip",
                         get_driver_path("idf-driver-esp32-usb-jtag-2021-07-15".to_string()));
     }
     Ok(())
