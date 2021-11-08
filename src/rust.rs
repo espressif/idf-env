@@ -71,7 +71,7 @@ fn build_rust_toolchain(version:&str, arch:&str) -> RustToolchain {
         llvm_release,
         llvm_arch,
         artifact_file_extension,
-        version: "1.55.0-dev".to_string(),
+        version: "1.56.0.1".to_string(),
         rust_dist,
         rust_dist_temp: "/tmp/rust".to_string(),
         rust_src_dist,
@@ -136,7 +136,7 @@ fn install_rust_toolchain(toolchain:&RustToolchain) {
             prepare_package_strip_prefix(&toolchain.rust_dist_url,
                                          &toolchain.rust_dist_file,
                                          toolchain.rust_dist_temp.to_string(),
-                                         "rust-1.55.0-dev-aarch64-apple-darwin");
+                                         "rust-1.56.0.1-aarch64-apple-darwin");
 
             let mut arguments: Vec<String> = [].to_vec();
 
@@ -148,7 +148,7 @@ fn install_rust_toolchain(toolchain:&RustToolchain) {
             prepare_package_strip_prefix(&toolchain.rust_src_dist_url,
                                          &toolchain.rust_src_dist_file,
                                          toolchain.rust_src_dist_temp.to_string(),
-                                         "rust-src-1.55.0-dev");
+                                         "rust-src-1.56.0.1");
 
             let mut arguments: Vec<String> = [].to_vec();
 
@@ -202,7 +202,7 @@ fn uninstall_rust_toolchain(toolchain:&RustToolchain) {
 
 fn get_default_rust_toolchain() -> RustToolchain {
     let triple = guess_host_triple::guess_host_triple().unwrap();
-    build_rust_toolchain("1.55.0-dev", triple)
+    build_rust_toolchain("1.56.0.1", triple)
 }
 
 fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
