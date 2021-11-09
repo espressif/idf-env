@@ -168,6 +168,19 @@ pub fn prepare_package(package_url: String, package_archive: &str, output_direct
 }
 
 pub fn prepare_package_strip_prefix(package_url: &str, package_archive: &str, output_directory: String, strip_prefix: &str) -> Result<()> {
+    if Path::new(&output_directory).exists() {
+        println!("Using cached directory: {}", output_directory);
+        return Ok(());
+    }
+
+    let dist_path = get_dist_path("");
+    if !Path::new(&dist_path).exists() {
+        println!("Creating dist directory: {}", dist_path);
+        fs::create_dir_all(&dist_path);
+    }
+
+    let package_archive = get_dist_path(package_archive);
+
     download_package(package_url.to_string(), package_archive.to_string());
     if !Path::new(&output_directory).exists() {
         let package_archive = package_archive.to_string();
