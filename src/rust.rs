@@ -4,8 +4,10 @@ use clap_nested::{Command, Commander, MultiCommand};
 use dirs::home_dir;
 use std::path::Path;
 use std::fs::{create_dir_all, remove_dir_all};
+use std::io::Read;
+use std::process::Stdio;
 use crate::config::get_tool_path;
-use crate::package::{prepare_package, prepare_package_strip_prefix};
+use crate::package::{prepare_package, prepare_package_strip_prefix, prepare_single_binary};
 use crate::shell::run_command;
 
 struct RustToolchain {
@@ -118,8 +120,78 @@ fn set_env_variable(key:&str, value:&str) {
 
 }
 
+fn install_rust() {
+
+    // ./rustup-init.exe --default-toolchain stable -y
+    // $env:PATH+=";$env:USERPROFILE\.cargo\bin"
+    // $ExportContent+="`n" + '$env:PATH+=";$env:USERPROFILE\.cargo\bin"'
+
+    let rustup_path = prepare_single_binary("https://win.rustup.rs/x86_64",
+                         "rustup-init.exe",
+                          "rustup");
+    println!("rustup stable");
+    match std::process::Command::new(rustup_path.clone())
+        .arg("--default-toolchain")
+        .arg("stable")
+        .arg("-y")
+        .stdout(Stdio::piped())
+        .output()
+    {
+        Ok(child_output) => {
+            let result = String::from_utf8_lossy(&child_output.stdout);
+            println!("{}", result);
+        }
+        Err(e) => {
+
+        }
+    }
+
+    println!("rustup nightly");
+    match std::process::Command::new(rustup_path)
+        .arg("nightly")
+        .arg("-y")
+        .stdout(Stdio::piped())
+        .output()
+    {
+        Ok(child_output) => {
+            let result = String::from_utf8_lossy(&child_output.stdout);
+            println!("{}", result);
+        }
+        Err(e) => {
+
+        }
+    }
+
+}
+
 
 fn install_rust_toolchain(toolchain:&RustToolchain) {
+    match std::process::Command::new("rustup")
+        .arg("toolchain")
+        .arg("list")
+        .stdout(Stdio::piped())
+        .output() {
+        Ok(child_output) => {
+            println!("rustup - found");
+            let result = String::from_utf8_lossy(&child_output.stdout);
+            if !result.contains("stable") {
+                println!("stable toolchain not found");
+                install_rust();
+            }
+            if !result.contains("nightly") {
+                println!("nightly toolchain not found");
+                install_rust();
+            }
+            println!("rustup - found - {}", String::from_utf8_lossy(&child_output.stdout));
+        },
+        Err(e) => {
+            if let NotFound = e.kind() {
+                println!("rustup was not found.");
+                install_rust();
+            }
+        },
+    }
+
     if Path::new(toolchain.destination_dir.as_str()).exists() {
         println!("Previous installation of Rust Toolchain exist in: {}", toolchain.destination_dir);
         println!("Please, remove the directory before new installation.");

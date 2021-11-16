@@ -9,7 +9,7 @@ use tar::Archive;
 use xz2::read::XzDecoder;
 
 use tokio::runtime::Handle;
-use crate::config::get_dist_path;
+use crate::config::{ get_dist_path, get_tool_path };
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
@@ -165,6 +165,24 @@ pub fn prepare_package(package_url: String, package_archive: &str, output_direct
     download_package(package_url, package_archive.clone());
     unzip(package_archive, output_directory).unwrap();
     Ok(())
+}
+
+pub fn prepare_single_binary(package_url: &str, binary_name: &str, output_directory: &str) -> String {
+    let tool_path = get_tool_path(output_directory.to_string());
+    let binary_path = format!("{}/{}", tool_path, binary_name);
+
+    if Path::new(&binary_path).exists() {
+        println!("Using cached tool: {}", binary_path);
+        return binary_path;
+    }
+
+    if !Path::new(&tool_path).exists() {
+        println!("Creating tool directory: {}", tool_path);
+        fs::create_dir_all(&tool_path);
+    }
+
+    download_package(package_url.to_string(), binary_path.to_string());
+    return binary_path;
 }
 
 pub fn prepare_package_strip_prefix(package_url: &str, package_archive: &str, output_directory: String, strip_prefix: &str) -> Result<()> {
