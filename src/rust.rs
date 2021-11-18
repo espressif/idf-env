@@ -1,3 +1,4 @@
+use std::env;
 use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
 
@@ -144,9 +145,9 @@ fn install_rust_stable() {
 
 fn install_rust_nightly() {
 
-    let rustup_path = "rustup";
+    let rustup_path = format!("{}/.cargo/bin/rustup.exe", env::var("USERPROFILE").unwrap());
 
-    println!("rustup nightly");
+    println!("{} install nightly", rustup_path);
     match std::process::Command::new(rustup_path)
         .arg("install")
         .arg("nightly")
