@@ -120,17 +120,12 @@ fn set_env_variable(key:&str, value:&str) {
 
 }
 
-fn install_rust() {
-
-    // ./rustup-init.exe --default-toolchain stable -y
-    // $env:PATH+=";$env:USERPROFILE\.cargo\bin"
-    // $ExportContent+="`n" + '$env:PATH+=";$env:USERPROFILE\.cargo\bin"'
-
-    let rustup_path = prepare_single_binary("https://win.rustup.rs/x86_64",
+fn install_rust_stable() {
+    let rustup_init_path = prepare_single_binary("https://win.rustup.rs/x86_64",
                          "rustup-init.exe",
                           "rustup");
     println!("rustup stable");
-    match std::process::Command::new(rustup_path.clone())
+    match std::process::Command::new(rustup_init_path)
         .arg("--default-toolchain")
         .arg("stable")
         .arg("-y")
@@ -142,28 +137,37 @@ fn install_rust() {
             println!("{}", result);
         }
         Err(e) => {
-
+            println!("Error: {}", e);
         }
     }
+}
+
+fn install_rust_nightly() {
+
+    let rustup_path = "rustup";
 
     println!("rustup nightly");
     match std::process::Command::new(rustup_path)
+        .arg("install")
         .arg("nightly")
-        .arg("-y")
         .stdout(Stdio::piped())
         .output()
     {
         Ok(child_output) => {
             let result = String::from_utf8_lossy(&child_output.stdout);
-            println!("{}", result);
+            println!("Result: {}", result);
         }
         Err(e) => {
-
+            println!("Error: {}", e);
         }
     }
 
 }
 
+fn install_rust() {
+    install_rust_stable();
+    install_rust_nightly();
+}
 
 fn install_rust_toolchain(toolchain:&RustToolchain) {
     match std::process::Command::new("rustup")
@@ -176,11 +180,11 @@ fn install_rust_toolchain(toolchain:&RustToolchain) {
             let result = String::from_utf8_lossy(&child_output.stdout);
             if !result.contains("stable") {
                 println!("stable toolchain not found");
-                install_rust();
+                install_rust_stable();
             }
             if !result.contains("nightly") {
                 println!("nightly toolchain not found");
-                install_rust();
+                install_rust_nightly();
             }
             println!("rustup - found - {}", String::from_utf8_lossy(&child_output.stdout));
         },
