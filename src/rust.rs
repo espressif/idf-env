@@ -1,11 +1,14 @@
+use std::env;
 use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
 
 use dirs::home_dir;
 use std::path::Path;
 use std::fs::{create_dir_all, remove_dir_all};
+use std::io::Read;
+use std::process::Stdio;
 use crate::config::get_tool_path;
-use crate::package::{prepare_package, prepare_package_strip_prefix};
+use crate::package::{prepare_package, prepare_package_strip_prefix, prepare_single_binary};
 use crate::shell::run_command;
 
 struct RustToolchain {
@@ -53,7 +56,7 @@ fn get_rust_installer(arch:&str) -> &str {
 }
 
 fn build_rust_toolchain(version:&str, arch:&str) -> RustToolchain {
-    let llvm_release = "esp-12.0.1-20210823".to_string();
+    let llvm_release = "esp-12.0.1-20210914".to_string();
     let artifact_file_extension = get_artifact_file_extension(arch).to_string();
     let llvm_arch = get_llvm_arch(arch).to_string();
     let llvm_file = format!("xtensa-esp32-elf-llvm12_0_1-{}-{}.{}", llvm_release, llvm_arch, artifact_file_extension);
@@ -71,16 +74,16 @@ fn build_rust_toolchain(version:&str, arch:&str) -> RustToolchain {
         llvm_release,
         llvm_arch,
         artifact_file_extension,
-        version: "1.55.0-dev".to_string(),
+        version: "1.56.0.1".to_string(),
         rust_dist,
-        rust_dist_temp: "/tmp/rust".to_string(),
+        rust_dist_temp: get_tool_path("rust".to_string()),
         rust_src_dist,
-        rust_src_dist_temp: "/tmp/rust-src".to_string(),
+        rust_src_dist_temp: get_tool_path("rust-src".to_string()),
         rust_src_dist_file,
         rust_dist_file,
         rust_dist_url,
         rust_src_dist_url,
-        rust_installer: get_rust_installer(version).to_string(),
+        rust_installer: get_rust_installer(arch).to_string(),
         destination_dir: format!("{}/.rustup/toolchains/esp", home_dir().unwrap().display().to_string()),
         llvm_file,
         llvm_url,
@@ -118,8 +121,82 @@ fn set_env_variable(key:&str, value:&str) {
 
 }
 
+fn install_rust_stable() {
+    let rustup_init_path = prepare_single_binary("https://win.rustup.rs/x86_64",
+                         "rustup-init.exe",
+                          "rustup");
+    println!("rustup stable");
+    match std::process::Command::new(rustup_init_path)
+        .arg("--default-toolchain")
+        .arg("stable")
+        .arg("-y")
+        .stdout(Stdio::piped())
+        .output()
+    {
+        Ok(child_output) => {
+            let result = String::from_utf8_lossy(&child_output.stdout);
+            println!("{}", result);
+        }
+        Err(e) => {
+            println!("Error: {}", e);
+        }
+    }
+}
+
+fn install_rust_nightly() {
+
+    let rustup_path = format!("{}/.cargo/bin/rustup.exe", env::var("USERPROFILE").unwrap());
+
+    println!("{} install nightly", rustup_path);
+    match std::process::Command::new(rustup_path)
+        .arg("install")
+        .arg("nightly")
+        .stdout(Stdio::piped())
+        .output()
+    {
+        Ok(child_output) => {
+            let result = String::from_utf8_lossy(&child_output.stdout);
+            println!("Result: {}", result);
+        }
+        Err(e) => {
+            println!("Error: {}", e);
+        }
+    }
+
+}
+
+fn install_rust() {
+    install_rust_stable();
+    install_rust_nightly();
+}
 
 fn install_rust_toolchain(toolchain:&RustToolchain) {
+    match std::process::Command::new("rustup")
+        .arg("toolchain")
+        .arg("list")
+        .stdout(Stdio::piped())
+        .output() {
+        Ok(child_output) => {
+            println!("rustup - found");
+            let result = String::from_utf8_lossy(&child_output.stdout);
+            if !result.contains("stable") {
+                println!("stable toolchain not found");
+                install_rust_stable();
+            }
+            if !result.contains("nightly") {
+                println!("nightly toolchain not found");
+                install_rust_nightly();
+            }
+            println!("rustup - found - {}", String::from_utf8_lossy(&child_output.stdout));
+        },
+        Err(e) => {
+            if let NotFound = e.kind() {
+                println!("rustup was not found.");
+                install_rust();
+            }
+        },
+    }
+
     if Path::new(toolchain.destination_dir.as_str()).exists() {
         println!("Previous installation of Rust Toolchain exist in: {}", toolchain.destination_dir);
         println!("Please, remove the directory before new installation.");
@@ -136,7 +213,7 @@ fn install_rust_toolchain(toolchain:&RustToolchain) {
             prepare_package_strip_prefix(&toolchain.rust_dist_url,
                                          &toolchain.rust_dist_file,
                                          toolchain.rust_dist_temp.to_string(),
-                                         "rust-1.55.0-dev-aarch64-apple-darwin");
+                                         "rust-1.56.0.1-aarch64-apple-darwin");
 
             let mut arguments: Vec<String> = [].to_vec();
 
@@ -148,7 +225,7 @@ fn install_rust_toolchain(toolchain:&RustToolchain) {
             prepare_package_strip_prefix(&toolchain.rust_src_dist_url,
                                          &toolchain.rust_src_dist_file,
                                          toolchain.rust_src_dist_temp.to_string(),
-                                         "rust-src-1.55.0-dev");
+                                         "rust-src-1.56.0.1");
 
             let mut arguments: Vec<String> = [].to_vec();
 
@@ -202,7 +279,7 @@ fn uninstall_rust_toolchain(toolchain:&RustToolchain) {
 
 fn get_default_rust_toolchain() -> RustToolchain {
     let triple = guess_host_triple::guess_host_triple().unwrap();
-    build_rust_toolchain("1.55.0-dev", triple)
+    build_rust_toolchain("1.56.0.1", triple)
 }
 
 fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
