@@ -12,3 +12,6 @@ Cargo.lock
 .vscode/
 .idea/
 tmp/
+
+*.zip
+*.xz
