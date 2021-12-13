@@ -1,5 +1,6 @@
 use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
+use git2::Repository;
 use std::path::Path;
 use std::io::Cursor;
 use std::process;
@@ -455,6 +456,98 @@ fn get_build_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result:
     Ok(())
 }
 
+fn change_submodules_mirror(mut repo: Repository, submodule_url: String) {
+    let mut change_set: Vec<(String, String)> = Vec::new();
+    for submodule in repo.submodules().unwrap() {
+        let repo_name = submodule.name().unwrap().to_string();
+        let original_url = submodule.url().unwrap();
+
+        if !( original_url.starts_with("../../") ||
+            original_url.starts_with("https://github.com")
+        ) {
+            println!("Submodule: {}, URL: {} - skip", repo_name, original_url);
+            continue;
+        }
+
+        let mut old_repo = original_url.split('/').last().unwrap();
+
+        // Correction of some names
+        if old_repo.starts_with("unity") {
+            old_repo = "Unity"
+        } else if old_repo.starts_with("cexception") {
+            old_repo = "CException"
+        }
+
+        let new_url = format!("{}{}", submodule_url, old_repo);
+
+        change_set.push((repo_name, new_url));
+
+    }
+
+    for submodule in change_set {
+        println!("Submodule: {}, new URL: {}", submodule.0, submodule.1);
+        repo.submodule_set_url(&*submodule.0, &*submodule.1);
+    }
+
+}
+
+fn get_mirror_switch_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+    let idf_path = matches.value_of("idf-path")
+        .unwrap_or(&*get_selected_idf_path()).to_string();
+    let url = matches.value_of("url")
+        .unwrap().to_string();
+    let submodule_url = matches.value_of("submodule-url")
+        .unwrap().to_string();
+
+    println!("Processing main repository...");
+    match Repository::open(idf_path.clone()) {
+        Ok(mut repo) => {
+            //repo.find_remote("origin")?.url()
+            if matches.is_present("url") {
+                repo.remote_set_url("origin", url.as_str());
+            }
+
+            change_submodules_mirror(repo, submodule_url.clone());
+
+        },
+        Err(e) => {
+            println!("failed to open: {}", e.to_string());
+            std::process::exit(1);
+        },
+    };
+
+    println!("Processing submodules...");
+    match Repository::open(idf_path) {
+        Ok(mut repo) => {
+            //repo.find_remote("origin")?.url()
+            if matches.is_present("url") {
+                repo.remote_set_url("origin", url.as_str());
+            }
+
+            for mut submodule_repo_reference in repo.submodules().unwrap() {
+                submodule_repo_reference.init(false);
+                submodule_repo_reference.update(true, None);
+                match submodule_repo_reference.open() {
+                    Ok(mut sub_repo) => {
+                        println!("Processing submodule: {:?}", sub_repo.workdir().unwrap());
+                        change_submodules_mirror(sub_repo, submodule_url.clone());
+                    },
+                    Err(e) => {
+                        println!("Unable to update submodule");
+                    }
+                }
+            }
+
+        },
+        Err(e) => {
+            println!("failed to open: {}", e.to_string());
+            std::process::exit(1);
+        },
+    };
+
+    Ok(())
+}
+
 pub fn get_build_cmd<'a>() -> Command<'a, str> {
     Command::new("build")
         .description("Start build process")
@@ -487,10 +580,44 @@ pub fn get_build_cmd<'a>() -> Command<'a, str> {
         )
 }
 
+pub fn get_mirror_cmd<'a>() -> Command<'a, str> {
+    Command::new("mirror")
+        .description("Switch the URL of repository mirror")
+        .options(|app| {
+            app.arg(
+                Arg::with_name("url")
+                    .short("u")
+                    .long("url")
+                    .help("Base URL of the main repo")
+                    .takes_value(true)
+            )
+                .arg(
+                    Arg::with_name("idf-path")
+                        .short("p")
+                        .long("idf-path")
+                        .help("Path to ESP IDF source code repository")
+                        .takes_value(true)
+                )
+                .arg(
+                    Arg::with_name("submodule-url")
+                        .short("s")
+                        .long("submodule-url")
+                        .help("Base URL for submodule mirror")
+                        .required(true)
+                        .takes_value(true)
+                )
+        })
+        .runner(|_args, matches|
+            get_mirror_switch_runner(_args, matches)
+        )
+}
+
+
 pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
     let multi_cmd: MultiCommand<str, str> = Commander::new()
         .add_cmd(get_build_cmd())
         .add_cmd(get_install_cmd())
+        .add_cmd(get_mirror_cmd())
         .add_cmd(get_reset_cmd())
         .add_cmd(get_shell_cmd())
         .into_cmd("idf")
