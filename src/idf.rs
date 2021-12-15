@@ -102,6 +102,8 @@ fn update_submodule(idf_path: String, submodule: String, depth: String) -> Resul
     arguments_submodule.push("update".to_string());
     arguments_submodule.push("--depth".to_string());
     arguments_submodule.push(depth);
+    arguments_submodule.push("--recommend-shallow".to_string());
+    arguments_submodule.push("--recursive".to_string());
     arguments_submodule.push(submodule);
     assert!(execute_command(get_git_path(), arguments_submodule).is_ok());
     Ok(())
