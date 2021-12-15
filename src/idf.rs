@@ -1,6 +1,6 @@
 use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
-use git2::Repository;
+use git2::{FetchOptions, Repository, Submodule};
 use std::path::Path;
 use std::io::Cursor;
 use std::process;
@@ -91,6 +91,19 @@ fn reset_repository(repository_path: String) -> Result<()> {
     arguments_status.push("status".to_string());
     assert!(execute_command(get_git_path(), arguments_status).is_ok());
 
+    Ok(())
+}
+
+fn update_submodule(idf_path: String, submodule: String, depth: String) -> Result<()> {
+    let mut arguments_submodule: Vec<String> = [].to_vec();
+    arguments_submodule.push("-C".to_string());
+    arguments_submodule.push(idf_path);
+    arguments_submodule.push("submodule".to_string());
+    arguments_submodule.push("update".to_string());
+    arguments_submodule.push("--depth".to_string());
+    arguments_submodule.push(depth);
+    arguments_submodule.push(submodule);
+    assert!(execute_command(get_git_path(), arguments_submodule).is_ok());
     Ok(())
 }
 
@@ -517,16 +530,24 @@ fn get_mirror_switch_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std:
     };
 
     println!("Processing submodules...");
-    match Repository::open(idf_path) {
+    match Repository::open(idf_path.clone()) {
         Ok(mut repo) => {
             //repo.find_remote("origin")?.url()
             if matches.is_present("url") {
                 repo.remote_set_url("origin", url.as_str());
             }
 
+            let f = FetchOptions::new();
             for mut submodule_repo_reference in repo.submodules().unwrap() {
                 submodule_repo_reference.init(false);
-                submodule_repo_reference.update(true, None);
+                if matches.is_present("depth") {
+                    // git2 crate does not support depth for submodules, we need to call git instead
+                    let depth = matches.value_of("depth")
+                        .unwrap().to_string();
+                    update_submodule(idf_path.clone(), submodule_repo_reference.name().unwrap().to_string(), depth);
+                } else {
+                    submodule_repo_reference.update(true, None);
+                }
                 match submodule_repo_reference.open() {
                     Ok(mut sub_repo) => {
                         println!("Processing submodule: {:?}", sub_repo.workdir().unwrap());
@@ -604,6 +625,13 @@ pub fn get_mirror_cmd<'a>() -> Command<'a, str> {
                         .long("submodule-url")
                         .help("Base URL for submodule mirror")
                         .required(true)
+                        .takes_value(true)
+                )
+                .arg(
+                    Arg::with_name("depth")
+                        .short("d")
+                        .long("depth")
+                        .help("Create shallow clone of the repo and submodules.")
                         .takes_value(true)
                 )
         })
