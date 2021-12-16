@@ -19,7 +19,7 @@ mod certificate;
 async fn app() -> Result<()> {
     Commander::new()
         .options(|app| {
-            app.version("1.2.16")
+            app.version("1.2.17")
                 .name("idf-env")
                 .author("Espressif Systems - https://www.espressif.com")
                 .about("Tool for maintaining ESP-IDF environment on computer.")

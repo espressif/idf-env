@@ -2,9 +2,9 @@ use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
 use git2::{FetchOptions, Repository, Submodule};
 use std::path::Path;
-use std::io::{BufRead, BufReader, Cursor};
+use std::io::{Cursor};
 use std::process;
-use tokio::runtime::Handle;
+use tokio::{runtime::Handle, io::BufReader};
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
@@ -52,31 +52,21 @@ fn download_installer() -> Result<()> {
     th.join().unwrap()
 }
 
+async fn excecute_async(command: String, arguments:Vec<String>){
+    let mut child_process = tokio::process::Command::new(command)
+        .args(arguments)
+        .status()
+        .await;
+}
+
 fn execute_command(command: String, arguments: Vec<String>) -> Result<()> {
     let argument_string = arguments.clone().into_iter().map(|i| format!("{} ", i.to_string())).collect::<String>();
     println!("Executing: {} {}", command, argument_string);
-    let mut child_process = std::process::Command::new(command)
-        .args(arguments)
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()?; {
-
-    }
-    match child_process.stdout.as_mut() {
-        Some(out) => {
-            let buf_reader = BufReader::new(out);
-            for line in buf_reader.lines() {
-                match line {
-                    Ok(l) => {
-                        println!("{}", l);
-                    }
-                    Err(_) => {},
-                };
-            }
-        }
-        None => {},
-    }
-
+    let handle = Handle::current().clone();
+    let th = std::thread::spawn(move || {
+        handle.block_on(excecute_async(command, arguments))
+    });
+    th.join().unwrap();
     Ok(())
 }
 
