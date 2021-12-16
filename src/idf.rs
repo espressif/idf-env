@@ -2,7 +2,7 @@ use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
 use git2::{FetchOptions, Repository, Submodule};
 use std::path::Path;
-use std::io::Cursor;
+use std::io::{BufRead, BufReader, Cursor};
 use std::process;
 use tokio::runtime::Handle;
 
@@ -55,10 +55,28 @@ fn download_installer() -> Result<()> {
 fn execute_command(command: String, arguments: Vec<String>) -> Result<()> {
     let argument_string = arguments.clone().into_iter().map(|i| format!("{} ", i.to_string())).collect::<String>();
     println!("Executing: {} {}", command, argument_string);
-    std::process::Command::new(command)
+    let mut child_process = std::process::Command::new(command)
         .args(arguments)
-        .output()
-        .expect("failed to execute process");
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()?; {
+
+    }
+    match child_process.stdout.as_mut() {
+        Some(out) => {
+            let buf_reader = BufReader::new(out);
+            for line in buf_reader.lines() {
+                match line {
+                    Ok(l) => {
+                        println!("{}", l);
+                    }
+                    Err(_) => {},
+                };
+            }
+        }
+        None => {},
+    }
+
     Ok(())
 }
 
@@ -94,7 +112,7 @@ fn reset_repository(repository_path: String) -> Result<()> {
     Ok(())
 }
 
-fn update_submodule(idf_path: String, submodule: String, depth: String) -> Result<()> {
+fn update_submodule(idf_path: String, submodule: String, depth: String, progress: bool) -> Result<()> {
     let mut arguments_submodule: Vec<String> = [].to_vec();
     arguments_submodule.push("-C".to_string());
     arguments_submodule.push(idf_path);
@@ -102,6 +120,9 @@ fn update_submodule(idf_path: String, submodule: String, depth: String) -> Resul
     arguments_submodule.push("update".to_string());
     arguments_submodule.push("--depth".to_string());
     arguments_submodule.push(depth);
+    if progress {
+        arguments_submodule.push("--progress".to_string());
+    }
     arguments_submodule.push("--recommend-shallow".to_string());
     arguments_submodule.push("--recursive".to_string());
     arguments_submodule.push(submodule);
@@ -542,11 +563,12 @@ fn get_mirror_switch_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std:
             let f = FetchOptions::new();
             for mut submodule_repo_reference in repo.submodules().unwrap() {
                 submodule_repo_reference.init(false);
+                let progress = matches.is_present("progress");
                 if matches.is_present("depth") {
                     // git2 crate does not support depth for submodules, we need to call git instead
                     let depth = matches.value_of("depth")
                         .unwrap().to_string();
-                    update_submodule(idf_path.clone(), submodule_repo_reference.name().unwrap().to_string(), depth);
+                    update_submodule(idf_path.clone(), submodule_repo_reference.name().unwrap().to_string(), depth, progress);
                 } else {
                     submodule_repo_reference.update(true, None);
                 }
@@ -633,8 +655,15 @@ pub fn get_mirror_cmd<'a>() -> Command<'a, str> {
                     Arg::with_name("depth")
                         .short("d")
                         .long("depth")
-                        .help("Create shallow clone of the repo and submodules.")
+                        .help("Create shallow clone of the repo and submodules")
                         .takes_value(true)
+
+                )
+                .arg(
+                    Arg::with_name("progress")
+                        .short("r")
+                        .long("progress")
+                        .help("Display progress status of git operation")
                 )
         })
         .runner(|_args, matches|

@@ -124,11 +124,24 @@ pub fn untar_strip_prefix(file_path: String, output_directory: String, strip_pre
 }
 
 async fn fetch_url(url: String, output: String) -> Result<()> {
-    let response = reqwest::get(url).await?;
-    let mut file = std::fs::File::create(output)?;
-    let mut content = Cursor::new(response.bytes().await?);
-    std::io::copy(&mut content, &mut file)?;
-    Ok(())
+    let response = reqwest::get(&url).await;
+    match response {
+        Ok(r) => {
+            let mut file = std::fs::File::create(output)?;
+            let mut content = Cursor::new(r.bytes().await?);
+            std::io::copy(&mut content, &mut file)?;
+
+            return Ok(())
+        },
+        _ => {
+            println!("Download of {} failed", url);
+            // Exit code is 0, there is temporal issue with Windows Installer which does not recover from error exit code
+            #[cfg(windows)]
+            std::process::exit(0);
+            #[cfg(unix)]
+            std::process::exit(1);
+        }
+    };
 }
 
 async fn download_zip(url: String, output: String) -> Result<()> {

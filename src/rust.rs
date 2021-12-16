@@ -55,11 +55,17 @@ fn get_rust_installer(arch:&str) -> &str {
     }
 }
 
-fn build_rust_toolchain(version:&str, arch:&str) -> RustToolchain {
-    let llvm_release = "esp-12.0.1-20210914".to_string();
+/* Transforms esp-13.0.0-20211203 to 13_0_0 */
+fn get_llvm_version_with_underscores(llvm_version: &str) -> String {
+    let version:&str = llvm_version.split("-").next().unwrap();
+    version.replace("-","_")
+}
+
+fn build_rust_toolchain(version:&str, llvm_version: &str, arch:&str) -> RustToolchain {
+    let llvm_release = llvm_version.to_string();
     let artifact_file_extension = get_artifact_file_extension(arch).to_string();
     let llvm_arch = get_llvm_arch(arch).to_string();
-    let llvm_file = format!("xtensa-esp32-elf-llvm12_0_1-{}-{}.{}", llvm_release, llvm_arch, artifact_file_extension);
+    let llvm_file = format!("xtensa-esp32-elf-llvm{}-{}-{}.{}", get_llvm_version_with_underscores(&llvm_release), llvm_release, llvm_arch, artifact_file_extension);
     let rust_dist = format!("rust-{}-{}", version, arch);
     let rust_src_dist = format!("rust-src-{}", version);
     let rust_dist_file = format!("{}.{}", rust_dist, artifact_file_extension);
@@ -74,7 +80,7 @@ fn build_rust_toolchain(version:&str, arch:&str) -> RustToolchain {
         llvm_release,
         llvm_arch,
         artifact_file_extension,
-        version: "1.56.0.1".to_string(),
+        version: version.to_string(),
         rust_dist,
         rust_dist_temp: get_tool_path("rust".to_string()),
         rust_src_dist,
@@ -213,7 +219,7 @@ fn install_rust_toolchain(toolchain:&RustToolchain) {
             prepare_package_strip_prefix(&toolchain.rust_dist_url,
                                          &toolchain.rust_dist_file,
                                          toolchain.rust_dist_temp.to_string(),
-                                         "rust-1.56.0.1-aarch64-apple-darwin");
+                                         toolchain.rust_dist.as_str());
 
             let mut arguments: Vec<String> = [].to_vec();
 
@@ -225,7 +231,7 @@ fn install_rust_toolchain(toolchain:&RustToolchain) {
             prepare_package_strip_prefix(&toolchain.rust_src_dist_url,
                                          &toolchain.rust_src_dist_file,
                                          toolchain.rust_src_dist_temp.to_string(),
-                                         "rust-src-1.56.0.1");
+                                         toolchain.rust_src_dist.as_str());
 
             let mut arguments: Vec<String> = [].to_vec();
 
@@ -277,20 +283,29 @@ fn uninstall_rust_toolchain(toolchain:&RustToolchain) {
     }
 }
 
-fn get_default_rust_toolchain() -> RustToolchain {
+fn get_default_rust_toolchain(matches: &clap::ArgMatches<'_>) -> RustToolchain {
     let triple = guess_host_triple::guess_host_triple().unwrap();
-    build_rust_toolchain("1.56.0.1", triple)
+
+    let toolchain_version = matches.value_of("toolchain-version")
+        .unwrap();
+    let llvm_version = matches.value_of("llvm-version")
+        .unwrap();
+
+    build_rust_toolchain(
+        toolchain_version,
+        llvm_version,
+        triple)
 }
 
 fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
-    let toolchain = get_default_rust_toolchain();
+    let toolchain = get_default_rust_toolchain(matches);
 
     install_rust_toolchain(&toolchain);
     Ok(())
 }
 
 fn get_reinstall_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
-    let toolchain = get_default_rust_toolchain();
+    let toolchain = get_default_rust_toolchain(matches);
 
     uninstall_rust_toolchain(&toolchain);
     install_rust_toolchain(&toolchain);
@@ -298,7 +313,7 @@ fn get_reinstall_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::res
 }
 
 fn get_uninstall_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
-    let toolchain = get_default_rust_toolchain();
+    let toolchain = get_default_rust_toolchain(matches);
 
     uninstall_rust_toolchain(&toolchain);
     Ok(())
@@ -307,6 +322,24 @@ fn get_uninstall_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::res
 pub fn get_install_cmd<'a>() -> Command<'a, str> {
     Command::new("install")
         .description("Install Rust environment for Xtensa")
+        .options(|app| {
+            app.arg(
+                Arg::with_name("toolchain-version")
+                    .short("t")
+                    .long("toolchain-version")
+                    .help("Version of Rust toolchain")
+                    .takes_value(true)
+                    .default_value("1.57.0.2")
+            )
+                .arg(
+                    Arg::with_name("llvm-version")
+                        .short("l")
+                        .long("llvm-version")
+                        .help("Version of LLVM with Xtensa support")
+                        .takes_value(true)
+                        .default_value("esp-13.0.0-20211203")
+                )
+        })
         .runner(|_args, matches|
             get_install_runner(_args, matches)
         )
@@ -315,6 +348,24 @@ pub fn get_install_cmd<'a>() -> Command<'a, str> {
 pub fn get_reinstall_cmd<'a>() -> Command<'a, str> {
     Command::new("reinstall")
         .description("Re-install Rust environment for Xtensa")
+        .options(|app| {
+            app.arg(
+                Arg::with_name("toolchain-version")
+                    .short("t")
+                    .long("toolchain-version")
+                    .help("Version of Rust toolchain")
+                    .takes_value(true)
+                    .default_value("1.57.0.2")
+            )
+                .arg(
+                    Arg::with_name("llvm-version")
+                        .short("l")
+                        .long("llvm-version")
+                        .help("Version of LLVM with Xtensa support")
+                        .takes_value(true)
+                        .default_value("esp-13.0.0-20211203")
+                )
+        })
         .runner(|_args, matches|
             get_reinstall_runner(_args, matches)
         )
@@ -323,6 +374,24 @@ pub fn get_reinstall_cmd<'a>() -> Command<'a, str> {
 pub fn get_uninstall_cmd<'a>() -> Command<'a, str> {
     Command::new("uninstall")
         .description("Uninstall Rust environment for Xtensa")
+        .options(|app| {
+            app.arg(
+                Arg::with_name("toolchain-version")
+                    .short("t")
+                    .long("toolchain-version")
+                    .help("Version of Rust toolchain")
+                    .takes_value(true)
+                    .default_value("1.57.0.2")
+            )
+                .arg(
+                    Arg::with_name("llvm-version")
+                        .short("l")
+                        .long("llvm-version")
+                        .help("Version of LLVM with Xtensa support")
+                        .takes_value(true)
+                        .default_value("esp-13.0.0-20211203")
+                )
+        })
         .runner(|_args, matches|
             get_uninstall_runner(_args, matches)
         )
