@@ -57,8 +57,9 @@ fn get_rust_installer(arch:&str) -> &str {
 
 /* Transforms esp-13.0.0-20211203 to 13_0_0 */
 fn get_llvm_version_with_underscores(llvm_version: &str) -> String {
-    let version:&str = llvm_version.split("-").next().unwrap();
-    version.replace("-","_")
+    let version:Vec<&str> = llvm_version.split("-").collect();
+    let llvm_dot_version = version[1];
+    llvm_dot_version.replace(".","_")
 }
 
 fn build_rust_toolchain(version:&str, llvm_version: &str, arch:&str) -> RustToolchain {
