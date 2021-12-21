@@ -111,3 +111,15 @@ idf-env companion update
 ```
 idf-env shell
 ```
+
+### Working with certificates
+
+Verify whether remote site is reachable and has https certificate recognized by the system:
+
+```shell
+idf-env certificate verify --url https://dl.espressif.com/dl/
+```
+
+Return codes:
+- 0 - site is reachable
+- 1 - site is not-reachable

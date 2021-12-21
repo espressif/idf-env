@@ -238,12 +238,36 @@ pub fn get_add_cmd<'a>() -> Command<'a, str> {
         })
 }
 
+fn get_set_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+    let git_path = matches.value_of("git").unwrap().to_string();
+    update_property("gitPath".to_string(), git_path);
+    Ok(())
+}
+
+pub fn get_set_cmd<'a>() -> Command<'a, str> {
+    Command::new("set")
+        .description("set configuration")
+        .options(|app| {
+                app.arg(
+                    Arg::with_name("git")
+                        .short("g")
+                        .long("git")
+                        .help("Full path to Git binary")
+                        .takes_value(true)
+                )
+        })
+        .runner(|_args, matches|
+            get_set_runner(_args, matches)
+        )
+}
+
 
 pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
     let multi_cmd: MultiCommand<str, str> = Commander::new()
         .add_cmd(get_cmd())
         .add_cmd(get_edit_cmd())
         .add_cmd(get_add_cmd())
+        .add_cmd(get_set_cmd())
         .into_cmd("config")
 
         // Optionally specify a description
