@@ -16,11 +16,13 @@ mod rust;
 mod shell;
 mod certificate;
 mod toit;
+#[cfg(windows)]
+mod gui;
 
 async fn app() -> Result<()> {
     Commander::new()
         .options(|app| {
-            app.version("1.2.19")
+            app.version("1.2.20")
                 .name("idf-env")
                 .author("Espressif Systems - https://www.espressif.com")
                 .about("Tool for maintaining ESP-IDF environment on computer.")
@@ -36,6 +38,7 @@ async fn app() -> Result<()> {
         .add_cmd(launcher::get_multi_cmd())
         .add_cmd(rust::get_multi_cmd())
         .add_cmd(toit::get_multi_cmd())
+        .add_cmd(gui::get_multi_cmd())
         .no_cmd(|_args, _matches| {
             println!("No command matched. Use parameter --help");
             Ok(())
