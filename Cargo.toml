@@ -23,9 +23,7 @@ zip = "*"
 xz2 = "0.1.6"
 
 [target.'cfg(unix)'.dependencies]
-#web-view = { path = "web-view" }
 web-view = { git = "https://github.com/Boscop/web-view.git" }
-#webview-sys = { path = "webview-sys", version = "0.7.3" }
 
 [target.'cfg(windows)'.dependencies]
 once_cell = "1.3.1"
