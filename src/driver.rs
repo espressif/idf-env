@@ -89,6 +89,7 @@ pub fn get_cmd<'a>() -> Command<'a, str> {
 #[cfg(unix)]
 fn install_driver(driver_inf: String, driver_url: String, _driver_archive: String) {}
 
+#[cfg(windows)]
 use widestring::WideCString;
 
 #[cfg(windows)]

@@ -16,8 +16,12 @@ mod rust;
 mod shell;
 mod certificate;
 mod toit;
-#[cfg(windows)]
+
 mod gui;
+#[cfg(windows)]
+use crate::gui::windows::get_multi_cmd as get_gui_multi_cmd;
+#[cfg(unix)]
+use crate::gui::macos::get_multi_cmd as get_gui_multi_cmd;
 
 async fn app() -> Result<()> {
     Commander::new()
@@ -38,7 +42,7 @@ async fn app() -> Result<()> {
         .add_cmd(launcher::get_multi_cmd())
         .add_cmd(rust::get_multi_cmd())
         .add_cmd(toit::get_multi_cmd())
-        .add_cmd(gui::get_multi_cmd())
+        .add_cmd(get_gui_multi_cmd())
         .no_cmd(|_args, _matches| {
             println!("No command matched. Use parameter --help");
             Ok(())

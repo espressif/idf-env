@@ -22,7 +22,7 @@ fn get_gui_runner(_args: &str, matches: &clap::ArgMatches<'_>)  -> std::result::
 
     Window::builder()
         .title("WebView2 - NWG")
-        .size((1200, 900))
+        .size((800, 600))
         .build(&mut window)
         .unwrap();
 
@@ -46,7 +46,7 @@ fn get_gui_runner(_args: &str, matches: &clap::ArgMatches<'_>)  -> std::result::
                 // webview.navigate("http://localhost:8000").unwrap();
                 // webview.navigate("file://index.html").unwrap();
 
-                let app = include_str!("../gui/index.html");
+                let app = include_str!("../../gui/index.html");
                 webview.navigate_to_string(app).unwrap();
 
                 controller_clone.set(c).unwrap();
@@ -64,7 +64,7 @@ fn get_gui_runner(_args: &str, matches: &clap::ArgMatches<'_>)  -> std::result::
     let window_handle = window.handle;
 
     // There lacks an OnWindowRestored event for SC_RESTORE in
-    // native-windows-gui, so we use raw events.
+    // native-windows-windows, so we use raw events.
     nwg::bind_raw_event_handler(&window_handle, 0xffff + 1, move |_, msg, w, _| {
         match (msg, w as usize) {
             (WM_SIZE, _) => {
