@@ -1,6 +1,6 @@
 [package]
 name = "idf-env"
-version = "1.2.18"
+version = "1.2.19"
 authors = ["Juraj Michalek <juraj.michalek@espressif.com>"]
 edition = "2018"
 
