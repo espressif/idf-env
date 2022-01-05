@@ -13,7 +13,21 @@ fn get_gui_runner(_args: &str, matches: &clap::ArgMatches<'_>)  -> std::result::
         .resizable(false)
         .debug(true)
         .user_data(())
-        .invoke_handler(|_webview, _arg| Ok(()))
+        .invoke_handler(|webview, arg| {
+            match arg {
+                "install" => {
+                    println!("Start installation...")
+                }
+                "test_two" => {
+                    // Invoke a JavaScript function!
+                    // webview.eval(&format!("myFunction({}, {})", 123, 456))
+                }
+                _ => {
+                    println!("Operation not implemented: {}", arg)
+                },
+            };
+            Ok(())
+        })
         .run()
         .unwrap();
     Ok(())

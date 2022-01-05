@@ -80,105 +80,66 @@
             }
         };
 
+        var workloads = [
+          { 
+            id: 'c',
+            title: 'C/C++ with ESP-IDF',
+            decription: 'Development tools for C/C++ language based on Espressif Integrated Development Framework (ESP-IDF)',
+            components: [
+              {
+                id: 'esp-idf-4.4',
+                title: 'ESP-IDF release/4.4'
+              },
+              {
+                id: 'windows-defender-exclusions',
+                title: 'Register Windows Defender exclusions',
+                isAdminRequired: true
+              }
+            ]
+          },
+          {
+            id: 'rust',
+            title: 'Rust language',
+            description: 'Development of Rust applications for RISC-V and Xtensa Espressif chips',
+            components: [
+              {
+                id: 'rustup',
+                title: 'Rustup'
+              },
+              {
+                id: 'rust-toolchain-stable',
+                title: 'Rust Toolchain - stable'
+              },
+              {
+                id: 'rust-toolchain-nightly',
+                title: 'Rust Toolchain - nightly'
+              },
+              {
+                id: 'rust-toolchain-xtensa',
+                title: 'Rust Toolchain for Xtensa'
+              },
+              {
+                id: 'llvm-xtensa',
+                title: 'LLVM for Xtensa'
+              }
+            ]
+          },
+          {
+            id: 'toit',
+            title: 'Toit language',
+            description: 'Toit language for IoT devices',
+            components: [
+              {
+                id: 'jaguar',
+                title: 'Jaguar hot-reload'
+              }
+            ]
+          }
+        ];
 
     </script>
 
-    <style>
-        body {
-            font-family: 'Roboto';font-size: 18px;
-            background-color: #fbfbfb;
-        }
-
-        .installation-title {
-            float: left;
-            padding-left: 1em;
-            padding-right: 1em;
-            cursor: pointer;
-        }
-
-        .installation-title-tail {
-            clear: both;
-        }
-
-        .esp-logo {
-            background-image: url(img/espressif-logo.png);
-            width: 2em;
-            height: 2em;
-            background-size: contain;
-            background-repeat: no-repeat;
-        }
-
-        .install-item {
-            width: 80%;
-            background-color: white;
-            border-color: #e6e6e6;
-            border-style: solid;
-            border-width: 0.1em;
-            margin: 0.4em;
-            padding: 0.1em;
-            display: none;
-        }
-
-        .install-item-left {
-            float: left;
-            margin: 0.3em;
-        }
-
-        .install-item-middle {
-            float: left;
-        }
-
-        .install-item-right {
-            float: right;
-        }
-
-        .install-item-tail {
-            clear: both;
-        }
-
-        .install-button {
-            width: 7em;
-            background-color: #fbfbfb;
-            text-align: center;
-            margin: 0.4em;
-            padding: 0.1em;
-            border-color: #e6e6e6;
-            border-style: solid;
-            border-width: 0.1em;
-            cursor: pointer;
-            color: #656565;
-        }
-
-        .install-item-info {
-            color: #787878;
-        }
-
-        .active {
-            border-bottom: 0.2em solid #007acc;
-        }
-
-        .activeitem {
-            display: block;
-        }
-
-        .modify-button {
-            float: right;
-        }
-
-        .modify-button-tail {
-            clear: both;
-        }
-
-        .modify-item {
-            width: 80%;
-            display: none;
-        }
-
-        .location-path {
-            width: 90%;
-        }
-
-    </style>
+  <link rel="stylesheet" type="text/css" href="css/style.css">
 </head>
 
 <body>
@@ -319,27 +280,34 @@
 
 
             <div class="install-item"
-            :class="{ activeitem: isWorkloadsActive }">
-            <h2>Eclipse</h2>
-            <h2>Visual Studio Code</h2>
-            <h2>PowerShell</h2>
-            <h2>Command Line</h2>
+            :class="{ activeitem: isWorkloadsActive }"
+            v-for="workload in workloads">
 
-            <h2>IDF</h2>
-            <ul>
-                <li v-for="idf in idfList">
-                    <input type="checkbox" name="vehicle1" v-model="idf.state">
-                    <label for="vehicle1">{{ idf.title }}</label>
-                    - Python:
+            <!-- <div class="install-item-middle">
+                <div>ESP-IDF v4.3</div>
+                <div class="install-item-info">Release date: 2020-09-01</div>
+                <div class="install-item-info">Chips: ESP32, ESP32-S2</div>
+                <div class="install-item-info">Period:
+                    <ul>
+                        <li>Service period (recommended for new designs) until 2021-10</li>
+                        <li>Maintenance period 2023-05</li>
+                    </ul>
+                </div>
+                <div><router-link to="release-notes">Release notes</router-link></div>
+            </div>
+            <div class="install-item-right">
+                <router-link to="/modify"><div class="install-button">Modify</div></router-link>
+                <div class="install-button">Launch</div>
+                <div class="install-button">More</div>
+            </div>
+            <div class="install-item-tail"></div> -->
+        <!-- </div> -->
+            <h2>{{ workload.title }}</h2>
+            <div>{{ workload.description }}</div>
 
-                    <select name="python" id="python">
-                        <option v-for="python in pythonList">{{ python.title }}</option>
-                    </select>
-                </li>
-            </ul>
 
 
-            <h2>Sites</h2>
+            <!-- <h2>Sites</h2>
             <ul>
                 <input type="checkbox" name="vehicle1" v-model="options.onlineMode">
                 <label for="vehicle1">On-line access</label>
@@ -349,7 +317,7 @@
                     <label for="vehicle1">{{ site.title }}</label>
                     - {{ site.url }}
                 </li>
-            </ul>
+            </ul> -->
         </div>
         <div class="install-item"
         :class="{ activeitem: isComponentsActive }">
@@ -366,7 +334,6 @@
         </ul>
     </div>
 
-
         <div class="modify-buttons">
                 <div class="modify-button"><router-link to="/" tag="div"><div class="install-button">Close</div></router-link></div>
                 <div class="modify-button"><router-link to="/install" tag="div"><div class="install-button">Install</div></router-link></div>
@@ -375,12 +342,17 @@
 
         </div>
     </script>
+    <script type="text/x-template" id="install-component-template">
+      <div>
+        Installing...
+      </div>
+    </script>
 </body>
 
 <script type="text/javascript">
     const store = new Vuex.Store({
         state: {
-            isInstalledActive: true,
+            isInstalledActive: false,
             isAvaialbleActive: false,
             isWorkloadsActive: true,
             isComponentsActive: false,
@@ -454,6 +426,7 @@
           options: {
               onlineMode: 'enabled'
           },
+          workloads: workloads,
           idfList: DOCUMENTATION_VERSIONS.VERSIONS/*[
               { title: 'IDF 4.3', state: 'installed' },
               { title: 'IDF 4.2', state: '' },
@@ -485,9 +458,26 @@
         }
     });
 
+
+    let installComponent = Vue.component('entry-component', {
+        template: '#install-component-template',
+        store,
+        props: {},
+        created () {
+          external.invoke('install')
+        },
+        methods: {
+            switchInstallTab: function (installTab) {
+                this.$store.commit('switchModifyTab', installTab);
+            }
+        }
+    });
+
+
     const routes = [
         { path: '/', component: entryComponent },
-        { path: '/modify', component: modifyComponent }
+        { path: '/modify', component: modifyComponent },
+        { path: '/install', component: installComponent }
     ];
 
     const router = new VueRouter({
