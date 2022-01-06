@@ -1,0 +1,93 @@
+body {
+  font-family: 'Roboto';font-size: 18px;
+  background-color: #fbfbfb;
+}
+
+.installation-title {
+  float: left;
+  padding-left: 1em;
+  padding-right: 1em;
+  cursor: pointer;
+}
+
+.installation-title-tail {
+  clear: both;
+}
+
+.esp-logo {
+  background-image: url(img/espressif-logo.png);
+  width: 2em;
+  height: 2em;
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+.install-item {
+  width: 80%;
+  background-color: white;
+  border-color: #e6e6e6;
+  border-style: solid;
+  border-width: 0.1em;
+  margin: 0.4em;
+  padding: 0.1em;
+  display: none;
+}
+
+.install-item-left {
+  float: left;
+  margin: 0.3em;
+}
+
+.install-item-middle {
+  float: left;
+}
+
+.install-item-right {
+  float: right;
+}
+
+.install-item-tail {
+  clear: both;
+}
+
+.install-button {
+  width: 7em;
+  background-color: #fbfbfb;
+  text-align: center;
+  margin: 0.4em;
+  padding: 0.1em;
+  border-color: #e6e6e6;
+  border-style: solid;
+  border-width: 0.1em;
+  cursor: pointer;
+  color: #656565;
+}
+
+.install-item-info {
+  color: #787878;
+}
+
+.active {
+  border-bottom: 0.2em solid #007acc;
+}
+
+.activeitem {
+  display: block;
+}
+
+.modify-button {
+  float: right;
+}
+
+.modify-button-tail {
+  clear: both;
+}
+
+.modify-item {
+  width: 80%;
+  display: none;
+}
+
+.location-path {
+  width: 90%;
+}

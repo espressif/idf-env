@@ -5,20 +5,17 @@ use clap_nested::{Commander};
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
-mod antivirus;
-mod config;
-mod companion;
-mod driver;
-mod idf;
-mod launcher;
-mod package;
-mod rust;
-mod shell;
-mod certificate;
-mod toit;
-
-mod gui;
-
+use idf_env_core::antivirus;
+use idf_env_core::config;
+use idf_env_core::companion;
+use idf_env_core::driver;
+use idf_env_core::idf;
+use idf_env_core::launcher;
+use idf_env_core::package;
+use idf_env_core::rust;
+use idf_env_core::shell;
+use idf_env_core::certificate;
+use idf_env_core::toit;
 
 async fn app() -> Result<()> {
     Commander::new()
@@ -39,7 +36,6 @@ async fn app() -> Result<()> {
         .add_cmd(launcher::get_multi_cmd())
         .add_cmd(rust::get_multi_cmd())
         .add_cmd(toit::get_multi_cmd())
-        .add_cmd(gui::webview::get_multi_cmd())
         .no_cmd(|_args, _matches| {
             println!("No command matched. Use parameter --help");
             Ok(())

@@ -3,6 +3,33 @@ use clap_nested::{Command, Commander, MultiCommand};
 
 use web_view::*;
 
+pub fn open_url(url: &str) {
+    web_view::builder()
+        .title("Espressif Environment Installer")
+        .content(Content::Url(url))
+        .size(800, 600)
+        .resizable(false)
+        .debug(true)
+        .user_data(())
+        .invoke_handler(|webview, arg| {
+            match arg {
+                "install" => {
+                    println!("Start installation...")
+                }
+                "test_two" => {
+                    // Invoke a JavaScript function!
+                    // webview.eval(&format!("myFunction({}, {})", 123, 456))
+                }
+                _ => {
+                    println!("Operation not implemented: {}", arg)
+                },
+            };
+            Ok(())
+        })
+        .run()
+        .unwrap();
+}
+
 fn get_gui_runner(_args: &str, matches: &clap::ArgMatches<'_>)  -> std::result::Result<(), clap::Error> {
     // let app = include_str!("../../gui/index.html");
     let url = matches.value_of("url").unwrap();
