@@ -278,47 +278,62 @@
                 <input class="location-path" type="text" value="/Users/epsressifer/.espressif/tools">
             </div>
 
-
-            <div class="install-item"
+            <div class="workloads-container"
             :class="{ activeitem: isWorkloadsActive }"
-            v-for="workload in workloads">
+            >
+              <div class="install-item"
+              :class="{ activeitem: isWorkloadsActive }"
+              v-for="workload in workloads">
 
-            <!-- <div class="install-item-middle">
-                <div>ESP-IDF v4.3</div>
-                <div class="install-item-info">Release date: 2020-09-01</div>
-                <div class="install-item-info">Chips: ESP32, ESP32-S2</div>
-                <div class="install-item-info">Period:
-                    <ul>
-                        <li>Service period (recommended for new designs) until 2021-10</li>
-                        <li>Maintenance period 2023-05</li>
-                    </ul>
-                </div>
-                <div><router-link to="release-notes">Release notes</router-link></div>
-            </div>
-            <div class="install-item-right">
-                <router-link to="/modify"><div class="install-button">Modify</div></router-link>
-                <div class="install-button">Launch</div>
-                <div class="install-button">More</div>
-            </div>
-            <div class="install-item-tail"></div> -->
-        <!-- </div> -->
-            <h2>{{ workload.title }}</h2>
-            <div>{{ workload.description }}</div>
+              <!-- <div class="install-item-middle">
+                  <div>ESP-IDF v4.3</div>
+                  <div class="install-item-info">Release date: 2020-09-01</div>
+                  <div class="install-item-info">Chips: ESP32, ESP32-S2</div>
+                  <div class="install-item-info">Period:
+                      <ul>
+                          <li>Service period (recommended for new designs) until 2021-10</li>
+                          <li>Maintenance period 2023-05</li>
+                      </ul>
+                  </div>
+                  <div><router-link to="release-notes">Release notes</router-link></div>
+              </div>
+              <div class="install-item-right">
+                  <router-link to="/modify"><div class="install-button">Modify</div></router-link>
+                  <div class="install-button">Launch</div>
+                  <div class="install-button">More</div>
+              </div>
+              <div class="install-item-tail"></div> -->
+          <!-- </div> -->
+              <h2>{{ workload.title }}</h2>
+              <div>{{ workload.description }}</div>
 
 
 
-            <!-- <h2>Sites</h2>
-            <ul>
-                <input type="checkbox" name="vehicle1" v-model="options.onlineMode">
-                <label for="vehicle1">On-line access</label>
+              <!-- <h2>Sites</h2>
+              <ul>
+                  <input type="checkbox" name="vehicle1" v-model="options.onlineMode">
+                  <label for="vehicle1">On-line access</label>
 
-                <li v-for="site in sites">
-                    <input type="checkbox" name="vehicle1" v-model="site.state">
-                    <label for="vehicle1">{{ site.title }}</label>
-                    - {{ site.url }}
-                </li>
-            </ul> -->
+                  <li v-for="site in sites">
+                      <input type="checkbox" name="vehicle1" v-model="site.state">
+                      <label for="vehicle1">{{ site.title }}</label>
+                      - {{ site.url }}
+                  </li>
+              </ul> -->
+          </div>
+
+          <div class="install-component"
+              :class="{ activeitem: isWorkloadsActive }"
+              v-for="workload in workloads">
+            <div>{{ workload.title }}</div>
+
+            <div
+              v-for="component in workload.components">
+                <input type="checkbox"/> {{ component.title }}
+              </div>
+          </div>
         </div>
+
         <div class="install-item"
         :class="{ activeitem: isComponentsActive }">
         <h2>Tools</h2>
