@@ -12,10 +12,11 @@ use idf_env_core::driver;
 use idf_env_core::idf;
 use idf_env_core::launcher;
 use idf_env_core::package;
-use idf_env_core::rust;
 use idf_env_core::shell;
 use idf_env_core::certificate;
 use idf_env_core::toit;
+
+mod rust;
 
 async fn app() -> Result<()> {
     Commander::new()

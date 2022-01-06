@@ -3,6 +3,8 @@ use clap_nested::{Command, Commander, MultiCommand};
 
 use web_view::*;
 
+use crate::rust::install_rust;
+
 pub fn open_url(url: &str) {
     web_view::builder()
         .title("Espressif Environment Installer")
@@ -14,7 +16,8 @@ pub fn open_url(url: &str) {
         .invoke_handler(|webview, arg| {
             match arg {
                 "install" => {
-                    println!("Start installation...")
+                    println!("Start installation...");
+                    install_rust();
                 }
                 "test_two" => {
                     // Invoke a JavaScript function!
