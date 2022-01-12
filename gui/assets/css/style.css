@@ -106,3 +106,10 @@ body {
 .location-path {
   width: 90%;
 }
+
+.progress {
+  font-style: italic;
+}
+.installed {
+  font-weight: bold;
+}

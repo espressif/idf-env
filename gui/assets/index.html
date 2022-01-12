@@ -362,149 +362,103 @@
         Installing...
       </div>
     </script>
+
+
+    <form>
+      <h2>Control components</h2>
+      <input id="rustup-checkbox" type="checkbox" name="rustup" value="rustup">
+      <label for="rustup">rustup</label>
+    
+      <input id="rustup-nightly-checkbox" type="checkbox" name="rustup-nightly" value="rustup-nightly">
+      <label for="rustup-nightly">rustup-nightly</label>
+    
+      <input id="rustup-stable-checkbox" type="checkbox" name="rustup-stable" value="rustup-stable">
+      <label for="rustup-stable">rustup-stable</label>
+    
+    
+      <h2>Deployed components</h2>
+      <div id="rustup-component">rustup</div>
+      <div id="rustup-nightly-component">rust-nightly</div>
+      <div id="rustup-stable-component">rust-stable</div>
+    </form>
+    
 </body>
 
+<!-- Vue part -->
+<script src="js/store/store.js"></script>
+<script src="js/components/entry-component.js"></script>
+<script src="js/components/modify-component.js"></script>
+<script src="js/components/install-component.js"></script>
+<script src="js/router/router.js"></script>
+
+<!-- Control plane -->
+<script src="js/control-plane/component.js"></script>
+<script src="js/control-plane/controller.js"></script>
+<script src="js/control-plane/controller-manager.js"></script>
+
 <script type="text/javascript">
-    const store = new Vuex.Store({
-        state: {
-            isInstalledActive: false,
-            isAvaialbleActive: false,
-            isWorkloadsActive: true,
-            isComponentsActive: false,
-            isLocationsActive: false
-        },
-        mutations: {
-            switchInstallTab: function (state, installTab) {
-                state.isInstalledActive = (installTab === 'installed');
-                state.isAvaialbleActive = (installTab === 'available');
-            },
-            switchModifyTab: function (state, installTab) {
-                state.isWorkloadsActive = (installTab === 'workloads');
-                state.isComponentsActive = (installTab === 'components');
-                state.isLocationsActive = (installTab === 'locations');
-            }
-
-        }
-    });
 
 
-    let entryComponent = Vue.component('entry-component', {
-        template: '#entry-component-template',
-        store,
-        props: {},
-        computed: {
-            isInstalledActive() {
-                return this.$store.state.isInstalledActive;
-            },
-            isAvaialbleActive() {
-                return this.$store.state.isAvaialbleActive;
-            }
-        },
-        data:  function () {return {
-          options: {
-              onlineMode: 'enabled'
-          },
-          idfList2: DOCUMENTATION_VERSIONS.VERSIONS/*[
-              { title: 'IDF 4.3', state: 'installed' },
-              { title: 'IDF 4.2', state: '' },
-              { title: 'IDF 4.1', state: '' },
-              { title: 'IDF master', state: '' }
-          ]*/
-        }},
-
-        methods: {
-            switchInstallTab: function (installTab) {
-                this.$store.commit('switchInstallTab', installTab);
-                //window.external.notify("aa");
-            }
-        }
-    });
+function getDesiredState() {
+  return {
+    'components': [
+      { 
+        name: 'rustup', 
+        state: document.getElementById('rustup-checkbox').checked ? 'installed' : 'uninstalled'
+      },
+      { 
+        name: 'rustup-nightly', 
+        state: document.getElementById('rustup-nightly-checkbox').checked ? 'installed' : 'uninstalled'
+      },
+      { 
+        name: 'rustup-stable', 
+        state: document.getElementById('rustup-stable-checkbox').checked ? 'installed' : 'uninstalled'
+      }
+    ]
+  }
+}
 
 
-    let modifyComponent = Vue.component('entry-component', {
-        template: '#modify-component-template',
-        store,
-        props: {},
-        computed: {
-            isWorkloadsActive() {
-                return this.$store.state.isWorkloadsActive;
-            },
-            isComponentsActive() {
-                return this.$store.state.isComponentsActive;
-            },
-            isLocationsActive() {
-                return this.$store.state.isLocationsActive;
-            }
+var componentsController;
 
-        },
-        data:  function () {return {
-          options: {
-              onlineMode: 'enabled'
-          },
-          workloads: workloads,
-          idfList: DOCUMENTATION_VERSIONS.VERSIONS/*[
-              { title: 'IDF 4.3', state: 'installed' },
-              { title: 'IDF 4.2', state: '' },
-              { title: 'IDF 4.1', state: '' },
-              { title: 'IDF master', state: '' }
-          ]*/,
-          pythonList: [
-              { title: 'Embedded 3.9' },
-              { title: 'Embedded 3.7' },
-              { title: 'System 3.6' }
-          ],
-          sites: [
-            {
-                state: 'enabled',
-                title: 'Unofficial wheels',
-                url: 'https://georgik.rocks/tmp/python/pypi'
-            },
-            {
-                state: 'enabled',
-                title: 'Official wheels',
-                url: 'https://dl.espressif.com'
-            }
-          ]
-        }},
-        methods: {
-            switchInstallTab: function (installTab) {
-                this.$store.commit('switchModifyTab', installTab);
-            }
-        }
-    });
+var app = new Vue({
+    el: '#app',
+    store: store,
+    router: router
+});
 
+function onChangeHandler(event) {
+  console.log("State definition changed");
+  componentsController.desiredState = getDesiredState();
+}
 
-    let installComponent = Vue.component('entry-component', {
-        template: '#install-component-template',
-        store,
-        props: {},
-        created () {
-          external.invoke('install')
-        },
-        methods: {
-            switchInstallTab: function (installTab) {
-                this.$store.commit('switchModifyTab', installTab);
-            }
-        }
-    });
+function processOnLoad() {
+  let controllerManager = new ControllerManager();
 
+  componentsController = new Controller();
+  let rustupComponent = new Component('rustup', document.getElementById('rustup-component'));
+  componentsController.addComponent(rustupComponent);
 
-    const routes = [
-        { path: '/', component: entryComponent },
-        { path: '/modify', component: modifyComponent },
-        { path: '/install', component: installComponent }
-    ];
+  let rustupNightlyComponent = new Component('rustup-nightly', document.getElementById('rustup-nightly-component'));
+  componentsController.addComponent(rustupNightlyComponent);
 
-    const router = new VueRouter({
-        routes // short for `routes: routes`
-    });
+  let rustupStableComponent = new Component('rustup-stable', document.getElementById('rustup-stable-component'));
+  componentsController.addComponent(rustupStableComponent);
 
-    var app = new Vue({
-        el: '#app',
-        store: store,
-        router: router
-    });
-    
+  controllerManager.addController(componentsController);
+  controllerManager.loop();
+
+  let checkbox = document.getElementById("rustup-checkbox");
+  checkbox.addEventListener('change', onChangeHandler);
+
+  let checkboxNightly = document.getElementById("rustup-nightly-checkbox");
+  checkboxNightly.addEventListener('change', onChangeHandler);
+
+  let checkboxStable = document.getElementById("rustup-stable-checkbox");
+  checkboxStable.addEventListener('change', onChangeHandler);
+}
+
+window.addEventListener("load", processOnLoad);
     
 </script>
 
