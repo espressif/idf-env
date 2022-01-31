@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 anyhow = "*"
-clap = "*"
+clap = { version = "2.33.3" }
 clap-nested = "*"
 dirs = "*"
 flate2 = "1.0.22"
