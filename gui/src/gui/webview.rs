@@ -5,6 +5,16 @@ use web_view::*;
 
 use crate::rust::install_rust;
 
+#[derive(Deserialize)]
+#[serde(tag = "cmd", rename_all = "camelCase")]
+pub enum Cmd {
+    Init,
+    Log { text: String },
+    AddTask { name: String },
+    MarkTask { index: usize, done: bool },
+    ClearDoneTasks,
+}
+
 pub fn open_url(url: &str) {
     web_view::builder()
         .title("Espressif Environment Installer")
@@ -14,19 +24,27 @@ pub fn open_url(url: &str) {
         .debug(true)
         .user_data(())
         .invoke_handler(|webview, arg| {
-            match arg {
-                "install" => {
-                    println!("Start installation...");
-                    install_rust();
+            use Cmd::*;
+            match serde_json::from_str(arg).unwrap() {
+                LoadComponentStatus { component_name } => {
+                    let eval_str = format!("UpdateComponent({},{:?});", component_name, "installed");
+                    webview.eval(&eval_str)?;
+
                 }
-                "test_two" => {
-                    // Invoke a JavaScript function!
-                    // webview.eval(&format!("myFunction({}, {})", 123, 456))
-                }
-                _ => {
-                    println!("Operation not implemented: {}", arg)
-                },
-            };
+            }
+            // match arg {
+            //     "install" => {
+            //         println!("Start installation...");
+            //         install_rust();
+            //     }
+            //     "test_two" => {
+            //         // Invoke a JavaScript function!
+            //         // webview.eval(&format!("myFunction({}, {})", 123, 456))
+            //     }
+            //     _ => {
+            //         println!("Operation not implemented: {}", arg)
+            //     },
+            // };
             Ok(())
         })
         .run()
