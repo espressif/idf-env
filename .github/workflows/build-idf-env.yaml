@@ -30,15 +30,15 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
-#        os: [windows-latest]
+        #os: [macos-latest, ubuntu-latest, windows-latest]
+        os: [windows-latest]
         include:
-          - os: macos-latest
-            TARGET: macos
-            BINARY_NAME: idf-env
-          - os: ubuntu-latest
-            TARGET: linux-amd64
-            BINARY_NAME: idf-env
+          #- os: macos-latest
+          #  TARGET: macos
+          #  BINARY_NAME: idf-env
+          #- os: ubuntu-latest
+          #  TARGET: linux-amd64
+          #  BINARY_NAME: idf-env
           - os: windows-latest
             TARGET: win64
             BINARY_NAME: idf-env.exe
