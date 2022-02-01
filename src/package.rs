@@ -75,6 +75,13 @@ pub fn unzip_strip_prefix(file_path: String, output_directory: String, strip_pre
         // Add path prefix to extract the file
         let mut outpath = std::path::PathBuf::new();
         outpath.push(&output_directory);
+
+        // Skip files in top level directories which are not under directory with prefix
+        if !file_outpath.starts_with(strip_prefix) {
+            println!("* skipped: \"{}\"", file_outpath.display());
+            continue;
+        }
+
         let stripped_file_outpath = file_outpath.strip_prefix(strip_prefix).unwrap();
         outpath.push(stripped_file_outpath);
 
