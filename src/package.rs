@@ -93,8 +93,10 @@ pub fn unzip_strip_prefix(file_path: String, output_directory: String, strip_pre
         }
 
         if (&*file.name()).ends_with('/') {
-            println!("* extracted: \"{}\"", outpath.display());
-            fs::create_dir_all(&outpath).unwrap();
+            if !Path::new(file.name()).exists() {
+                println!("* created: \"{}\"", outpath.display());
+                fs::create_dir_all(&outpath).unwrap();
+            }
         } else {
             println!(
                 "* extracted: \"{}\" ({} bytes)",
