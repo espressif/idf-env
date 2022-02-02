@@ -1,5 +1,4 @@
-use clap::Arg;
-use clap_nested::{Command, Commander, MultiCommand};
+use clap::{Arg, App};
 use git2::{FetchOptions, Repository, Submodule};
 use std::path::Path;
 use std::io::{Cursor};
@@ -120,25 +119,23 @@ fn update_submodule(idf_path: String, submodule: String, depth: String, progress
     Ok(())
 }
 
-fn get_reset_cmd<'a>() -> Command<'a, str> {
-    Command::new("reset")
-        .description("Reset ESP-IDF git repository to initial state and wipe out modified data")
-        .options(|app| {
-            app.arg(
-                Arg::with_name("idf-path")
-                    .short("d")
-                    .long("idf-path")
-                    .help("Path to existing ESP-IDF")
-                    .takes_value(true)
-            )
-        })
-        .runner(|_args, matches| {
-            if matches.value_of("idf-path").is_some() {
-                let dir = matches.value_of("idf-path").unwrap();
-                assert!(reset_repository(dir.to_string()).is_ok());
-            }
-            Ok(())
-        })
+fn get_reset_cmd<'a>() -> App<'a> {
+    App::new("reset")
+        .about("Reset ESP-IDF git repository to initial state and wipe out modified data")
+        .arg(
+            Arg::new("idf-path")
+                .short('d')
+                .long("idf-path")
+                .help("Path to existing ESP-IDF")
+                .takes_value(true)
+        )
+        // .runner(|_args, matches| {
+        //     if matches.value_of("idf-path").is_some() {
+        //         let dir = matches.value_of("idf-path").unwrap();
+        //         assert!(reset_repository(dir.to_string()).is_ok());
+        //     }
+        //     Ok(())
+        // })
 }
 
 #[cfg(windows)]
@@ -161,7 +158,7 @@ fn get_esp_idf_directory(idf_name:String) -> String {
     format!("{}/{}", get_idf_base_directory(), idf_name)
 }
 
-fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_install_runner(_args: &str, matches: &clap::ArgMatches) -> std::result::Result<(), clap::Error> {
     let esp_idf = get_esp_idf_directory("esp-idf-master/".to_string());
     println!("ESP-IDF Path: {}", esp_idf);
 
@@ -234,7 +231,7 @@ fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::resul
     Ok(())
 }
 
-fn get_install_inno_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_install_inno_runner(_args: &str, matches: &clap::ArgMatches) -> std::result::Result<(), clap::Error> {
     let mut arguments: Vec<String> = [].to_vec();
 
     if !matches.is_present("installer") {
@@ -315,50 +312,48 @@ fn get_install_inno_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::
 
 }
 
-pub fn get_install_cmd<'a>() -> Command<'a, str> {
-    Command::new("install")
-        .description("Install new instance of IDF")
-        .options(|app| {
-            app.arg(
-                Arg::with_name("installer")
-                    .short("e")
-                    .long("installer")
-                    .help("Path to installer binary"),
-            )
-                .arg(
-                    Arg::with_name("interactive")
-                        .short("i")
-                        .long("interactive")
-                        .help("Run installation in interactive mode"),
-                )
-                .arg(
-                    Arg::with_name("upgrade")
-                        .short("u")
-                        .long("upgrade")
-                        .takes_value(false)
-                        .help("Upgrade existing installation"))
-                .arg(
-                    Arg::with_name("idf-version")
-                        .short("x")
-                        .long("idf-version")
-                        .takes_value(true)
-                        .help("ESP-IDF version"))
-                .arg(
-                    Arg::with_name("idf-path")
-                        .short("d")
-                        .long("idf-path")
-                        .takes_value(true)
-                        .help("ESP-IDF installation directory"))
-                .arg(
-                    Arg::with_name("verbose")
-                        .short("w")
-                        .long("verbose")
-                        .takes_value(false)
-                        .help("display diagnostic log after installation"))
-        })
-        .runner(|_args, matches|
-            get_install_runner(_args, matches)
+pub fn get_install_cmd<'a>() -> App<'a> {
+    App::new("install")
+        .about("Install new instance of IDF")
+        .arg(
+        Arg::new("installer")
+            .short('e')
+            .long("installer")
+            .help("Path to installer binary"),
         )
+        .arg(
+            Arg::new("interactive")
+                .short('i')
+                .long("interactive")
+                .help("Run installation in interactive mode"),
+        )
+        .arg(
+            Arg::new("upgrade")
+                .short('u')
+                .long("upgrade")
+                .takes_value(false)
+                .help("Upgrade existing installation"))
+        .arg(
+            Arg::new("idf-version")
+                .short('x')
+                .long("idf-version")
+                .takes_value(true)
+                .help("ESP-IDF version"))
+        .arg(
+            Arg::new("idf-path")
+                .short('d')
+                .long("idf-path")
+                .takes_value(true)
+                .help("ESP-IDF installation directory"))
+        .arg(
+            Arg::new("verbose")
+                .short('w')
+                .long("verbose")
+                .takes_value(false)
+                .help("display diagnostic log after installation"))
+        // .runner(|_args, matches|
+        //     get_install_runner(_args, matches)
+        // )
 }
 
 #[cfg(unix)]
@@ -400,7 +395,7 @@ fn get_initializer_arguments() -> Vec<String> {
     arguments
 }
 
-fn get_shell_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_shell_runner(_args: &str, matches: &clap::ArgMatches) -> std::result::Result<(), clap::Error> {
     println!("Starting process");
     // let root = Path::new("C:\\esp");
     // assert!(env::set_current_dir(&root).is_ok());
@@ -422,19 +417,17 @@ fn get_shell_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result:
     Ok(())
 }
 
-pub fn get_shell_cmd<'a>() -> Command<'a, str> {
-    Command::new("shell")
-        .description("Start the companion")
-        .options(|app| {
-            app.arg(
-                Arg::with_name("port")
-                    .short("p")
+pub fn get_shell_cmd<'a>() -> App<'a> {
+    App::new("shell")
+        .about("Start the companion")
+        .arg(
+                Arg::new("port")
+                    .short('p')
                     .long("port")
                     .help("Name of communication port")
                     .takes_value(true)
             )
-        })
-        .runner(|_args, matches| get_shell_runner(_args, matches) )
+        // .runner(|_args, matches| get_shell_runner(_args, matches) )
 }
 
 #[cfg(unix)]
@@ -464,7 +457,7 @@ fn run_build(idf_path: &String, shell_initializer: &String) -> std::result::Resu
     Ok(())
 }
 
-fn get_build_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_build_runner(_args: &str, matches: &clap::ArgMatches) -> std::result::Result<(), clap::Error> {
     let build_repetitions:i32 = matches.value_of("repeat").unwrap().to_string().parse().unwrap();
     let idf_path = matches.value_of("idf-path")
         .unwrap_or(&*get_selected_idf_path()).to_string();
@@ -517,7 +510,7 @@ fn change_submodules_mirror(mut repo: Repository, submodule_url: String) {
 
 }
 
-fn get_mirror_switch_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_mirror_switch_runner(_args: &str, matches: &clap::ArgMatches) -> std::result::Result<(), clap::Error> {
     let idf_path = matches.value_of("idf-path")
         .unwrap_or(&*get_selected_idf_path()).to_string();
     let url = matches.value_of("url")
@@ -583,96 +576,87 @@ fn get_mirror_switch_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std:
     Ok(())
 }
 
-pub fn get_build_cmd<'a>() -> Command<'a, str> {
-    Command::new("build")
-        .description("Start build process")
-        .options(|app| {
-            app.arg(
-                Arg::with_name("repeat")
-                    .short("r")
-                    .long("repeat")
-                    .help("Number of repetitions of the same command")
-                    .takes_value(true)
-                    .default_value("1")
-            )
-                .arg(
-                    Arg::with_name("idf-path")
-                        .short("p")
-                        .long("idf-path")
-                        .help("Path to ESP IDF source code repository")
-                        .takes_value(true)
-                )
-                .arg(
-                    Arg::with_name("tools-path")
-                        .short("t")
-                        .long("tools-path")
-                        .help("Path to Tools directory")
-                        .takes_value(true)
-                )
-        })
-        .runner(|_args, matches|
-            get_build_runner(_args, matches)
+pub fn get_build_cmd<'a>() -> App<'a> {
+    App::new("build")
+        .about("Start build process")
+        .arg(
+        Arg::new("repeat")
+            .short('r')
+            .long("repeat")
+            .help("Number of repetitions of the same command")
+            .takes_value(true)
+            .default_value("1")
         )
+        .arg(
+            Arg::new("idf-path")
+                .short('p')
+                .long("idf-path")
+                .help("Path to ESP IDF source code repository")
+                .takes_value(true)
+        )
+        .arg(
+            Arg::new("tools-path")
+                .short('t')
+                .long("tools-path")
+                .help("Path to Tools directory")
+                .takes_value(true)
+        )
+        // .runner(|_args, matches|
+        //     get_build_runner(_args, matches)
+        // )
 }
 
-pub fn get_mirror_cmd<'a>() -> Command<'a, str> {
-    Command::new("mirror")
-        .description("Switch the URL of repository mirror")
-        .options(|app| {
-            app.arg(
-                Arg::with_name("url")
-                    .short("u")
-                    .long("url")
-                    .help("Base URL of the main repo")
-                    .takes_value(true)
-            )
-                .arg(
-                    Arg::with_name("idf-path")
-                        .short("p")
-                        .long("idf-path")
-                        .help("Path to ESP IDF source code repository")
-                        .takes_value(true)
-                )
-                .arg(
-                    Arg::with_name("submodule-url")
-                        .short("s")
-                        .long("submodule-url")
-                        .help("Base URL for submodule mirror")
-                        .required(true)
-                        .takes_value(true)
-                )
-                .arg(
-                    Arg::with_name("depth")
-                        .short("d")
-                        .long("depth")
-                        .help("Create shallow clone of the repo and submodules")
-                        .takes_value(true)
-
-                )
-                .arg(
-                    Arg::with_name("progress")
-                        .short("r")
-                        .long("progress")
-                        .help("Display progress status of git operation")
-                )
-        })
-        .runner(|_args, matches|
-            get_mirror_switch_runner(_args, matches)
+pub fn get_mirror_cmd<'a>() -> App<'a> {
+    App::new("mirror")
+        .about("Switch the URL of repository mirror")
+        .arg(
+        Arg::new("url")
+            .short('u')
+            .long("url")
+            .help("Base URL of the main repo")
+            .takes_value(true)
         )
+        .arg(
+            Arg::new("idf-path")
+                .short('p')
+                .long("idf-path")
+                .help("Path to ESP IDF source code repository")
+                .takes_value(true)
+        )
+        .arg(
+            Arg::new("submodule-url")
+                .short('s')
+                .long("submodule-url")
+                .help("Base URL for submodule mirror")
+                .required(true)
+                .takes_value(true)
+        )
+        .arg(
+            Arg::new("depth")
+                .short('d')
+                .long("depth")
+                .help("Create shallow clone of the repo and submodules")
+                .takes_value(true)
+
+        )
+        .arg(
+            Arg::new("progress")
+                .short('r')
+                .long("progress")
+                .help("Display progress status of git operation")
+        )
+        // .runner(|_args, matches|
+        //     get_mirror_switch_runner(_args, matches)
+        // )
 }
 
 
-pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
-    let multi_cmd: MultiCommand<str, str> = Commander::new()
-        .add_cmd(get_build_cmd())
-        .add_cmd(get_install_cmd())
-        .add_cmd(get_mirror_cmd())
-        .add_cmd(get_reset_cmd())
-        .add_cmd(get_shell_cmd())
-        .into_cmd("idf")
-
-        // Optionally specify a description
-        .description("Maintain configuration of ESP-IDF installations.");
-
-    return multi_cmd;
+pub fn get_multi_cmd<'a>() -> App<'a> {
+    App::new("idf")
+        .about("Maintain configuration of ESP-IDF installations.")
+        .subcommand(get_build_cmd())
+        .subcommand(get_install_cmd())
+        .subcommand(get_mirror_cmd())
+        .subcommand(get_reset_cmd())
+        .subcommand(get_shell_cmd())
 }

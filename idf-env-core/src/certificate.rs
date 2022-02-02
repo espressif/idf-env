@@ -1,5 +1,4 @@
-use clap::Arg;
-use clap_nested::{Command, Commander, MultiCommand};
+use clap::{Arg, App};
 
 use tokio::runtime::Handle;
 
@@ -25,33 +24,28 @@ fn open_url(url: String) -> ResultTokio<()> {
     Ok(th.join().unwrap())
 }
 
-fn get_verify_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_verify_runner(_args: &str, matches: &clap::ArgMatches) -> std::result::Result<(), clap::Error> {
     let url = matches.value_of("url").unwrap().to_string();
     open_url(url);
     Ok(())
 
 }
 
-pub fn get_verify_cmd<'a>() -> Command<'a, str> {
-    Command::new("verify")
-        .description("Verify whether server with HTTPS certificate is reachable")
-        .options(|app| {
-            app.arg(
-                Arg::with_name("url")
-                    .short("u")
-                    .long("url")
-                    .help("URL to perform certificate check")
-                    .takes_value(true)
-            )
-        })
-        .runner(|_args, matches| get_verify_runner(_args, matches) )
+pub fn get_verify_cmd<'a>() -> App<'a> {
+    App::new("verify")
+        .about("Verify whether server with HTTPS certificate is reachable")
+        .arg(
+            Arg::new("url")
+                .short('u')
+                .long("url")
+                .help("URL to perform certificate check")
+                .takes_value(true)
+        )
+        // .runner(|_args, matches| get_verify_runner(_args, matches) )
 }
 
-pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
-    let multi_cmd: MultiCommand<str, str> = Commander::new()
-        .add_cmd(get_verify_cmd())
-        .into_cmd("certificate")
-        .description("Manage HTTPS certificates");
-
-    return multi_cmd;
+pub fn get_multi_cmd<'a>() -> App<'a> {
+    App::new("certificate")
+        .about("Manage HTTPS certificates")
+        .subcommand(get_verify_cmd())
 }

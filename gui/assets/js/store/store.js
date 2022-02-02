@@ -4,7 +4,8 @@ const store = new Vuex.Store({
       isAvaialbleActive: false,
       isWorkloadsActive: true,
       isComponentsActive: false,
-      isLocationsActive: false
+      isLocationsActive: false,
+      workloads: workloads,
   },
   mutations: {
       switchInstallTab: function (state, installTab) {
@@ -15,6 +16,14 @@ const store = new Vuex.Store({
           state.isWorkloadsActive = (installTab === 'workloads');
           state.isComponentsActive = (installTab === 'components');
           state.isLocationsActive = (installTab === 'locations');
+      },
+      component: function (state, componentId) {
+        let rustComponents = state.workloads[1].components;
+        for(var index=0; index<rustComponents.length; index++) {
+          if (rustComponents[index].id == componentId) {
+            rustComponents[index].state = 'installed'    
+          }
+        }
       }
 
   }

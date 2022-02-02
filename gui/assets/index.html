@@ -104,23 +104,28 @@
             components: [
               {
                 id: 'rustup',
-                title: 'Rustup'
+                title: 'Rustup',
+                state: 'unknown'
               },
               {
                 id: 'rust-toolchain-stable',
-                title: 'Rust Toolchain - stable'
+                title: 'Rust Toolchain - stable',
+                state: 'unknown'
               },
               {
                 id: 'rust-toolchain-nightly',
-                title: 'Rust Toolchain - nightly'
+                title: 'Rust Toolchain - nightly',
+                state: 'unknown'
               },
               {
                 id: 'rust-toolchain-xtensa',
-                title: 'Rust Toolchain for Xtensa'
+                title: 'Rust Toolchain for Xtensa',
+                state: 'unknown'
               },
               {
                 id: 'llvm-xtensa',
-                title: 'LLVM for Xtensa'
+                title: 'LLVM for Xtensa',
+                state: 'unknown'
               }
             ]
           },
@@ -131,7 +136,8 @@
             components: [
               {
                 id: 'jaguar',
-                title: 'Jaguar hot-reload'
+                title: 'Jaguar hot-reload',
+                state: 'unknown'
               }
             ]
           }
@@ -329,7 +335,8 @@
 
             <div
               v-for="component in workload.components">
-                <input type="checkbox"/> {{ component.title }}
+                <input type="checkbox" v-on:click="requestObservedState()"/> {{ component.title }}
+                <div>{{ component.state }}</div>
               </div>
           </div>
         </div>
@@ -364,23 +371,10 @@
     </script>
 
 
-    <form>
-      <h2>Control components</h2>
-      <input id="rustup-checkbox" type="checkbox" name="rustup" value="rustup">
-      <label for="rustup">rustup</label>
-    
-      <input id="rustup-nightly-checkbox" type="checkbox" name="rustup-nightly" value="rustup-nightly">
-      <label for="rustup-nightly">rustup-nightly</label>
-    
-      <input id="rustup-stable-checkbox" type="checkbox" name="rustup-stable" value="rustup-stable">
-      <label for="rustup-stable">rustup-stable</label>
-    
-    
-      <h2>Deployed components</h2>
-      <div id="rustup-component">rustup</div>
-      <div id="rustup-nightly-component">rust-nightly</div>
-      <div id="rustup-stable-component">rust-stable</div>
-    </form>
+    <h2>Deployed components</h2>
+    <div id="rustup-component">rustup</div>
+    <div id="rustup-nightly-component">rust-nightly</div>
+    <div id="rustup-stable-component">rust-stable</div>
     
 </body>
 
@@ -400,22 +394,23 @@
 
 
 function getDesiredState() {
-  return {
-    'components': [
-      { 
-        name: 'rustup', 
-        state: document.getElementById('rustup-checkbox').checked ? 'installed' : 'uninstalled'
-      },
-      { 
-        name: 'rustup-nightly', 
-        state: document.getElementById('rustup-nightly-checkbox').checked ? 'installed' : 'uninstalled'
-      },
-      { 
-        name: 'rustup-stable', 
-        state: document.getElementById('rustup-stable-checkbox').checked ? 'installed' : 'uninstalled'
-      }
-    ]
-  }
+  return { components: workloads[1].components };
+  // return {
+  //   'components': [
+  //     { 
+  //       name: 'rustup', 
+  //       state: document.getElementById('rustup-checkbox').checked ? 'installed' : 'uninstalled'
+  //     },
+  //     { 
+  //       name: 'rustup-nightly', 
+  //       state: document.getElementById('rustup-nightly-checkbox').checked ? 'installed' : 'uninstalled'
+  //     },
+  //     { 
+  //       name: 'rustup-stable', 
+  //       state: document.getElementById('rustup-stable-checkbox').checked ? 'installed' : 'uninstalled'
+  //     }
+  //   ]
+  // }
 }
 
 
@@ -448,14 +443,6 @@ function processOnLoad() {
   controllerManager.addController(componentsController);
   controllerManager.loop();
 
-  let checkbox = document.getElementById("rustup-checkbox");
-  checkbox.addEventListener('change', onChangeHandler);
-
-  let checkboxNightly = document.getElementById("rustup-nightly-checkbox");
-  checkboxNightly.addEventListener('change', onChangeHandler);
-
-  let checkboxStable = document.getElementById("rustup-stable-checkbox");
-  checkboxStable.addEventListener('change', onChangeHandler);
 }
 
 window.addEventListener("load", processOnLoad);

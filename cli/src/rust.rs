@@ -1,10 +1,10 @@
 
 use std::env;
-use clap::Arg;
+use clap::{Arg, App};
 use clap_nested::{Command, Commander, MultiCommand};
 use idf_env_core::rust::{RustToolchain, build_rust_toolchain, install_rust_toolchain, uninstall_rust_toolchain};
 
-pub fn get_default_rust_toolchain(matches: &clap::ArgMatches<'_>) -> RustToolchain {
+pub fn get_default_rust_toolchain(matches: &clap::ArgMatches) -> RustToolchain {
     let triple = guess_host_triple::guess_host_triple().unwrap();
 
     let toolchain_version = matches.value_of("toolchain-version")
@@ -18,14 +18,14 @@ pub fn get_default_rust_toolchain(matches: &clap::ArgMatches<'_>) -> RustToolcha
         triple)
 }
 
-fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_install_runner(_args: &str, matches: &clap::ArgMatches) -> std::result::Result<(), clap::Error> {
     let toolchain = get_default_rust_toolchain(matches);
 
     install_rust_toolchain(&toolchain);
     Ok(())
 }
 
-fn get_reinstall_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_reinstall_runner(_args: &str, matches: &clap::ArgMatches) -> std::result::Result<(), clap::Error> {
     let toolchain = get_default_rust_toolchain(matches);
 
     uninstall_rust_toolchain(&toolchain);
@@ -33,7 +33,7 @@ fn get_reinstall_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::res
     Ok(())
 }
 
-fn get_uninstall_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_uninstall_runner(_args: &str, matches: &clap::ArgMatches) -> std::result::Result<(), clap::Error> {
     let toolchain = get_default_rust_toolchain(matches);
 
     uninstall_rust_toolchain(&toolchain);
@@ -41,21 +41,21 @@ fn get_uninstall_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::res
 }
 
 
-pub fn get_install_cmd<'a>() -> Command<'a, str> {
+pub fn get_install_cmd<'a>() -> App<> {
     Command::new("install")
-        .description("Install Rust environment for Xtensa")
+        .about("Install Rust environment for Xtensa")
         .options(|app| {
             app.arg(
-                Arg::with_name("toolchain-version")
-                    .short("t")
+                Arg::new("toolchain-version")
+                    .short('t')
                     .long("toolchain-version")
                     .help("Version of Rust toolchain")
                     .takes_value(true)
                     .default_value("1.57.0.2")
             )
                 .arg(
-                    Arg::with_name("llvm-version")
-                        .short("l")
+                    Arg::new("llvm-version")
+                        .short('l')
                         .long("llvm-version")
                         .help("Version of LLVM with Xtensa support")
                         .takes_value(true)
@@ -67,21 +67,21 @@ pub fn get_install_cmd<'a>() -> Command<'a, str> {
         )
 }
 
-pub fn get_reinstall_cmd<'a>() -> Command<'a, str> {
+pub fn get_reinstall_cmd<'a>() -> App<> {
     Command::new("reinstall")
-        .description("Re-install Rust environment for Xtensa")
+        .about("Re-install Rust environment for Xtensa")
         .options(|app| {
             app.arg(
-                Arg::with_name("toolchain-version")
-                    .short("t")
+                Arg::new("toolchain-version")
+                    .short('t')
                     .long("toolchain-version")
                     .help("Version of Rust toolchain")
                     .takes_value(true)
                     .default_value("1.57.0.2")
             )
                 .arg(
-                    Arg::with_name("llvm-version")
-                        .short("l")
+                    Arg::new("llvm-version")
+                        .short('l')
                         .long("llvm-version")
                         .help("Version of LLVM with Xtensa support")
                         .takes_value(true)
@@ -93,21 +93,21 @@ pub fn get_reinstall_cmd<'a>() -> Command<'a, str> {
         )
 }
 
-pub fn get_uninstall_cmd<'a>() -> Command<'a, str> {
+pub fn get_uninstall_cmd<'a>() -> App<> {
     Command::new("uninstall")
-        .description("Uninstall Rust environment for Xtensa")
+        .about("Uninstall Rust environment for Xtensa")
         .options(|app| {
             app.arg(
-                Arg::with_name("toolchain-version")
-                    .short("t")
+                Arg::new("toolchain-version")
+                    .short('t')
                     .long("toolchain-version")
                     .help("Version of Rust toolchain")
                     .takes_value(true)
                     .default_value("1.57.0.2")
             )
                 .arg(
-                    Arg::with_name("llvm-version")
-                        .short("l")
+                    Arg::new("llvm-version")
+                        .short('l')
                         .long("llvm-version")
                         .help("Version of LLVM with Xtensa support")
                         .takes_value(true)
@@ -119,15 +119,10 @@ pub fn get_uninstall_cmd<'a>() -> Command<'a, str> {
         )
 }
 
-pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
-    let multi_cmd: MultiCommand<str, str> = Commander::new()
-        .add_cmd(get_install_cmd())
-        .add_cmd(get_reinstall_cmd())
-        .add_cmd(get_uninstall_cmd())
-        .into_cmd("rust")
-
-        // Optionally specify a description
-        .description("Maintain Rust environment for Xtensa.");
-
-    return multi_cmd;
+pub fn get_multi_cmd<'a>() -> App<> {
+    App::new("rust")
+        .about("Maintain Rust environment for Xtensa.")
+        .subcommand(get_install_cmd())
+        .subcommand(get_reinstall_cmd())
+        .subcommand(get_uninstall_cmd())
 }

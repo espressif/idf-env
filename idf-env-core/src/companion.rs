@@ -1,5 +1,4 @@
-use clap::Arg;
-use clap_nested::{Command, Commander, MultiCommand};
+use clap::{Arg, App};
 
 use crate::package::{prepare_package, remove_package};
 use std::process::Stdio;
@@ -19,7 +18,7 @@ fn remove_companion() -> Result<()> {
                     "tmp/esp-iwidc")
 }
 
-fn get_update_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_update_runner(_args: &str, matches: &clap::ArgMatches) -> std::result::Result<(), clap::Error> {
     match remove_companion() {
         Ok(content) => {
             prepare_companion();
@@ -32,7 +31,7 @@ fn get_update_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result
 }
 
 
-fn get_companion_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_companion_runner(_args: &str, matches: &clap::ArgMatches) -> std::result::Result<(), clap::Error> {
     prepare_companion();
 
     let mut arguments: Vec<String> = [].to_vec();
@@ -60,37 +59,30 @@ fn get_companion_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::res
 
 }
 
-pub fn get_start_cmd<'a>() -> Command<'a, str> {
-    Command::new("start")
-        .description("Start the companion")
-        .options(|app| {
-            app.arg(
-                Arg::with_name("port")
-                    .short("p")
-                    .long("port")
-                    .help("Name of communication port")
-                    .takes_value(true)
-            )
-        })
-        .runner(|_args, matches| get_companion_runner(_args, matches) )
+pub fn get_start_cmd<'a>() -> App<'a> {
+    App::new("start")
+        .about("Start the companion")
+        .arg(
+            Arg::new("port")
+                .short('p')
+                .long("port")
+                .help("Name of communication port")
+                .takes_value(true)
+        )
+        // .runner(|_args, matches| get_companion_runner(_args, matches) )
 }
 
 
-pub fn get_update_cmd<'a>() -> Command<'a, str> {
-    Command::new("update")
-        .description("Update the companion from the server")
-        .runner(|_args, matches| get_update_runner(_args, matches) )
+pub fn get_update_cmd<'a>() -> App<'a> {
+    App::new("update")
+        .about("Update the companion from the server")
+        // .runner(|_args, matches| get_update_runner(_args, matches) )
 }
 
 
-pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
-    let multi_cmd: MultiCommand<str, str> = Commander::new()
-        .add_cmd(get_start_cmd())
-        .add_cmd(get_update_cmd())
-        .into_cmd("companion")
-
-        // Optionally specify a description
-        .description("ESP-IDF Desktop Web Companion for flashing and monitoring device from Web IDE.");
-
-    return multi_cmd;
+pub fn get_multi_cmd<'a>() -> App<'a> {
+    App::new("companion")
+        .about("ESP-IDF Desktop Web Companion for flashing and monitoring device from Web IDE.")
+        .subcommand(get_start_cmd())
+        .subcommand(get_update_cmd())
 }

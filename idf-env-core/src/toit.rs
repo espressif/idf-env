@@ -1,6 +1,5 @@
 use std::env;
-use clap::Arg;
-use clap_nested::{Command, Commander, MultiCommand};
+use clap::{Arg, App};
 
 use dirs::home_dir;
 use std::path::Path;
@@ -86,11 +85,11 @@ fn uninstall_toit_tools(toit_tools:&ToitTools) {
     }
 }
 
-fn get_default_toit_tools(matches: &clap::ArgMatches<'_>) -> ToitTools {
+fn get_default_toit_tools(matches: &clap::ArgMatches) -> ToitTools {
     build_toit_tools()
 }
 
-fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_install_runner(_args: &str, matches: &clap::ArgMatches) -> std::result::Result<(), clap::Error> {
     let toit_tools = get_default_toit_tools(&matches);
     if matches.is_present("jaguar") {
         install_toit_tools(&toit_tools);
@@ -98,7 +97,7 @@ fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::resul
     Ok(())
 }
 
-fn get_reinstall_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_reinstall_runner(_args: &str, matches: &clap::ArgMatches) -> std::result::Result<(), clap::Error> {
     let toit_tools = get_default_toit_tools(matches);
     if matches.is_present("jaguar") {
         uninstall_toit_tools(&toit_tools);
@@ -107,7 +106,7 @@ fn get_reinstall_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::res
     Ok(())
 }
 
-fn get_uninstall_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_uninstall_runner(_args: &str, matches: &clap::ArgMatches) -> std::result::Result<(), clap::Error> {
     let toit_tools = get_default_toit_tools(matches);
     if matches.is_present("jaguar") {
         uninstall_toit_tools(&toit_tools);
@@ -115,62 +114,49 @@ fn get_uninstall_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::res
     Ok(())
 }
 
-pub fn get_install_cmd<'a>() -> Command<'a, str> {
-    Command::new("install")
-        .description("Install Toit environment")
-        .options(|app| {
-            app.arg(
-                Arg::with_name("jaguar")
-                    .short("j")
-                    .long("jaguar")
-
-            )
-        })
-        .runner(|_args, matches|
-            get_install_runner(_args, matches)
+pub fn get_install_cmd<'a>() -> App<'a> {
+    App::new("install")
+        .about("Install Toit environment")
+        .arg(
+        Arg::new("jaguar")
+            .short('j')
+            .long("jaguar")
         )
+        // .runner(|_args, matches|
+        //     get_install_runner(_args, matches)
+        // )
 }
 
-pub fn get_reinstall_cmd<'a>() -> Command<'a, str> {
-    Command::new("reinstall")
-        .description("Re-install Toit environment")
-        .options(|app| {
-            app.arg(
-                Arg::with_name("jaguar")
-                    .short("j")
-                    .long("jaguar")
-            )
-        })
-        .runner(|_args, matches|
-            get_reinstall_runner(_args, matches)
+pub fn get_reinstall_cmd<'a>() -> App<'a> {
+    App::new("reinstall")
+        .about("Re-install Toit environment")
+        .arg(
+            Arg::new("jaguar")
+                .short('j')
+                .long("jaguar")
         )
+        // .runner(|_args, matches|
+        //     get_reinstall_runner(_args, matches)
+        // )
 }
 
-pub fn get_uninstall_cmd<'a>() -> Command<'a, str> {
-    Command::new("uninstall")
-        .description("Uninstall Toit environment")
-        .options(|app| {
-            app.arg(
-                Arg::with_name("jaguar")
-                    .short("j")
-                    .long("jaguar")
-            )
-
-        })
-        .runner(|_args, matches|
-            get_uninstall_runner(_args, matches)
+pub fn get_uninstall_cmd<'a>() -> App<'a> {
+    App::new("uninstall")
+        .about("Uninstall Toit environment")
+        .arg(
+            Arg::new("jaguar")
+                .short('j')
+                .long("jaguar")
         )
+        // .runner(|_args, matches|
+        //     get_uninstall_runner(_args, matches)
+        // )
 }
 
-pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
-    let multi_cmd: MultiCommand<str, str> = Commander::new()
-        .add_cmd(get_install_cmd())
-        .add_cmd(get_reinstall_cmd())
-        .add_cmd(get_uninstall_cmd())
-        .into_cmd("toit")
-
-        // Optionally specify a description
-        .description("Toit environment.");
-
-    return multi_cmd;
+pub fn get_multi_cmd<'a>() -> App<'a> {
+    App::new("toit")
+        .about("Toit environment.")
+        .subcommand(get_install_cmd())
+        .subcommand(get_reinstall_cmd())
+        .subcommand(get_uninstall_cmd())
 }

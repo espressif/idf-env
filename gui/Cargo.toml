@@ -8,7 +8,6 @@ edition = "2018"
 [dependencies]
 anyhow = "*"
 clap = "*"
-clap-nested = "*"
 dirs = "*"
 flate2 = "1.0.22"
 git2 = "0.13.25"
@@ -17,6 +16,8 @@ json = "*"
 md5 = "*"
 num_cpus = "*"
 reqwest = "*"
+serde = { version = "1.0.136", features = ["derive"] }
+serde_json = { version = "1.0.78" }
 tar = "0.4.37"
 tokio = { version = "1.15.0", features = ["full"] }
 walkdir = "*"

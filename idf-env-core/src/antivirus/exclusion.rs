@@ -1,5 +1,4 @@
-use clap::Arg;
-use clap_nested::{Command, Commander, MultiCommand};
+use clap::{Arg, App};
 
 #[cfg(windows)]
 use crate::driver::windows;
@@ -58,7 +57,7 @@ fn nuke_exclusions() {
     windows::run_with_stdin("powershell".to_string(), "foreach ($Process in (Get-MpPreference).ExclusionProcess) { Remove-MpPreference -ExclusionProcess $Process }".to_string());
 }
 
-fn get_add_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_add_runner(_args: &str, matches: &clap::ArgMatches) -> std::result::Result<(), clap::Error> {
     #[cfg(windows)]
     if !windows::is_app_elevated() {
         #[cfg(windows)]
@@ -91,7 +90,7 @@ fn remove_exclusions(file_list:Vec<String>, chunk_size:usize) {
     process_exclusion("Remove-MpPreference".to_string(), file_list, chunk_size);
 }
 
-fn get_remove_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_remove_runner(_args: &str, matches: &clap::ArgMatches) -> std::result::Result<(), clap::Error> {
     #[cfg(windows)]
     if !windows::is_app_elevated() {
         #[cfg(windows)]
@@ -126,94 +125,85 @@ fn get_remove_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result
 }
 
 
-pub fn get_add_cmd<'a>() -> Command<'a, str> {
-    Command::new("add")
-        .description("Exclude path from scanning by antivirus")
-        .options(|app| {
-            app.arg(
-                Arg::with_name("path")
-                    .short("p")
-                    .long("path")
-                    .help("Add path to exclusions")
-                    .takes_value(true)
-            )
-                .arg(
-                    Arg::with_name("tool")
-                        .short("t")
-                        .long("tool")
-                        .help("Name of ESP-IDF tool which should be excluded from antivirus scanning")
-                        .takes_value(true)
-                )
-                .arg(
-                    Arg::with_name("all")
-                        .short("a")
-                        .long("all")
-                        .help("Register all tools exclusions")
-                )
-                .arg(
-                    Arg::with_name("chunk")
-                        .short("c")
-                        .long("chunk")
-                        .help("Number of exclusions sent to antivirus in one batch")
-                        .default_value("20")
-                )
-        })
-        .runner(|_args, matches| get_add_runner(_args, matches) )
+pub fn get_add_cmd<'a>() -> App<'a> {
+    App::new("add")
+        .about("Exclude path from scanning by antivirus")
+        .arg(
+            Arg::new("path")
+                .short('p')
+                .long("path")
+                .help("Add path to exclusions")
+                .takes_value(true)
+        )
+        .arg(
+            Arg::new("tool")
+                .short('t')
+                .long("tool")
+                .help("Name of ESP-IDF tool which should be excluded from antivirus scanning")
+                .takes_value(true)
+        )
+        .arg(
+            Arg::new("all")
+                .short('a')
+                .long("all")
+                .help("Register all tools exclusions")
+        )
+        .arg(
+            Arg::new("chunk")
+                .short('c')
+                .long("chunk")
+                .help("Number of exclusions sent to antivirus in one batch")
+                .default_value("20")
+        )
+
+        // .runner(|_args, matches| get_add_runner(_args, matches) )
 }
 
 
-pub fn get_remove_cmd<'a>() -> Command<'a, str> {
-    Command::new("remove")
-        .description("Remove excluded path to enable antivirus scanning")
-        .options(|app| {
-            app.arg(
-                Arg::with_name("path")
-                    .short("p")
-                    .long("path")
-                    .help("Remove path from exclusions")
-                    .takes_value(true)
-            )
-                .arg(
-                    Arg::with_name("tool")
-                        .short("t")
-                        .long("tool")
-                        .help("Name of ESP-IDF tool which should be removed from antivirus exclusions")
-                        .takes_value(true)
-                )
-                .arg(
-                    Arg::with_name("all")
-                        .short("a")
-                        .long("all")
-                        .help("Remove registration of all tools from antivirus exclusions")
+pub fn get_remove_cmd<'a>() -> App<'a> {
+    App::new("remove")
+        .about("Remove excluded path to enable antivirus scanning")
+        .arg(
+            Arg::new("path")
+                .short('p')
+                .long("path")
+                .help("Remove path from exclusions")
+                .takes_value(true)
+        )
+        .arg(
+            Arg::new("tool")
+                .short('t')
+                .long("tool")
+                .help("Name of ESP-IDF tool which should be removed from antivirus exclusions")
+                .takes_value(true)
+        )
+        .arg(
+            Arg::new("all")
+                .short('a')
+                .long("all")
+                .help("Remove registration of all tools from antivirus exclusions")
 
-                )
-                .arg(
-                    Arg::with_name("chunk")
-                        .short("c")
-                        .long("chunk")
-                        .help("Number of exclusions sent to antivirus in one batch")
-                        .default_value("20")
-                )
-                .arg(
-                    Arg::with_name("nuke")
-                        .short("x")
-                        .long("nuke")
-                        .help("Obliterate Absolutely ALL exclusions at once")
-                )
-        })
-        .runner(|_args, matches| get_remove_runner(_args, matches) )
+        )
+        .arg(
+            Arg::new("chunk")
+                .short('c')
+                .long("chunk")
+                .help("Number of exclusions sent to antivirus in one batch")
+                .default_value("20")
+        )
+        .arg(
+            Arg::new("nuke")
+                .short('x')
+                .long("nuke")
+                .help("Obliterate Absolutely ALL exclusions at once")
+        )
+        // .runner(|_args, matches| get_remove_runner(_args, matches) )
 }
 
 
-pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
-    let multi_cmd: MultiCommand<str, str> = Commander::new()
-        // .add_cmd(get_cmd())
-        .add_cmd(get_add_cmd())
-        .add_cmd(get_remove_cmd())
-        .into_cmd("exclusion")
-
-        // Optionally specify a description
-        .description("Work with antivirus exclusions.");
-
-    return multi_cmd;
+pub fn get_multi_cmd<'a>() -> App<'a> {
+    App::new("exclusion")
+        .about("Work with antivirus exclusions.")
+        .subcommand(get_add_cmd())
+        .subcommand(get_remove_cmd())
 }

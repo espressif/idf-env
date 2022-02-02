@@ -1,6 +1,6 @@
 class Component {
-  constructor(name, element) {
-    this.name = name;
+  constructor(id, element) {
+    this.id = id;
     this.element = element;
     this.isBusy = false;
   }
@@ -38,11 +38,11 @@ class Component {
 
   observe() {
     if (this.element.classList.contains('installed')) {
-      return { name: this.name, state: 'installed' };
+      return { id: this.id, state: 'installed' };
     } else if (this.element.classList.contains('progress')) {
-      return { name: this.name, state: 'progress' };
+      return { id: this.id, state: 'progress' };
     } else {
-      return { name: this.name, state: 'uninstalled' };
+      return { id: this.id, state: 'uninstalled' };
     }
   }
 }

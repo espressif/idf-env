@@ -11,14 +11,19 @@ let modifyComponent = Vue.component('entry-component', {
       },
       isLocationsActive() {
           return this.$store.state.isLocationsActive;
+      },
+      workloads() {
+        return this.$store.state.workloads;
       }
 
+  },
+  created () {
+    this.requestObservedState();
   },
   data:  function () {return {
     options: {
         onlineMode: 'enabled'
     },
-    workloads: workloads,
     idfList: DOCUMENTATION_VERSIONS.VERSIONS/*[
         { title: 'IDF 4.3', state: 'installed' },
         { title: 'IDF 4.2', state: '' },
@@ -45,7 +50,13 @@ let modifyComponent = Vue.component('entry-component', {
   }},
   methods: {
       switchInstallTab: function (installTab) {
-          this.$store.commit('switchModifyTab', installTab);
+        this.$store.commit('switchModifyTab', installTab);
+      },
+      requestObservedState: function () {
+        if (componentsController == undefined) { return; }
+        this.$store.commit('component', 'rustup');
+        console.log("State definition changed");
+        componentsController.desiredState = getDesiredState();
       }
   }
 });

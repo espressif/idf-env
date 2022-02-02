@@ -1,6 +1,5 @@
 use std::env;
 use clap::Arg;
-use clap_nested::{Command, Commander, MultiCommand};
 
 use dirs::home_dir;
 use std::path::Path;

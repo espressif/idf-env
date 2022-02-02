@@ -1,5 +1,4 @@
-use clap::Arg;
-use clap_nested::{Command, Commander, MultiCommand};
+use clap::{Arg, App};
 #[cfg(windows)]
 use std::collections::HashMap;
 
@@ -56,34 +55,32 @@ fn get_missing_driver_property(property_name: String) -> Result<()> {
     return get_driver_property(property_name, "ConfigManagerErrorCode>0".to_string());
 }
 
-pub fn get_cmd<'a>() -> Command<'a, str> {
-    Command::new("get")
-        .description("Get information about drivers")
-        .options(|app| {
-            app.arg(
-                Arg::with_name("property")
-                    .short("p")
-                    .long("property")
-                    .help("Filter result for property name")
-                    .takes_value(true)
-                    .default_value("*"),
+pub fn get_cmd<'a>() -> App<'a> {
+    App::new("get")
+        .about("Get information about drivers")
+        .arg(
+            Arg::new("property")
+                .short('p')
+                .long("property")
+                .help("Filter result for property name")
+                .takes_value(true)
+                .default_value("*"),
+        )
+            .arg(
+                Arg::new("missing")
+                    .short('m')
+                    .long("missing")
+                    .help("Display missing drivers")
             )
-                .arg(
-                    Arg::with_name("missing")
-                        .short("m")
-                        .long("missing")
-                        .help("Display missing drivers")
-                )
-        })
-        .runner(|_args, matches| {
-            let property_name = matches.value_of("property").unwrap().to_string();
-            if matches.is_present("missing") {
-                get_missing_driver_property(property_name).unwrap();
-            } else {
-                get_installed_driver_property(property_name).unwrap();
-            }
-            Ok(())
-        })
+        // .runner(|_args, matches| {
+        //     let property_name = matches.value_of("property").unwrap().to_string();
+        //     if matches.is_present("missing") {
+        //         get_missing_driver_property(property_name).unwrap();
+        //     } else {
+        //         get_installed_driver_property(property_name).unwrap();
+        //     }
+        //     Ok(())
+        // })
 }
 
 #[cfg(unix)]
@@ -148,7 +145,7 @@ fn install_driver(driver_inf: String) {
 }
 
 #[cfg(unix)]
-fn get_install_runner(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_install_runner(_args: &str, _matches: &clap::ArgMatches) -> std::result::Result<(), clap::Error> {
     Ok(())
 }
 
@@ -158,7 +155,7 @@ pub fn get_driver_path(driver_name:String) -> String {
 }
 
 #[cfg(unix)]
-fn download_drivers(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn download_drivers(_args: &str, _matches: &clap::ArgMatches) -> std::result::Result<(), clap::Error> {
     Ok(())
 }
 
@@ -217,89 +214,78 @@ fn get_install_runner(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::resu
     Ok(())
 }
 
-pub fn get_install_cmd<'a>() -> Command<'a, str> {
-    Command::new("install")
-        .description("Install driver - requires elevated privileges")
-        .options(|app| {
-            app.arg(
-                Arg::with_name("ftdi")
-                    .short("f")
-                    .long("ftdi")
-                    .help("Install FTDI driver"),
-            )
-                .arg(
-                    Arg::with_name("silabs")
-                        .short("s")
-                        .long("silabs")
-                        .help("Install Silabs driver"),
-                )
-                .arg(
-                    Arg::with_name("espressif")
-                        .short("e")
-                        .long("espressif")
-                        .help("Install Espressif driver"),
-                )
-                .arg(
-                    Arg::with_name("wait")
-                        .short("w")
-                        .long("wait")
-                        .help("Wait after the installation for user confirmation"),
-                )
-                .arg(
-                    Arg::with_name("no-download")
-                        .short("x")
-                        .long("no-download")
-                        .help("Do not attempt to download files"),
-                )
-                .arg(
-                    Arg::with_name("verbose")
-                        .short("m")
-                        .long("verbose")
-                        .takes_value(false)
-                        .help("display diagnostic log after installation"))
-        })
-        .runner(|_args, matches| get_install_runner(_args, matches)
+pub fn get_install_cmd<'a>() -> App<'a> {
+    App::new("install")
+        .about("Install driver - requires elevated privileges")
+        .arg(
+            Arg::new("ftdi")
+                .short('f')
+                .long("ftdi")
+                .help("Install FTDI driver"),
         )
+            .arg(
+                Arg::new("silabs")
+                    .short('s')
+                    .long("silabs")
+                    .help("Install Silabs driver"),
+            )
+            .arg(
+                Arg::new("espressif")
+                    .short('e')
+                    .long("espressif")
+                    .help("Install Espressif driver"),
+            )
+            .arg(
+                Arg::new("wait")
+                    .short('w')
+                    .long("wait")
+                    .help("Wait after the installation for user confirmation"),
+            )
+            .arg(
+                Arg::new("no-download")
+                    .short('x')
+                    .long("no-download")
+                    .help("Do not attempt to download files"),
+            )
+            .arg(
+                Arg::new("verbose")
+                    .short('m')
+                    .long("verbose")
+                    .takes_value(false)
+                    .help("display diagnostic log after installation"))
+        // .runner(|_args, matches| get_install_runner(_args, matches)
 }
 
 
-pub fn get_download_cmd<'a>() -> Command<'a, str> {
-    Command::new("download")
-        .description("Download drivers")
-        .options(|app| {
-            app.arg(
-                Arg::with_name("ftdi")
-                    .short("f")
-                    .long("ftdi")
-                    .help("Install FTDI driver"),
-            )
-                .arg(
-                    Arg::with_name("silabs")
-                        .short("s")
-                        .long("silabs")
-                        .help("Install Silabs driver"),
-                )
-                .arg(
-                    Arg::with_name("espressif")
-                        .short("e")
-                        .long("espressif")
-                        .help("Install Espressif driver"),
-                )
-
-        })
-        .runner(|_args, matches| download_drivers(_args, matches)
+pub fn get_download_cmd<'a>() -> App<'a> {
+    App::new("download")
+        .about("Download drivers")
+        .arg(
+            Arg::new("ftdi")
+                .short('f')
+                .long("ftdi")
+                .help("Install FTDI driver"),
         )
+        .arg(
+            Arg::new("silabs")
+                .short('s')
+                .long("silabs")
+                .help("Install Silabs driver"),
+        )
+        .arg(
+            Arg::new("espressif")
+                .short('e')
+                .long("espressif")
+                .help("Install Espressif driver"),
+        )
+
+        // .runner(|_args, matches| download_drivers(_args, matches)
 }
 
-pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
-    let multi_cmd: MultiCommand<str, str> = Commander::new()
-        .add_cmd(get_cmd())
-        .add_cmd(get_install_cmd())
-        .add_cmd(get_download_cmd())
-        .into_cmd("driver")
-
-        // Optionally specify a description
-        .description("Detection of Antivirus and handling exception registration.");
-
-    return multi_cmd;
+pub fn get_multi_cmd<'a>() -> App<'a> {
+    App::new("driver")
+        .about("Detection of Antivirus and handling exception registration.")
+        .subcommand(get_cmd())
+        .subcommand(get_install_cmd())
+        .subcommand(get_download_cmd())
 }
