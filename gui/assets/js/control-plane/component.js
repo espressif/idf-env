@@ -12,6 +12,8 @@ class Component {
   }
 
   observe() {
-    window.external.invoke(JSON.stringify({cmd:"getComponentStatus", "name":this.id}));
+    if (window.external.hasOwnProperty('invoke')) {
+      window.external.invoke(JSON.stringify({cmd: "getComponentStatus", "name": this.id}));
+    }
   }
 }

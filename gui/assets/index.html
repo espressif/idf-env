@@ -2,347 +2,386 @@
 <html>
 
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 
-    <!-- development version, includes helpful console warnings -->
-    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
-    <script src="https://unpkg.com/vuex@3.6.0/dist/vuex.js"></script>
-    <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
-    <link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet'>
-<!--    <script src="idf_versions.js">-->
-    <script type="text/javascript">
-        var DOCUMENTATION_VERSIONS = {
-            DEFAULTS: { has_targets: false,
-                supported_targets: [ "esp32" ]
-            },
-            VERSIONS: [
-                { name: "latest", has_targets: true, supported_targets: [ "esp32", "esp32s2" ] },
+  <!-- development version, includes helpful console warnings -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+  <script src="https://unpkg.com/vuex@3.6.0/dist/vuex.js"></script>
+  <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
+  <link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet'>
+  <!--    <script src="idf_versions.js">-->
+  <script type="text/javascript">
+    var DOCUMENTATION_VERSIONS = {
+      DEFAULTS: {
+        has_targets: false,
+        supported_targets: ["esp32"]
+      },
+      VERSIONS: [
+        {name: "latest", has_targets: true, supported_targets: ["esp32", "esp32s2"]},
 
-                { name: "v4.3-beta1", pre_release: true, old:false, has_targets: true, supported_targets: [ "esp32", "esp32s2", "esp32c3" ]},
+        {
+          name: "v4.3-beta1",
+          pre_release: true,
+          old: false,
+          has_targets: true,
+          supported_targets: ["esp32", "esp32s2", "esp32c3"]
+        },
 
-                { name: "v4.2", old: false, has_targets: true, supported_targets: [ "esp32", "esp32s2" ]},
+        {name: "v4.2", old: false, has_targets: true, supported_targets: ["esp32", "esp32s2"]},
 
-                { name: "v4.1.1", old: false },
-                { name: "v4.1", old: true },
+        {name: "v4.1.1", old: false},
+        {name: "v4.1", old: true},
 
-                { name: "v4.0.2", old: false},
-                { name: "v4.0.1", old: true},
-                { name: "v4.0", old: true },
+        {name: "v4.0.2", old: false},
+        {name: "v4.0.1", old: true},
+        {name: "v4.0", old: true},
 
-                { name: "v3.3.4", old: false },
-                { name: "v3.3.3", old: true },
-                { name: "v3.3.2", old: true },
-                { name: "v3.3.1", old: true },
-                { name: "v3.3", old: true  },
+        {name: "v3.3.4", old: false},
+        {name: "v3.3.3", old: true},
+        {name: "v3.3.2", old: true},
+        {name: "v3.3.1", old: true},
+        {name: "v3.3", old: true},
 
-                { name: "v3.2.5", old: true },
+        {name: "v3.2.5", old: true},
 
-                { name: "v3.1.7", old: true },
+        {name: "v3.1.7", old: true},
 
-                { name: "release-v4.3", pre_release: true, has_targets: true, supported_targets: [ "esp32", "esp32s2", "esp32c3" ]},
-                { name: "release-v4.2", pre_release: true, has_targets: true, supported_targets: [ "esp32", "esp32s2" ] },
-                { name: "release-v4.1", pre_release: true },
-                { name: "release-v4.0", pre_release: true },
-                { name: "release-v3.3", pre_release: true }
-            ],
-            IDF_TARGETS: [
-                { text: "ESP32", value: "esp32"},
-                { text: "ESP32-S2", value: "esp32s2"},
-                { text: "ESP32-C3", value: "esp32c3"}
-            ],
-            RELEASES: {
-                "v3.1": {
-                    "start_date": "2018-09-07",
-                    "end_date": "2020-10-31"
-                },
-                "v3.2": {
-                    "start_date": "2019-04-11",
-                    "end_date": "2020-10-31"
-                },
-                "v3.3": {
-                    "start_date": "2019-09-05",
-                    "end_date": "2022-02-28"
-                },
-                "v4.0": {
-                    "start_date": "2020-02-11",
-                    "end_date": "2021-10-31"
-                },
-                "v4.1": {
-                    "start_date": "2020-08-24",
-                    "end_service": "2021-08-24",
-                    "end_date": "2023-02-24"
-                },
-                "v4.2": {
-                    "start_date": "2020-12-07",
-                    "end_service": "2021-12-07",
-                    "end_date": "2023-06-07"
-                }
-            }
-        };
+        {
+          name: "release-v4.3",
+          pre_release: true,
+          has_targets: true,
+          supported_targets: ["esp32", "esp32s2", "esp32c3"]
+        },
+        {name: "release-v4.2", pre_release: true, has_targets: true, supported_targets: ["esp32", "esp32s2"]},
+        {name: "release-v4.1", pre_release: true},
+        {name: "release-v4.0", pre_release: true},
+        {name: "release-v3.3", pre_release: true}
+      ],
+      IDF_TARGETS: [
+        {text: "ESP32", value: "esp32"},
+        {text: "ESP32-S2", value: "esp32s2"},
+        {text: "ESP32-C3", value: "esp32c3"}
+      ],
+      RELEASES: {
+        "v3.1": {
+          "start_date": "2018-09-07",
+          "end_date": "2020-10-31"
+        },
+        "v3.2": {
+          "start_date": "2019-04-11",
+          "end_date": "2020-10-31"
+        },
+        "v3.3": {
+          "start_date": "2019-09-05",
+          "end_date": "2022-02-28"
+        },
+        "v4.0": {
+          "start_date": "2020-02-11",
+          "end_date": "2021-10-31"
+        },
+        "v4.1": {
+          "start_date": "2020-08-24",
+          "end_service": "2021-08-24",
+          "end_date": "2023-02-24"
+        },
+        "v4.2": {
+          "start_date": "2020-12-07",
+          "end_service": "2021-12-07",
+          "end_date": "2023-06-07"
+        }
+      }
+    };
 
-        var workloads = [
-          { 
-            id: 'c',
-            title: 'C/C++ with ESP-IDF',
-            decription: 'Development tools for C/C++ language based on Espressif Integrated Development Framework (ESP-IDF)',
-            components: [
-              {
-                id: 'esp-idf-4.4',
-                title: 'ESP-IDF release/4.4'
-              },
-              // {
-              //   id: 'windows-defender-exclusions',
-              //   title: 'Register Windows Defender exclusions',
-              //   isAdminRequired: true
-              // }
-            ]
-          },
+    var workloads = [
+      {
+        id: 'c',
+        title: 'C/C++ with ESP-IDF',
+        decription: 'Development tools for C/C++ language based on Espressif Integrated Development Framework (ESP-IDF)',
+        components: [
           {
-            id: 'rust',
-            title: 'Rust language',
-            description: 'Development of Rust applications for RISC-V and Xtensa Espressif chips',
-            components: [
-              {
-                id: 'rustup',
-                title: 'Rustup',
-                state: 'unknown',
-                desiredState: 'unknown',
-              },
-              {
-                id: 'rust-toolchain-stable',
-                title: 'Rust Toolchain - stable',
-                state: 'unknown',
-                desiredState: 'unknown',
-              },
-              {
-                id: 'rust-toolchain-nightly',
-                title: 'Rust Toolchain - nightly',
-                state: 'unknown',
-                desiredState: 'unknown',
-              },
-              {
-                id: 'rust-toolchain-xtensa',
-                title: 'Rust Toolchain for Xtensa',
-                state: 'unknown',
-                desiredState: 'unknown',
-              },
-              {
-                id: 'llvm-xtensa',
-                title: 'LLVM for Xtensa',
-                state: 'unknown',
-                desiredState: 'unknown',
-              }
-            ]
+            id: 'esp-idf-4.4',
+            title: 'ESP-IDF release/4.4'
           },
           // {
-          //   id: 'toit',
-          //   title: 'Toit language',
-          //   description: 'Toit language for IoT devices',
-          //   components: [
-          //     {
-          //       id: 'jaguar',
-          //       title: 'Jaguar hot-reload',
-          //       state: 'unknown'
-          //     }
-          //   ]
+          //   id: 'windows-defender-exclusions',
+          //   title: 'Register Windows Defender exclusions',
+          //   isAdminRequired: true
           // }
-        ];
+        ]
+      },
+      {
+        id: 'rust',
+        title: 'Rust language',
+        description: 'Development of Rust applications for RISC-V and Xtensa Espressif chips',
+        components: [
+          {
+            id: 'rustup',
+            title: 'Rustup',
+            state: 'unknown',
+            desiredState: 'unknown',
+          },
+          {
+            id: 'rust-toolchain-stable',
+            title: 'Rust Toolchain - stable',
+            state: 'unknown',
+            desiredState: 'unknown',
+          },
+          {
+            id: 'rust-toolchain-nightly',
+            title: 'Rust Toolchain - nightly',
+            state: 'unknown',
+            desiredState: 'unknown',
+          },
+          {
+            id: 'rust-toolchain-xtensa',
+            title: 'Rust Toolchain for Xtensa',
+            state: 'unknown',
+            desiredState: 'unknown',
+          },
+          {
+            id: 'llvm-xtensa',
+            title: 'LLVM for Xtensa',
+            state: 'unknown',
+            desiredState: 'unknown',
+          }
+        ]
+      },
+      // {
+      //   id: 'toit',
+      //   title: 'Toit language',
+      //   description: 'Toit language for IoT devices',
+      //   components: [
+      //     {
+      //       id: 'jaguar',
+      //       title: 'Jaguar hot-reload',
+      //       state: 'unknown'
+      //     }
+      //   ]
+      // }
+    ];
 
-    </script>
+  </script>
 
   <link rel="stylesheet" type="text/css" href="css/style.css">
 </head>
 
 <body>
-    <div id="app">
-        <h1>ESP-IDF Installer</h1>
+<div id="app">
+  <h1>ESP-IDF Installer</h1>
 
-        <script type="text/x-template" id="entry-component-template">
-            <div>
-                <div class="installation-tabs">
-                    <div class="installation-title"
-                        v-on:click="switchInstallTab('installed')"
-                        :class="{ active: isInstalledActive }"
-                        >Installed</div>
-                    <div class="installation-title"
-                        v-on:click="switchInstallTab('available')"
-                        :class="{ active: isAvaialbleActive }"
-                        >Available</div>
-                    <div class="installation-title-tail"></div>
-                </div>
-                <hr>
-                <input type="text" value="Search for chip">
+  <script type="text/x-template" id="entry-component-template">
+    <div>
+      <div class="installation-tabs">
+        <div class="installation-title"
+             v-on:click="switchInstallTab('installed')"
+             :class="{ active: isInstalledActive }"
+        >Installed
+        </div>
+        <div class="installation-title"
+             v-on:click="switchInstallTab('available')"
+             :class="{ active: isAvaialbleActive }"
+        >Available
+        </div>
+        <div class="installation-title-tail"></div>
+      </div>
+      <hr>
+      <input type="text" value="Search for chip">
 
-                <div class="install-item"
-                    :class="{ activeitem: isInstalledActive }"
-                    v-for="xidf in idfList2">
-                    <div class="install-item-left">
-                        <div class="esp-logo"></div>
-                    </div>
-                    <div class="install-item-middle">
-                        <div>ESP-IDF v4.3</div>
-                        <div class="install-item-info">Release date: 2020-09-01</div>
-                        <div class="install-item-info">Chips: ESP32, ESP32-S2</div>
-                        <div class="install-item-info">Period:
-                            <ul>
-                                <li>Service period (recommended for new designs) until 2021-10</li>
-                                <li>Maintenance period 2023-05</li>
-                            </ul>
-                        </div>
-                        <div><router-link to="release-notes">Release notes</router-link></div>
-                    </div>
-                    <div class="install-item-right">
-                        <router-link to="/modify"><div class="install-button">Modify</div></router-link>
-                        <div class="install-button">Launch</div>
-                        <div class="install-button">More</div>
-                    </div>
-                    <div class="install-item-tail"></div>
-                </div>
-
-                <div class="install-item"
-                    :class="{ activeitem: isAvaialbleActive }">
-                    <div class="install-item-left">
-                        <div class="esp-logo"></div>
-                    </div>
-                    <div class="install-item-middle">
-                        <div>ESP-IDF 4.3</div>
-                        <div class="install-item-info">Release date: 2021-05-01</div>
-                        <div class="install-item-info">Chips: ESP32, ESP32-S2</div>
-                        <div class="install-item-info">Period: 
-                            <ul>
-                                <li>Development period until 2021-05</li>
-                                <li>Service period TBD</li>
-                                <li>Maintenance period TBD</li>
-                            </ul>
-                        </div>
-                        <div><router-link to="/license">License terms</router-link> | <router-link to="release-notes">Release notes</router-link></div>
-                    </div>
-                    <div class="install-item-right">
-                        <div class="install-button">Install</div>
-                        <div class="install-button">More</div>
-                    </div>
-
-                    <div class="install-item-tail"></div>
-                </div>
-
-                <div class="install-item"
-                    :class="{ activeitem: isAvaialbleActive }">
-                    <div class="install-item-left">
-                        <div class="esp-logo"></div>
-                    </div>
-                    <div class="install-item-middle">
-                        <div>ESP-IDF 3.3.2</div>
-                        <div class="install-item-info">Release date: 2019-09-01</div>
-                        <div class="install-item-info">Chips: ESP8266</div>
-                        <div class="install-item-info">Period: 
-                            <ul><li>Maintenance period until 2021-12</li></ul>
-                        </div>
-                        <div><router-link to="/license">License terms</router-link> | <router-link to="release-notes">Release notes</router-link></div>
-                    </div>
-                    <div class="install-item-right">
-                        <div class="install-button">Install</div>
-                        <div class="install-button">More</div>
-                    </div>
-
-                    <div class="install-item-tail"></div>
-                </div>
-            </div>
-        </script>
-        <router-view></router-view>
-    </div>
-
-    <script type="text/x-template" id="modify-component-template">
-        <div>
-            <div class="installation-tabs">
-                <div class="installation-title"
-                    v-on:click="switchInstallTab('workloads')"
-                    :class="{ active: isWorkloadsActive }"
-                    >Workloads</div>
-<!--                <div class="installation-title"-->
-<!--                    v-on:click="switchInstallTab('components')"-->
-<!--                    :class="{ active: isComponentsActive }"-->
-<!--                    >Individual Components</div>-->
-<!--                <div class="installation-title"-->
-<!--                    v-on:click="switchInstallTab('locations')"-->
-<!--                    :class="{ active: isLocationsActive }"-->
-<!--                    >Installation Locations</div>-->
-
-                <div class="installation-title-tail"></div>
-            </div>
-            <hr>
-
-            <div class="install-item"
-                :class="{ activeitem: isLocationsActive }">
-                <div>ESP-IDF</div>
-                <input class="location-path" type="text" value="/Users/epsressifer/Desktop/ESP-IDF">
-             </div>
-
-            <div class="install-item"
-                :class="{ activeitem: isLocationsActive }">
-                <div>Download cache</div>
-                <input class="location-path" type="text" value="/Users/epsressifer/.espressif/dist">
-            </div>
-
-            <div class="install-item"
-                :class="{ activeitem: isLocationsActive }">
-                <div>Shared tools</div>
-                <input class="location-path" type="text" value="/Users/epsressifer/.espressif/tools">
-            </div>
-
-<!--            <div class="workloads-container"-->
-<!--            :class="{ activeitem: isWorkloadsActive }"-->
-<!--            >-->
-<!--              <div class="install-item"-->
-<!--              :class="{ activeitem: isWorkloadsActive }"-->
-<!--              v-for="workload in workloads">-->
-<!--                  -->
-<!--              <h2>{{ workload.title }}</h2>-->
-<!--              <div>{{ workload.description }}</div>-->
-<!--          </div>-->
-
-          <div class="install-component"
-              :class="{ activeitem: isWorkloadsActive }"
-              v-for="workload in workloads">
-            <div>{{ workload.title }}</div>
-
-            <div
-              v-for="component in workload.components">
-                <input type="checkbox" v-on:click="toggleDesiredState(component.id)" v-model="component.desiredState" :value="component.id"/> {{ component.title }} - {{ component.state }} -&gt; {{ component.desiredState }}
-              </div>
+      <div class="install-item"
+           :class="{ activeitem: isInstalledActive }"
+           v-for="xidf in idfList2">
+        <div class="install-item-left">
+          <div class="esp-logo"></div>
+        </div>
+        <div class="install-item-middle">
+          <div>ESP-IDF v4.3</div>
+          <div class="install-item-info">Release date: 2020-09-01</div>
+          <div class="install-item-info">Chips: ESP32, ESP32-S2</div>
+          <div class="install-item-info">Period:
+            <ul>
+              <li>Service period (recommended for new designs) until 2021-10</li>
+              <li>Maintenance period 2023-05</li>
+            </ul>
+          </div>
+          <div>
+            <router-link to="release-notes">Release notes</router-link>
           </div>
         </div>
+        <div class="install-item-right">
+          <router-link to="/modify">
+            <div class="install-button">Modify</div>
+          </router-link>
+          <div class="install-button">Launch</div>
+          <div class="install-button">More</div>
+        </div>
+        <div class="install-item-tail"></div>
+      </div>
 
-        <div>
-        <div class="install-item"
-        :class="{ activeitem: isComponentsActive }">
-        <h2>Tools</h2>
+      <div class="install-item"
+           :class="{ activeitem: isAvaialbleActive }">
+        <div class="install-item-left">
+          <div class="esp-logo"></div>
+        </div>
+        <div class="install-item-middle">
+          <div>ESP-IDF 4.3</div>
+          <div class="install-item-info">Release date: 2021-05-01</div>
+          <div class="install-item-info">Chips: ESP32, ESP32-S2</div>
+          <div class="install-item-info">Period:
+            <ul>
+              <li>Development period until 2021-05</li>
+              <li>Service period TBD</li>
+              <li>Maintenance period TBD</li>
+            </ul>
+          </div>
+          <div>
+            <router-link to="/license">License terms</router-link>
+            |
+            <router-link to="release-notes">Release notes</router-link>
+          </div>
+        </div>
+        <div class="install-item-right">
+          <div class="install-button">Install</div>
+          <div class="install-button">More</div>
+        </div>
+
+        <div class="install-item-tail"></div>
+      </div>
+
+      <div class="install-item"
+           :class="{ activeitem: isAvaialbleActive }">
+        <div class="install-item-left">
+          <div class="esp-logo"></div>
+        </div>
+        <div class="install-item-middle">
+          <div>ESP-IDF 3.3.2</div>
+          <div class="install-item-info">Release date: 2019-09-01</div>
+          <div class="install-item-info">Chips: ESP8266</div>
+          <div class="install-item-info">Period:
+            <ul>
+              <li>Maintenance period until 2021-12</li>
+            </ul>
+          </div>
+          <div>
+            <router-link to="/license">License terms</router-link>
+            |
+            <router-link to="release-notes">Release notes</router-link>
+          </div>
+        </div>
+        <div class="install-item-right">
+          <div class="install-button">Install</div>
+          <div class="install-button">More</div>
+        </div>
+
+        <div class="install-item-tail"></div>
+      </div>
+    </div>
+  </script>
+  <router-view></router-view>
+</div>
+
+<script type="text/x-template" id="modify-component-template">
+  <div>
+    <div class="installation-tabs">
+      <div class="installation-title"
+           v-on:click="switchInstallTab('workloads')"
+           :class="{ active: isWorkloadsActive }"
+      >Workloads
+      </div>
+      <!--                <div class="installation-title"-->
+      <!--                    v-on:click="switchInstallTab('components')"-->
+      <!--                    :class="{ active: isComponentsActive }"-->
+      <!--                    >Individual Components</div>-->
+      <!--                <div class="installation-title"-->
+      <!--                    v-on:click="switchInstallTab('locations')"-->
+      <!--                    :class="{ active: isLocationsActive }"-->
+      <!--                    >Installation Locations</div>-->
+
+      <div class="installation-title-tail"></div>
+    </div>
+    <hr>
+
+    <div class="install-item"
+         :class="{ activeitem: isLocationsActive }">
+      <div>ESP-IDF</div>
+      <input class="location-path" type="text" value="/Users/epsressifer/Desktop/ESP-IDF">
+    </div>
+
+    <div class="install-item"
+         :class="{ activeitem: isLocationsActive }">
+      <div>Download cache</div>
+      <input class="location-path" type="text" value="/Users/epsressifer/.espressif/dist">
+    </div>
+
+    <div class="install-item"
+         :class="{ activeitem: isLocationsActive }">
+      <div>Shared tools</div>
+      <input class="location-path" type="text" value="/Users/epsressifer/.espressif/tools">
+    </div>
+
+    <!--            <div class="workloads-container"-->
+    <!--            :class="{ activeitem: isWorkloadsActive }"-->
+    <!--            >-->
+    <!--              <div class="install-item"-->
+    <!--              :class="{ activeitem: isWorkloadsActive }"-->
+    <!--              v-for="workload in workloads">-->
+    <!--                  -->
+    <!--              <h2>{{ workload.title }}</h2>-->
+    <!--              <div>{{ workload.description }}</div>-->
+    <!--          </div>-->
+
+    <div class="install-component"
+         :class="{ activeitem: isWorkloadsActive }"
+         v-for="workload in workloads">
+      <div>{{ workload.title }}</div>
+
+      <div
+        v-for="component in workload.components">
+        <input type="checkbox" v-on:click="toggleDesiredState(component.id)" v-model="component.desiredState"
+               :value="component.id"/> {{ component.title }} - {{ component.state }} -&gt; {{
+        component.desiredState }}
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="install-item"
+         :class="{ activeitem: isComponentsActive }">
+      <h2>Tools</h2>
+      <ul>
+        Python
         <ul>
-            Python
-            <ul>
-                <li v-for="python in pythonList">{{ python.title }}</li>
-            </ul>
-            Git
-            <ul>
-                <li>System 4.3.2</li>
-            </ul>
+          <li v-for="python in pythonList">{{ python.title }}</li>
         </ul>
+        Git
+        <ul>
+          <li>System 4.3.2</li>
+        </ul>
+      </ul>
     </div>
 
 
-        <div class="modify-buttons">
-                <div class="modify-button"><router-link to="/" tag="div"><div class="install-button">Close</div></router-link></div>
-                <div class="modify-button"><router-link to="/install" tag="div"><div class="install-button">Install</div></router-link></div>
-                <div class="modify-button-tail"></div>
-            </div>
-
-        </div>
-
-    </script>
-    <script type="text/x-template" id="install-component-template">
-      <div>
-        Installing...
+    <div class="modify-buttons">
+      <div class="modify-button">
+        <router-link to="/" tag="div">
+          <div class="install-button">Close</div>
+        </router-link>
       </div>
-    </script>
+      <div class="modify-button">
+        <router-link to="/install" tag="div">
+          <div class="install-button">Install</div>
+        </router-link>
+      </div>
+      <div class="modify-button-tail"></div>
+    </div>
+
+  </div>
+
+</script>
+<script type="text/x-template" id="install-component-template">
+  <div>
+    Installing...
+  </div>
+</script>
 
 </body>
 
@@ -361,52 +400,52 @@
 <script type="text/javascript">
 
 
-function getDesiredState() {
-  return { components: workloads[1].components };
-}
+  function getDesiredState() {
+    return {components: workloads[1].components};
+  }
 
 
-var componentsController;
+  var componentsController;
 
-var app = new Vue({
+  var app = new Vue({
     el: '#app',
     store: store,
     router: router
-});
+  });
 
-function onChangeHandler(event) {
-  console.log("State definition changed");
-  componentsController.desiredState = getDesiredState();
-}
+  function onChangeHandler(event) {
+    console.log("State definition changed");
+    componentsController.desiredState = getDesiredState();
+  }
 
-function processOnLoad() {
-  let controllerManager = new ControllerManager();
+  function processOnLoad() {
+    let controllerManager = new ControllerManager();
 
-  componentsController = new Controller();
-  let rustupComponent = new Component('rustup');
-  componentsController.addComponent(rustupComponent);
+    componentsController = new Controller();
+    let rustupComponent = new Component('rustup');
+    componentsController.addComponent(rustupComponent);
 
-  let rustupNightlyComponent = new Component('rust-toolchain-nightly');
-  componentsController.addComponent(rustupNightlyComponent);
+    let rustupNightlyComponent = new Component('rust-toolchain-nightly');
+    componentsController.addComponent(rustupNightlyComponent);
 
-  let rustupStableComponent = new Component('rust-toolchain-stable');
-  componentsController.addComponent(rustupStableComponent);
+    let rustupStableComponent = new Component('rust-toolchain-stable');
+    componentsController.addComponent(rustupStableComponent);
 
-  componentsController.addComponent(new Component('rust-toolchain-xtensa'));
-  componentsController.addComponent(new Component('llvm-xtensa'));
+    componentsController.addComponent(new Component('rust-toolchain-xtensa'));
+    componentsController.addComponent(new Component('llvm-xtensa'));
 
-  controllerManager.addController(componentsController);
-  controllerManager.loop();
+    controllerManager.addController(componentsController);
+    controllerManager.loop();
 
-}
+  }
 
-function UpdateComponent(componentId, observedState) {
+  function UpdateComponent(componentId, observedState) {
     // componentsController.updateComponent(state);
     store.commit('component', {componentId, observedState});
-}
+  }
 
-window.addEventListener("load", processOnLoad);
-    
+  window.addEventListener("load", processOnLoad);
+
 </script>
 
 </html>

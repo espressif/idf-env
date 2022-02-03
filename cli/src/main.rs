@@ -21,7 +21,7 @@ mod rust;
 async fn app() -> Result<()> {
     Commander::new()
         .options(|app| {
-            app.version("1.2.20")
+            app.version("2.0.0")
                 .name("idf-env")
                 .author("Espressif Systems - https://www.espressif.com")
                 .about("Tool for maintaining ESP-IDF environment on computer.")

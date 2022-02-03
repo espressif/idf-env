@@ -1,115 +1,117 @@
 body {
-  font-family: 'Roboto';font-size: 18px;
-  background-color: #fbfbfb;
+    font-family: 'Roboto';
+    font-size: 18px;
+    background-color: #fbfbfb;
 }
 
 .installation-title {
-  float: left;
-  padding-left: 1em;
-  padding-right: 1em;
-  cursor: pointer;
+    float: left;
+    padding-left: 1em;
+    padding-right: 1em;
+    cursor: pointer;
 }
 
 .installation-title-tail {
-  clear: both;
+    clear: both;
 }
 
 .esp-logo {
-  background-image: url(img/espressif-logo.png);
-  width: 2em;
-  height: 2em;
-  background-size: contain;
-  background-repeat: no-repeat;
+    background-image: url(img/espressif-logo.png);
+    width: 2em;
+    height: 2em;
+    background-size: contain;
+    background-repeat: no-repeat;
 }
 
 .install-item {
-  width: 80%;
-  background-color: white;
-  border-color: #e6e6e6;
-  border-style: solid;
-  border-width: 0.1em;
-  margin: 0.4em;
-  padding: 0.1em;
-  display: none;
+    width: 80%;
+    background-color: white;
+    border-color: #e6e6e6;
+    border-style: solid;
+    border-width: 0.1em;
+    margin: 0.4em;
+    padding: 0.1em;
+    display: none;
 }
 
 .install-component {
-  width: 80%;
-  background-color: white;
-  border-color: #e6e6e6;
-  border-style: solid;
-  border-width: 0.1em;
-  margin: 0.4em;
-  padding: 0.1em;
-  display: none;
+    width: 80%;
+    background-color: white;
+    border-color: #e6e6e6;
+    border-style: solid;
+    border-width: 0.1em;
+    margin: 0.4em;
+    padding: 0.1em;
+    display: none;
 }
 
 .workloads-container {
-  width: 100%;
+    width: 100%;
 }
 
 .install-item-left {
-  float: left;
-  margin: 0.3em;
+    float: left;
+    margin: 0.3em;
 }
 
 .install-item-middle {
-  float: left;
+    float: left;
 }
 
 .install-item-right {
-  float: right;
+    float: right;
 }
 
 .install-item-tail {
-  clear: both;
+    clear: both;
 }
 
 .install-button {
-  width: 7em;
-  background-color: #fbfbfb;
-  text-align: center;
-  margin: 0.4em;
-  padding: 0.1em;
-  border-color: #e6e6e6;
-  border-style: solid;
-  border-width: 0.1em;
-  cursor: pointer;
-  color: #656565;
+    width: 7em;
+    background-color: #fbfbfb;
+    text-align: center;
+    margin: 0.4em;
+    padding: 0.1em;
+    border-color: #e6e6e6;
+    border-style: solid;
+    border-width: 0.1em;
+    cursor: pointer;
+    color: #656565;
 }
 
 .install-item-info {
-  color: #787878;
+    color: #787878;
 }
 
 .active {
-  border-bottom: 0.2em solid #007acc;
+    border-bottom: 0.2em solid #007acc;
 }
 
 .activeitem {
-  display: block;
+    display: block;
 }
 
 .modify-button {
-  float: right;
+    float: right;
 }
 
 .modify-button-tail {
-  clear: both;
+    clear: both;
 }
 
 .modify-item {
-  width: 80%;
-  display: none;
+    width: 80%;
+    display: none;
 }
 
 .location-path {
-  width: 90%;
+    width: 90%;
 }
 
 .progress {
-  font-style: italic;
+    font-style: italic;
 }
+
 .installed {
-  font-weight: bold;
+    font-weight: bold;
 }

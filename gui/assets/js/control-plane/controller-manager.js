@@ -1,4 +1,3 @@
-
 class ControllerManager {
   constructor() {
     this.controllers = [];
@@ -17,7 +16,7 @@ class ControllerManager {
 
   loop() {
     // setInterval(() => {
-      this.reconcile();
+    this.reconcile();
     // }, 1000);
   }
 }

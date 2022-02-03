@@ -1,7 +1,6 @@
-
 [package]
 name = "idf-env-gui"
-version = "1.2.20"
+version = "2.0.0"
 authors = ["Juraj Michalek <juraj.michalek@espressif.com>"]
 edition = "2018"
 
@@ -23,7 +22,7 @@ tokio = { version = "1.15.0", features = ["full"] }
 walkdir = "*"
 zip = "*"
 xz2 = "0.1.6"
-idf-env-core = { path =  "../idf-env-core" }
+idf-env-core = { path = "../idf-env-core" }
 
 [target.'cfg(windows)'.dependencies]
 once_cell = "1.3.1"

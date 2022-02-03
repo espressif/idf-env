@@ -1,7 +1,7 @@
 const routes = [
-  { path: '/', component: entryComponent },
-  { path: '/modify', component: modifyComponent },
-  { path: '/install', component: installComponent }
+  {path: '/', component: entryComponent},
+  {path: '/modify', component: modifyComponent},
+  {path: '/install', component: installComponent}
 ];
 
 const router = new VueRouter({

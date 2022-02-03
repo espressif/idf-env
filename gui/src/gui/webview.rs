@@ -4,7 +4,7 @@ use web_view::*;
 use serde::{Deserialize};
 use serde_json;
 use crate::rust::install_rust;
-use crate::idf_env_core::rust::{ is_rustup_installed, is_rust_toolchain_installed, is_llvm_installed };
+use crate::idf_env_core::rust::{is_rustup_installed, is_rust_toolchain_installed, is_llvm_installed};
 
 #[derive(Deserialize)]
 #[serde(tag = "cmd", rename_all = "camelCase")]
@@ -14,7 +14,7 @@ pub enum Cmd {
     AddTask { name: String },
     MarkTask { index: usize, done: bool },
     ClearDoneTasks,
-    GetComponentStatus { name: String }
+    GetComponentStatus { name: String },
 }
 
 pub fn open_url(url: &str) {
@@ -70,7 +70,6 @@ pub fn open_url(url: &str) {
                             println!("Unknown component {}", name);
                         }
                     }
-
                 }
                 _ => {
                     println!("Unknown command");
@@ -82,7 +81,7 @@ pub fn open_url(url: &str) {
         .unwrap();
 }
 
-fn get_gui_runner(_args: &str, matches: &clap::ArgMatches)  -> std::result::Result<(), clap::Error> {
+fn get_gui_runner(_args: &str, matches: &clap::ArgMatches) -> std::result::Result<(), clap::Error> {
     // let app = include_str!("../../gui/index.html");
     let url = matches.value_of("url").unwrap();
     web_view::builder()
@@ -103,7 +102,7 @@ fn get_gui_runner(_args: &str, matches: &clap::ArgMatches)  -> std::result::Resu
                 }
                 _ => {
                     println!("Operation not implemented: {}", arg)
-                },
+                }
             };
             Ok(())
         })
@@ -123,9 +122,9 @@ pub fn get_gui_start_cmd<'a>() -> App<'a> {
                 .takes_value(true)
                 .default_value("https://espressif.com")
         )
-        // .runner(|_args, matches|
-        //     get_gui_runner(_args, matches)
-        // )
+    // .runner(|_args, matches|
+    //     get_gui_runner(_args, matches)
+    // )
 }
 
 pub fn get_multi_cmd<'a>() -> App<'a> {

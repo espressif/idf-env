@@ -1,6 +1,6 @@
-
 mod gui;
 mod rust;
+
 use idf_env_core;
 use clap::{Arg, App, ArgMatches};
 
@@ -28,18 +28,16 @@ pub fn get_start_cmd<'a>() -> App<'a> {
                 .default_value("https://espressif.github.io/idf-env/gui/assets/#/modify")
                 .help("URL with web interface of the installer"),
         )
-        //
-        // .runner(|_args, matches| get_gui_runner(_args, matches)
-        // )
+    //
+    // .runner(|_args, matches| get_gui_runner(_args, matches)
+    // )
 }
-
 
 
 pub fn get_gui_multi_cmd<'a>() -> App<'a> {
     App::new("gui")
         .about("Start GUI application to maintain the environemnt.")
         .subcommand(get_start_cmd())
-
 }
 
 async fn app() -> Result<()> {

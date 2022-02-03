@@ -1,4 +1,3 @@
-
 use idf_env_core::rust::{RustToolchain, build_rust_toolchain, install_rust_toolchain, uninstall_rust_toolchain};
 
 pub fn install_rust() {

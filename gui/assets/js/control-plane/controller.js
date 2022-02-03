@@ -1,4 +1,3 @@
-
 class Controller {
   constructor() {
     this.obsevedState = {};
@@ -27,7 +26,7 @@ class Controller {
   reconcile() {
     let desiredStateString = JSON.stringify(this.desiredState);
     let observedSateString = JSON.stringify(this.obsevedState);
-    if ((desiredStateString == '{}') ||(desiredStateString === observedSateString)) {
+    if ((desiredStateString == '{}') || (desiredStateString === observedSateString)) {
       console.log("Reconcile: NOP");
       return;
     }
@@ -35,21 +34,21 @@ class Controller {
     console.log("Observed state: " + observedSateString);
     console.log("Desired sate: " + desiredStateString);
     var self = this;
-    
+
     let desiredComponents = this.desiredState.components
     if (desiredComponents == undefined) {
       return;
     }
 
-    this.components.forEach(function(component) {
+    this.components.forEach(function (component) {
       let componentName = component.name;
-      
+
       let desiredComponent = self.getDesiredComponent(componentName);
       if (desiredComponent == undefined) {
         return;
       }
 
-      if (desiredComponent.state == 'installed')  {
+      if (desiredComponent.state == 'installed') {
         component.add();
       } else if (desiredComponent.state == 'uninstalled') {
         component.remove();
@@ -57,13 +56,13 @@ class Controller {
         console.log("component update in progress...");
       }
     });
-    
+
   }
 
   observe() {
     var self = this;
     var componentList = [];
-    this.components.forEach(function(component) {
+    this.components.forEach(function (component) {
       componentList.push(component.observe());
     });
     self.obsevedState = {components: componentList};
