@@ -37,7 +37,7 @@ class Component {
   }
 
   observe() {
-    window.external.invoke(JSON.stringify({cmd:"loadComponentStatus", "name":this.id}));
+    window.external.invoke(JSON.stringify({cmd:"getComponentStatus", "name":this.id}));
     if (this.element.classList.contains('installed')) {
       return { id: this.id, state: 'installed' };
     } else if (this.element.classList.contains('progress')) {

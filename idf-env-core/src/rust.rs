@@ -10,6 +10,9 @@ use crate::config::get_tool_path;
 use crate::package::{prepare_package, prepare_package_strip_prefix, prepare_single_binary};
 use crate::shell::run_command;
 
+const DEFAULT_RUST_TOOLCHAIN_VERSION:&str = "1.58.0.0";
+const DEFAULT_LLVM_VERSION:&str = "esp-13.0.0-20211203";
+
 pub struct RustToolchain {
     arch: String,
     llvm_release: String,
@@ -209,6 +212,11 @@ pub fn is_rust_toolchain_installed(toolchain_name:&str) -> bool {
     }
 }
 
+pub fn is_llvm_installed() -> bool {
+    let triple = guess_host_triple::guess_host_triple().unwrap();
+    let toolchain = build_rust_toolchain(DEFAULT_RUST_TOOLCHAIN_VERSION, DEFAULT_LLVM_VERSION, triple);
+    Path::new(toolchain.idf_tool_xtensa_elf_clang.as_str()).exists()
+}
 
 pub fn install_rust_toolchain(toolchain:&RustToolchain) {
     match std::process::Command::new("rustup")

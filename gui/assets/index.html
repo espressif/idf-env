@@ -440,6 +440,9 @@ function processOnLoad() {
   let rustupStableComponent = new Component('rust-toolchain-stable', document.getElementById('rustup-stable-component'));
   componentsController.addComponent(rustupStableComponent);
 
+  componentsController.addComponent(new Component('rust-toolchain-xtensa', document.getElementById('rustup-stable-component')));
+  componentsController.addComponent(new Component('llvm-xtensa', document.getElementById('rustup-stable-component')));
+
   controllerManager.addController(componentsController);
   controllerManager.loop();
 

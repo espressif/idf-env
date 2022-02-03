@@ -4,7 +4,7 @@ use web_view::*;
 use serde::{Deserialize};
 use serde_json;
 use crate::rust::install_rust;
-use crate::idf_env_core::rust::{ is_rustup_installed, is_rust_toolchain_installed };
+use crate::idf_env_core::rust::{ is_rustup_installed, is_rust_toolchain_installed, is_llvm_installed };
 
 #[derive(Deserialize)]
 #[serde(tag = "cmd", rename_all = "camelCase")]
@@ -14,7 +14,7 @@ pub enum Cmd {
     AddTask { name: String },
     MarkTask { index: usize, done: bool },
     ClearDoneTasks,
-    LoadComponentStatus { name: String }
+    GetComponentStatus { name: String }
 }
 
 pub fn open_url(url: &str) {
@@ -22,13 +22,13 @@ pub fn open_url(url: &str) {
         .title("Espressif Environment Installer")
         .content(Content::Url(url))
         .size(800, 600)
-        .resizable(false)
+        .resizable(true)
         .debug(true)
         .user_data(())
         .invoke_handler(|webview, arg| {
             use Cmd::*;
             match serde_json::from_str(arg).unwrap() {
-                LoadComponentStatus { name } => {
+                GetComponentStatus { name } => {
                     match name.as_str() {
                         "rustup" => {
                             let rustup_state = if is_rustup_installed() { "installed" } else { "not installed" };
@@ -47,6 +47,20 @@ pub fn open_url(url: &str) {
                         "rust-toolchain-stable" => {
                             let rust_toolchain_state = if is_rust_toolchain_installed("stable") { "installed" } else { "not installed" };
                             let eval_str = format!("UpdateComponent('{}',{:?});", name, rust_toolchain_state);
+                            println!("Load component {}", name);
+                            println!("Eval: {}", eval_str);
+                            webview.eval(&eval_str)?;
+                        }
+                        "rust-toolchain-xtensa" => {
+                            let rust_toolchain_state = if is_rust_toolchain_installed("esp") { "installed" } else { "not installed" };
+                            let eval_str = format!("UpdateComponent('{}',{:?});", name, rust_toolchain_state);
+                            println!("Load component {}", name);
+                            println!("Eval: {}", eval_str);
+                            webview.eval(&eval_str)?;
+                        }
+                        "llvm-xtensa" => {
+                            let toolchain_state = if is_llvm_installed() { "installed" } else { "not installed" };
+                            let eval_str = format!("UpdateComponent('{}',{:?});", name, toolchain_state);
                             println!("Load component {}", name);
                             println!("Eval: {}", eval_str);
                             webview.eval(&eval_str)?;
