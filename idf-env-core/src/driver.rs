@@ -160,7 +160,7 @@ fn download_drivers(_args: &str, _matches: &clap::ArgMatches) -> std::result::Re
 }
 
 #[cfg(windows)]
-fn download_drivers(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn download_drivers(_args: &str, _matches: &clap::ArgMatches) -> std::result::Result<(), clap::Error> {
     if _matches.is_present("silabs") {
         prepare_package("https://www.silabs.com/documents/public/software/CP210x_Universal_Windows_Driver.zip".to_string(),
                         "cp210x.zip",
@@ -181,7 +181,7 @@ fn download_drivers(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result
 
 
 #[cfg(windows)]
-fn get_install_runner(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_install_runner(_args: &str, _matches: &clap::ArgMatches) -> std::result::Result<(), clap::Error> {
 
     // Download drivers, if app is self-elevated this flag serves to avoid downloading in elevated mode.
     if !_matches.is_present("no-download") {
