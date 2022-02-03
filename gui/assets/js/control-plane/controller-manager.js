@@ -16,8 +16,8 @@ class ControllerManager {
   }
 
   loop() {
-    setInterval(() => {
+    // setInterval(() => {
       this.reconcile();
-    }, 1000);
+    // }, 1000);
   }
 }

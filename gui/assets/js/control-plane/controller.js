@@ -13,11 +13,15 @@ class Controller {
   getDesiredComponent(componentName) {
     for (var index = 0; index < this.desiredState.components.length; index++) {
       let component = this.desiredState.components[index];
-      if (component.name == componentName) {
+      if (component.name === componentName) {
         return component;
       }
     }
     return undefined;
+  }
+
+  updateComponent(state) {
+    console.log(state);
   }
 
   reconcile() {

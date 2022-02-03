@@ -17,11 +17,12 @@ const store = new Vuex.Store({
           state.isComponentsActive = (installTab === 'components');
           state.isLocationsActive = (installTab === 'locations');
       },
-      component: function (state, componentId) {
+      component: function (state, { componentId, observedState}) {
         let rustComponents = state.workloads[1].components;
         for(var index=0; index<rustComponents.length; index++) {
-          if (rustComponents[index].id == componentId) {
-            rustComponents[index].state = 'installed'    
+          if (rustComponents[index].id === componentId) {
+            rustComponents[index].state = observedState;
+            console.log("Updating state: " + observedState)
           }
         }
       }

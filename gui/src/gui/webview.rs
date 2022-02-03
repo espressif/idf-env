@@ -13,10 +13,11 @@ pub enum Cmd {
     AddTask { name: String },
     MarkTask { index: usize, done: bool },
     ClearDoneTasks,
+    LoadComponentStatus { name: String }
 }
 
 pub fn open_url(url: &str) {
-    web_view::builder()
+    let webview = web_view::builder()
         .title("Espressif Environment Installer")
         .content(Content::Url(url))
         .size(800, 600)
@@ -24,49 +25,37 @@ pub fn open_url(url: &str) {
         .debug(true)
         .user_data(())
         .invoke_handler(|webview, arg| {
-            match arg {
-                "install" => {
-                    println!("Start installation...")
-                }
-                "test_two" => {
-                    // Invoke a JavaScript function!
-                    // webview.eval(&format!("myFunction({}, {})", 123, 456))
+            use Cmd::*;
+            match serde_json::from_str(arg).unwrap() {
+                LoadComponentStatus { name } => {
+                    match name.as_str() {
+                        "rustup" => {
+                            let eval_str = format!("UpdateComponent('{}',{:?});", name, "installed?");
+                            println!("Load component {}", name);
+                            println!("Eval: {}", eval_str);
+                            webview.eval(&eval_str)?;
+                        }
+                        "rust-toolchain-nightly" => {
+                            let eval_str = format!("UpdateComponent('{}',{:?});", name, "missing");
+                            println!("Load component {}", name);
+                            println!("Eval: {}", eval_str);
+                            webview.eval(&eval_str)?;
+                        }
+
+                        _ => {
+                            println!("Unknown component {}", name);
+                        }
+                    }
+
                 }
                 _ => {
-                    println!("Operation not implemented: {}", arg)
-                },
+                    println!("Unknown command");
+                }
             };
             Ok(())
         })
         .run()
         .unwrap();
-
-        // .invoke_handler(|webview, arg| {
-        //     use Cmd::*;
-        //     match serde_json::from_str(arg).unwrap() {
-        //         LoadComponentStatus { component_name } => {
-        //             let eval_str = format!("UpdateComponent({},{:?});", component_name, "installed");
-        //             webview.eval(&eval_str)?;
-        //
-        //         }
-        //     }
-            // match arg {
-            //     "install" => {
-            //         println!("Start installation...");
-            //         install_rust();
-            //     }
-            //     "test_two" => {
-            //         // Invoke a JavaScript function!
-            //         // webview.eval(&format!("myFunction({}, {})", 123, 456))
-            //     }
-            //     _ => {
-            //         println!("Operation not implemented: {}", arg)
-            //     },
-            // };
-            // Ok(())
-        // })
-        // .run()
-        // .unwrap();
 }
 
 fn get_gui_runner(_args: &str, matches: &clap::ArgMatches)  -> std::result::Result<(), clap::Error> {

@@ -434,15 +434,20 @@ function processOnLoad() {
   let rustupComponent = new Component('rustup', document.getElementById('rustup-component'));
   componentsController.addComponent(rustupComponent);
 
-  let rustupNightlyComponent = new Component('rustup-nightly', document.getElementById('rustup-nightly-component'));
+  let rustupNightlyComponent = new Component('rust-toolchain-nightly', document.getElementById('rustup-nightly-component'));
   componentsController.addComponent(rustupNightlyComponent);
 
-  let rustupStableComponent = new Component('rustup-stable', document.getElementById('rustup-stable-component'));
+  let rustupStableComponent = new Component('rust-toolchain-stable', document.getElementById('rustup-stable-component'));
   componentsController.addComponent(rustupStableComponent);
 
   controllerManager.addController(componentsController);
   controllerManager.loop();
 
+}
+
+function UpdateComponent(componentId, observedState) {
+    // componentsController.updateComponent(state);
+    store.commit('component', {componentId, observedState});
 }
 
 window.addEventListener("load", processOnLoad);
