@@ -3,7 +3,7 @@ let installComponent = Vue.component('entry-component', {
   store,
   props: {},
   created() {
-    external.invoke('install')
+    window.rmi(JSON.stringify({cmd: "setComponentDesiredState", "name": "rustup", "state": "installed"}));
   },
   methods: {
     switchInstallTab: function (installTab) {

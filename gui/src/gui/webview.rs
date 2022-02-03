@@ -4,7 +4,7 @@ use web_view::*;
 use serde::{Deserialize};
 use serde_json;
 use crate::rust::install_rust;
-use crate::idf_env_core::rust::{is_rustup_installed, is_rust_toolchain_installed, is_llvm_installed};
+use crate::idf_env_core::rust::{is_rustup_installed, is_rust_toolchain_installed, is_llvm_installed, install_rust_stable};
 
 #[derive(Deserialize)]
 #[serde(tag = "cmd", rename_all = "camelCase")]
@@ -15,12 +15,14 @@ pub enum Cmd {
     MarkTask { index: usize, done: bool },
     ClearDoneTasks,
     GetComponentStatus { name: String },
+    SetComponentDesiredState { name: String, state: String }
 }
 
 pub fn open_url(url: &str) {
     let webview = web_view::builder()
         .title("Espressif Environment Installer")
-        .content(Content::Url(url))
+        // t= to avoid caching problems
+        .content(Content::Url(format!("{}?t={}", url, 1)))
         .size(800, 600)
         .resizable(true)
         .debug(true)
@@ -71,6 +73,34 @@ pub fn open_url(url: &str) {
                         }
                     }
                 }
+
+                SetComponentDesiredState { name, state } => {
+                    match name.as_str() {
+                        "rustup" => {
+                            match state.as_str() {
+                                "installed" => {
+                                    if !is_rustup_installed() {
+                                        install_rust_stable();
+                                    }
+                                }
+                                "uninstalled" => {
+                                    if !is_rustup_installed() {
+
+                                    }
+                                }
+                                _ => {
+                                    println!("Unknown state {} of component {}", state, name);
+                                }
+                            }
+                        }
+
+                        _ => {
+                            println!("Unknown component {}", name);
+                        }
+
+                    }
+                }
+
                 _ => {
                     println!("Unknown command");
                 }
