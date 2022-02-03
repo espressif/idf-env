@@ -176,6 +176,40 @@ pub fn install_rust() {
     install_rust_nightly();
 }
 
+pub fn is_rustup_installed() -> bool {
+    match std::process::Command::new("rustup")
+        .arg("toolchain")
+        .arg("list")
+        .stdout(Stdio::piped())
+        .output() {
+        Ok(child_output) => {
+            true
+        },
+        _ => {
+            false
+        }
+    }
+}
+
+
+
+pub fn is_rust_toolchain_installed(toolchain_name:&str) -> bool {
+    match std::process::Command::new("rustup")
+        .arg("toolchain")
+        .arg("list")
+        .stdout(Stdio::piped())
+        .output() {
+        Ok(child_output) => {
+            let result = String::from_utf8_lossy(&child_output.stdout);
+            result.contains(toolchain_name)
+        },
+        _ => {
+            false
+        }
+    }
+}
+
+
 pub fn install_rust_toolchain(toolchain:&RustToolchain) {
     match std::process::Command::new("rustup")
         .arg("toolchain")

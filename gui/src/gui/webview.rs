@@ -4,6 +4,7 @@ use web_view::*;
 use serde::{Deserialize};
 use serde_json;
 use crate::rust::install_rust;
+use crate::idf_env_core::rust::{ is_rustup_installed, is_rust_toolchain_installed };
 
 #[derive(Deserialize)]
 #[serde(tag = "cmd", rename_all = "camelCase")]
@@ -30,13 +31,22 @@ pub fn open_url(url: &str) {
                 LoadComponentStatus { name } => {
                     match name.as_str() {
                         "rustup" => {
-                            let eval_str = format!("UpdateComponent('{}',{:?});", name, "installed?");
+                            let rustup_state = if is_rustup_installed() { "installed" } else { "not installed" };
+                            let eval_str = format!("UpdateComponent('{}',{:?});", name, rustup_state);
                             println!("Load component {}", name);
                             println!("Eval: {}", eval_str);
                             webview.eval(&eval_str)?;
                         }
                         "rust-toolchain-nightly" => {
-                            let eval_str = format!("UpdateComponent('{}',{:?});", name, "missing");
+                            let rust_toolchain_state = if is_rust_toolchain_installed("nightly") { "installed" } else { "not installed" };
+                            let eval_str = format!("UpdateComponent('{}',{:?});", name, rust_toolchain_state);
+                            println!("Load component {}", name);
+                            println!("Eval: {}", eval_str);
+                            webview.eval(&eval_str)?;
+                        }
+                        "rust-toolchain-stable" => {
+                            let rust_toolchain_state = if is_rust_toolchain_installed("stable") { "installed" } else { "not installed" };
+                            let eval_str = format!("UpdateComponent('{}',{:?});", name, rust_toolchain_state);
                             println!("Load component {}", name);
                             println!("Eval: {}", eval_str);
                             webview.eval(&eval_str)?;
