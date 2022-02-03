@@ -58,6 +58,11 @@ fn set_env_variable(key:&str, value:&str) {
 
 }
 
+pub fn is_toit_installed() -> bool {
+    let toit_tools = build_toit_tools();
+    Path::new(&toit_tools.jaguar_destination_dir.as_str()).exists()
+}
+
 fn install_toit_tools(toit_tools:&ToitTools) {
 
     if Path::new(&toit_tools.jaguar_destination_dir.as_str()).exists() {

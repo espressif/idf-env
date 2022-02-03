@@ -18,7 +18,7 @@ let modifyComponent = Vue.component('entry-component', {
 
   },
   created () {
-    this.requestObservedState();
+    // this.requestObservedState();
   },
   data:  function () {return {
     options: {
@@ -52,11 +52,12 @@ let modifyComponent = Vue.component('entry-component', {
       switchInstallTab: function (installTab) {
         this.$store.commit('switchModifyTab', installTab);
       },
-      requestObservedState: function () {
+      toggleDesiredState: function (componentId) {
+        console.log("Component " + componentId);
         if (componentsController == undefined) { return; }
-        this.$store.commit('component', 'rustup');
+        this.$store.commit('toggleComponent', componentId);
         console.log("State definition changed");
-        componentsController.desiredState = getDesiredState();
+        // componentsController.desiredState = getDesiredState();
       }
   }
 });

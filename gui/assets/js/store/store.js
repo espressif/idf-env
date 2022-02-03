@@ -22,10 +22,27 @@ const store = new Vuex.Store({
         for(var index=0; index<rustComponents.length; index++) {
           if (rustComponents[index].id === componentId) {
             rustComponents[index].state = observedState;
+            if (rustComponents[index].desiredState === "unknown") {
+              rustComponents[index].desiredState = observedState;
+            }
             console.log("Updating state: " + observedState)
           }
         }
+      },
+      toggleComponent: function (state, { componentId }) {
+          let rustComponents = state.workloads[1].components;
+          for(var index=0; index<rustComponents.length; index++) {
+              if (rustComponents[index].id === componentId) {
+                  if (rustComponents[index].desiredState === 'installed') {
+                      rustComponents[index].desiredState = 'uninstalled'
+                  } else {
+                      rustComponents[index].desiredState = 'installed'
+                  }
+                  console.log("Toggle state: " + rustComponents[index].desiredState)
+              }
+          }
       }
+
 
   }
 });
