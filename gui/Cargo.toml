@@ -7,6 +7,7 @@ edition = "2018"
 [dependencies]
 anyhow = "*"
 clap = "*"
+chrono = "0.4.19"
 dirs = "*"
 flate2 = "1.0.22"
 git2 = "0.13.25"

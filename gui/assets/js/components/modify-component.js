@@ -56,10 +56,10 @@ let modifyComponent = Vue.component('entry-component', {
     },
     toggleDesiredState: function (componentId) {
       console.log("Component " + componentId);
-      if (componentsController == undefined) {
+      if (componentsController === undefined) {
         return;
       }
-      this.$store.commit('toggleComponent', componentId);
+      this.$store.commit('toggleComponent', {componentId});
       console.log("State definition changed");
       // componentsController.desiredState = getDesiredState();
     }

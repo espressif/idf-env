@@ -1,5 +1,6 @@
 use clap::{Arg, App};
 
+use chrono::Utc;
 use web_view::*;
 use serde::{Deserialize};
 use serde_json;
@@ -19,10 +20,13 @@ pub enum Cmd {
 }
 
 pub fn open_url(url: &str) {
+    let dt = Utc::now();
+    let timestamp: i64 = dt.timestamp();
+
     let webview = web_view::builder()
         .title("Espressif Environment Installer")
         // t= to avoid caching problems
-        .content(Content::Url(format!("{}?t={}", url, 1)))
+        .content(Content::Url(format!("{}?t={}", url, timestamp)))
         .size(800, 600)
         .resizable(true)
         .debug(true)

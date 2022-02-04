@@ -34,11 +34,11 @@ const store = new Vuex.Store({
       for (var index = 0; index < rustComponents.length; index++) {
         if (rustComponents[index].id === componentId) {
           if (rustComponents[index].desiredState === 'installed') {
-            rustComponents[index].desiredState = 'uninstalled'
+            rustComponents[index].desiredState = 'uninstalled';
           } else {
-            rustComponents[index].desiredState = 'installed'
+            rustComponents[index].desiredState = 'installed';
           }
-          console.log("Toggle state: " + rustComponents[index].desiredState)
+          console.log("Toggle state: " + rustComponents[index].desiredState);
         }
       }
     }

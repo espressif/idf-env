@@ -124,19 +124,19 @@
             id: 'rust-toolchain-stable',
             title: 'Rust Toolchain - stable',
             state: 'unknown',
-            desiredState: 'unknown',
+            desiredState: 'installed',
           },
           {
             id: 'rust-toolchain-nightly',
             title: 'Rust Toolchain - nightly',
             state: 'unknown',
-            desiredState: 'unknown',
+            desiredState: 'installed',
           },
           {
             id: 'rust-toolchain-xtensa',
             title: 'Rust Toolchain for Xtensa',
             state: 'unknown',
-            desiredState: 'unknown',
+            desiredState: 'installed',
           },
           {
             id: 'llvm-xtensa',
@@ -337,7 +337,7 @@
 
         <div
           v-for="component in workload.components">
-          <input type="checkbox" v-on:click="toggleDesiredState(component.id)" v-model="component.desiredState"
+          <input type="checkbox" v-on:click="toggleDesiredState(component.id)" v-model="component.desiredState === 'installed'"
                  :value="component.id"/> {{ component.title }} - {{ component.state }} -&gt; {{
           component.desiredState }}
         </div>
