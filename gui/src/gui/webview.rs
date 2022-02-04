@@ -32,6 +32,7 @@ pub fn open_url(url: &str) {
             match serde_json::from_str(arg).unwrap() {
                 GetComponentStatus { name } => {
                     match name.as_str() {
+                        // Note: it's not possible to install rustup separately, it's always required by Rust toolchain
                         "rustup" => {
                             let rustup_state = if is_rustup_installed() { "installed" } else { "not installed" };
                             let eval_str = format!("UpdateComponent('{}',{:?});", name, rustup_state);
@@ -76,15 +77,33 @@ pub fn open_url(url: &str) {
 
                 SetComponentDesiredState { name, state } => {
                     match name.as_str() {
-                        "rustup" => {
+                        "rust-toolchain-stable" => {
                             match state.as_str() {
                                 "installed" => {
-                                    if !is_rustup_installed() {
+                                    if !is_rust_toolchain_installed("stable") {
                                         install_rust_stable();
                                     }
                                 }
                                 "uninstalled" => {
-                                    if !is_rustup_installed() {
+                                    if is_rust_toolchain_installed("stable") {
+
+                                    }
+                                }
+                                _ => {
+                                    println!("Unknown state {} of component {}", state, name);
+                                }
+                            }
+                        }
+
+                        "rust-toolchain-nightly" => {
+                            match state.as_str() {
+                                "installed" => {
+                                    if !is_rust_toolchain_installed("nightly") {
+                                        install_rust_stable();
+                                    }
+                                }
+                                "uninstalled" => {
+                                    if is_rust_toolchain_installed("nightly") {
 
                                     }
                                 }

@@ -114,12 +114,12 @@
         title: 'Rust language',
         description: 'Development of Rust applications for RISC-V and Xtensa Espressif chips',
         components: [
-          {
-            id: 'rustup',
-            title: 'Rustup',
-            state: 'unknown',
-            desiredState: 'unknown',
-          },
+          // {
+          //   id: 'rustup',
+          //   title: 'Rustup',
+          //   state: 'unknown',
+          //   desiredState: 'unknown',
+          // },
           {
             id: 'rust-toolchain-stable',
             title: 'Rust Toolchain - stable',
@@ -424,8 +424,8 @@
     let controllerManager = new ControllerManager();
 
     componentsController = new Controller();
-    let rustupComponent = new Component('rustup');
-    componentsController.addComponent(rustupComponent);
+    // let rustupComponent = new Component('rustup');
+    // componentsController.addComponent(rustupComponent);
 
     let rustupNightlyComponent = new Component('rust-toolchain-nightly');
     componentsController.addComponent(rustupNightlyComponent);
