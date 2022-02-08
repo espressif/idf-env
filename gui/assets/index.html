@@ -5,9 +5,9 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 
   <!-- development version, includes helpful console warnings -->
-  <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
-  <script src="https://unpkg.com/vuex@3.6.0/dist/vuex.js"></script>
-  <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
+  <script src="https://unpkg.com/vue@3"></script>
+  <script src="https://unpkg.com/vuex@4"></script>
+  <script src="https://unpkg.com/vue-router@4"></script>
   <link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet'>
   <!--    <script src="idf_versions.js">-->
   <script type="text/javascript">
@@ -169,7 +169,7 @@
 <div id="app">
   <h1>ESP-IDF Installer</h1>
 
-  <script type="text/x-template" id="entry-component-template">
+  <component :is="'script'" id="entry-component-template">
     <div>
       <div class="installation-tabs">
         <div class="installation-title"
@@ -275,123 +275,126 @@
         <div class="install-item-tail"></div>
       </div>
     </div>
-  </script>
+  </component>
+  
+  <component :is="'script'" id="modify-component-template">
+    <div>
+      <div>
+        <div class="installation-tabs">
+          <div class="installation-title"
+               v-on:click="switchInstallTab('workloads')"
+               :class="{ active: isWorkloadsActive }"
+          >Workloads
+          </div>
+          <!--                <div class="installation-title"-->
+          <!--                    v-on:click="switchInstallTab('components')"-->
+          <!--                    :class="{ active: isComponentsActive }"-->
+          <!--                    >Individual Components</div>-->
+          <!--                <div class="installation-title"-->
+          <!--                    v-on:click="switchInstallTab('locations')"-->
+          <!--                    :class="{ active: isLocationsActive }"-->
+          <!--                    >Installation Locations</div>-->
+  
+          <div class="installation-title-tail"></div>
+        </div>
+        <hr>
+  
+        <div class="install-item"
+             :class="{ activeitem: isLocationsActive }">
+          <div>ESP-IDF</div>
+          <input class="location-path" type="text" value="/Users/epsressifer/Desktop/ESP-IDF">
+        </div>
+  
+        <div class="install-item"
+             :class="{ activeitem: isLocationsActive }">
+          <div>Download cache</div>
+          <input class="location-path" type="text" value="/Users/epsressifer/.espressif/dist">
+        </div>
+  
+        <div class="install-item"
+             :class="{ activeitem: isLocationsActive }">
+          <div>Shared tools</div>
+          <input class="location-path" type="text" value="/Users/epsressifer/.espressif/tools">
+        </div>
+  
+        <!--            <div class="workloads-container"-->
+        <!--            :class="{ activeitem: isWorkloadsActive }"-->
+        <!--            >-->
+        <!--              <div class="install-item"-->
+        <!--              :class="{ activeitem: isWorkloadsActive }"-->
+        <!--              v-for="workload in workloads">-->
+        <!--                  -->
+        <!--              <h2>{{ workload.title }}</h2>-->
+        <!--              <div>{{ workload.description }}</div>-->
+        <!--          </div>-->
+  
+        <div class="install-component"
+             :class="{ activeitem: isWorkloadsActive }"
+             v-for="workload in workloads">
+          <div>{{ workload.title }}</div>
+  
+ <!--         <div
+            v-for="component in workload.components">
+            <input type="checkbox" v-on:click="toggleDesiredState(component.id)" v-model="component.desiredState === 'installed'"
+                   :value="component.id"/> {{ component.title }} - {{ component.state }} -&gt; {{
+            component.desiredState }}
+          </div>-->
+        </div>
+      </div>
+  
+      <div>
+        <div class="install-item"
+             :class="{ activeitem: isComponentsActive }">
+          <h2>Tools</h2>
+          <ul>
+            Python
+            <ul>
+              <li v-for="python in pythonList">{{ python.title }}</li>
+            </ul>
+            Git
+            <ul>
+              <li>System 4.3.2</li>
+            </ul>
+          </ul>
+        </div>
+  
+  
+        <div class="modify-buttons">
+          <div class="modify-button">
+            <router-link to="/" tag="div">
+              <div class="install-button">Close</div>
+            </router-link>
+          </div>
+          <div class="modify-button">
+            <router-link to="/install" tag="div">
+              <div class="install-button">Install</div>
+            </router-link>
+          </div>
+          <div class="modify-button-tail"></div>
+        </div>
+  
+      </div>
+    </div>
+  </component>
+
+
+
+  <component :is="'script'" id="install-component-template">
+    <div>
+      Installing...
+    </div>
+  </component>
+  
+
   <router-view></router-view>
 </div>
 
-<script type="text/x-template" id="modify-component-template">
-  <div>
-    <div>
-      <div class="installation-tabs">
-        <div class="installation-title"
-             v-on:click="switchInstallTab('workloads')"
-             :class="{ active: isWorkloadsActive }"
-        >Workloads
-        </div>
-        <!--                <div class="installation-title"-->
-        <!--                    v-on:click="switchInstallTab('components')"-->
-        <!--                    :class="{ active: isComponentsActive }"-->
-        <!--                    >Individual Components</div>-->
-        <!--                <div class="installation-title"-->
-        <!--                    v-on:click="switchInstallTab('locations')"-->
-        <!--                    :class="{ active: isLocationsActive }"-->
-        <!--                    >Installation Locations</div>-->
-
-        <div class="installation-title-tail"></div>
-      </div>
-      <hr>
-
-      <div class="install-item"
-           :class="{ activeitem: isLocationsActive }">
-        <div>ESP-IDF</div>
-        <input class="location-path" type="text" value="/Users/epsressifer/Desktop/ESP-IDF">
-      </div>
-
-      <div class="install-item"
-           :class="{ activeitem: isLocationsActive }">
-        <div>Download cache</div>
-        <input class="location-path" type="text" value="/Users/epsressifer/.espressif/dist">
-      </div>
-
-      <div class="install-item"
-           :class="{ activeitem: isLocationsActive }">
-        <div>Shared tools</div>
-        <input class="location-path" type="text" value="/Users/epsressifer/.espressif/tools">
-      </div>
-
-      <!--            <div class="workloads-container"-->
-      <!--            :class="{ activeitem: isWorkloadsActive }"-->
-      <!--            >-->
-      <!--              <div class="install-item"-->
-      <!--              :class="{ activeitem: isWorkloadsActive }"-->
-      <!--              v-for="workload in workloads">-->
-      <!--                  -->
-      <!--              <h2>{{ workload.title }}</h2>-->
-      <!--              <div>{{ workload.description }}</div>-->
-      <!--          </div>-->
-
-      <div class="install-component"
-           :class="{ activeitem: isWorkloadsActive }"
-           v-for="workload in workloads">
-        <div>{{ workload.title }}</div>
-
-        <div
-          v-for="component in workload.components">
-          <input type="checkbox" v-on:click="toggleDesiredState(component.id)" v-model="component.desiredState === 'installed'"
-                 :value="component.id"/> {{ component.title }} - {{ component.state }} -&gt; {{
-          component.desiredState }}
-        </div>
-      </div>
-    </div>
-
-    <div>
-      <div class="install-item"
-           :class="{ activeitem: isComponentsActive }">
-        <h2>Tools</h2>
-        <ul>
-          Python
-          <ul>
-            <li v-for="python in pythonList">{{ python.title }}</li>
-          </ul>
-          Git
-          <ul>
-            <li>System 4.3.2</li>
-          </ul>
-        </ul>
-      </div>
-
-
-      <div class="modify-buttons">
-        <div class="modify-button">
-          <router-link to="/" tag="div">
-            <div class="install-button">Close</div>
-          </router-link>
-        </div>
-        <div class="modify-button">
-          <router-link to="/install" tag="div">
-            <div class="install-button">Install</div>
-          </router-link>
-        </div>
-        <div class="modify-button-tail"></div>
-      </div>
-
-    </div>
-  </div>
-</script>
-<script type="text/x-template" id="install-component-template">
-  <div>
-    Installing...
-  </div>
-</script>
 
 </body>
 
 <!-- Vue part -->
-<script src="js/store/store.js"></script>
-<script src="js/components/entry-component.js"></script>
-<script src="js/components/modify-component.js"></script>
-<script src="js/components/install-component.js"></script>
 <script src="js/router/router.js"></script>
+<script src="js/store/store.js"></script>
 
 <!-- Control plane -->
 <script src="js/rmi/rust-rmi.js"></script>
@@ -409,10 +412,9 @@
 
   var componentsController;
 
-  var app = new Vue({
+  var app = Vue.createApp({
     el: '#app',
     store: store,
-    router: router
   });
 
   function onChangeHandler(event) {
@@ -448,6 +450,18 @@
 
   window.addEventListener("load", processOnLoad);
 
+</script>
+
+<script src="js/components/entry-component.js"></script>
+<script src="js/components/modify-component.js"></script>
+<script src="js/components/install-component.js"></script>
+
+<script type="text/javascript">
+  router.addRoute({path: '/', name:'home', component: app.component('entry-component') });
+  router.addRoute({path: '/modify', name:'modify', component: app.component('install-component') });
+  router.addRoute({path: '/install', name:'install', component: app.component('modify-component') });
+  app.use(router);
+  app.mount('#app');
 </script>
 
 </html>

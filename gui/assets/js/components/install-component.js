@@ -1,4 +1,4 @@
-let installComponent = Vue.component('entry-component', {
+app.component('install-component', {
   template: '#install-component-template',
   store,
   props: {},

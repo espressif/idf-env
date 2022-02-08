@@ -1,4 +1,4 @@
-let modifyComponent = Vue.component('entry-component', {
+app.component('modify-component', {
   template: '#modify-component-template',
   store,
   props: {},

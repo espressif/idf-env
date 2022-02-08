@@ -29,8 +29,4 @@ winapi = { version = "*", features = ["setupapi", "handleapi", "processthreadsap
 wmi = "*"
 widestring = "*"
 winreg = "0.7"
-web-view = { git = "https://github.com/Boscop/web-view.git", features = ["edge"] }
-
-[target.'cfg(unix)'.dependencies]
-web-view = { git = "https://github.com/Boscop/web-view.git" }
 

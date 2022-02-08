@@ -1,4 +1,4 @@
-let entryComponent = Vue.component('entry-component', {
+app.component('entry-component', {
   template: '#entry-component-template',
   store,
   props: {},
