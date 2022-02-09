@@ -1,4 +1,4 @@
-const store = new Vuex.Store({
+const store = new Vuex.createStore({
   state: {
     isInstalledActive: false,
     isAvaialbleActive: false,

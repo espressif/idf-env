@@ -1,5 +1,9 @@
 app.component('install-component', {
-  template: '#install-component-template',
+  template: `
+    <div>
+      Installing...
+    </div>
+  `,
   store,
   props: {},
   created() {

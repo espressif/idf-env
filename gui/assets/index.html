@@ -169,223 +169,6 @@
 <div id="app">
   <h1>ESP-IDF Installer</h1>
 
-  <component :is="'script'" id="entry-component-template">
-    <div>
-      <div class="installation-tabs">
-        <div class="installation-title"
-             v-on:click="switchInstallTab('installed')"
-             :class="{ active: isInstalledActive }"
-        >Installed
-        </div>
-        <div class="installation-title"
-             v-on:click="switchInstallTab('available')"
-             :class="{ active: isAvaialbleActive }"
-        >Available
-        </div>
-        <div class="installation-title-tail"></div>
-      </div>
-      <hr>
-      <input type="text" value="Search for chip">
-
-      <div class="install-item"
-           :class="{ activeitem: isInstalledActive }"
-           v-for="xidf in idfList2">
-        <div class="install-item-left">
-          <div class="esp-logo"></div>
-        </div>
-        <div class="install-item-middle">
-          <div>ESP-IDF v4.3</div>
-          <div class="install-item-info">Release date: 2020-09-01</div>
-          <div class="install-item-info">Chips: ESP32, ESP32-S2</div>
-          <div class="install-item-info">Period:
-            <ul>
-              <li>Service period (recommended for new designs) until 2021-10</li>
-              <li>Maintenance period 2023-05</li>
-            </ul>
-          </div>
-          <div>
-            <router-link to="release-notes">Release notes</router-link>
-          </div>
-        </div>
-        <div class="install-item-right">
-          <router-link to="/modify">
-            <div class="install-button">Modify</div>
-          </router-link>
-          <div class="install-button">Launch</div>
-          <div class="install-button">More</div>
-        </div>
-        <div class="install-item-tail"></div>
-      </div>
-
-      <div class="install-item"
-           :class="{ activeitem: isAvaialbleActive }">
-        <div class="install-item-left">
-          <div class="esp-logo"></div>
-        </div>
-        <div class="install-item-middle">
-          <div>ESP-IDF 4.3</div>
-          <div class="install-item-info">Release date: 2021-05-01</div>
-          <div class="install-item-info">Chips: ESP32, ESP32-S2</div>
-          <div class="install-item-info">Period:
-            <ul>
-              <li>Development period until 2021-05</li>
-              <li>Service period TBD</li>
-              <li>Maintenance period TBD</li>
-            </ul>
-          </div>
-          <div>
-            <router-link to="/license">License terms</router-link>
-            |
-            <router-link to="release-notes">Release notes</router-link>
-          </div>
-        </div>
-        <div class="install-item-right">
-          <div class="install-button">Install</div>
-          <div class="install-button">More</div>
-        </div>
-
-        <div class="install-item-tail"></div>
-      </div>
-
-      <div class="install-item"
-           :class="{ activeitem: isAvaialbleActive }">
-        <div class="install-item-left">
-          <div class="esp-logo"></div>
-        </div>
-        <div class="install-item-middle">
-          <div>ESP-IDF 3.3.2</div>
-          <div class="install-item-info">Release date: 2019-09-01</div>
-          <div class="install-item-info">Chips: ESP8266</div>
-          <div class="install-item-info">Period:
-            <ul>
-              <li>Maintenance period until 2021-12</li>
-            </ul>
-          </div>
-          <div>
-            <router-link to="/license">License terms</router-link>
-            |
-            <router-link to="release-notes">Release notes</router-link>
-          </div>
-        </div>
-        <div class="install-item-right">
-          <div class="install-button">Install</div>
-          <div class="install-button">More</div>
-        </div>
-
-        <div class="install-item-tail"></div>
-      </div>
-    </div>
-  </component>
-  
-  <component :is="'script'" id="modify-component-template">
-    <div>
-      <div>
-        <div class="installation-tabs">
-          <div class="installation-title"
-               v-on:click="switchInstallTab('workloads')"
-               :class="{ active: isWorkloadsActive }"
-          >Workloads
-          </div>
-          <!--                <div class="installation-title"-->
-          <!--                    v-on:click="switchInstallTab('components')"-->
-          <!--                    :class="{ active: isComponentsActive }"-->
-          <!--                    >Individual Components</div>-->
-          <!--                <div class="installation-title"-->
-          <!--                    v-on:click="switchInstallTab('locations')"-->
-          <!--                    :class="{ active: isLocationsActive }"-->
-          <!--                    >Installation Locations</div>-->
-  
-          <div class="installation-title-tail"></div>
-        </div>
-        <hr>
-  
-        <div class="install-item"
-             :class="{ activeitem: isLocationsActive }">
-          <div>ESP-IDF</div>
-          <input class="location-path" type="text" value="/Users/epsressifer/Desktop/ESP-IDF">
-        </div>
-  
-        <div class="install-item"
-             :class="{ activeitem: isLocationsActive }">
-          <div>Download cache</div>
-          <input class="location-path" type="text" value="/Users/epsressifer/.espressif/dist">
-        </div>
-  
-        <div class="install-item"
-             :class="{ activeitem: isLocationsActive }">
-          <div>Shared tools</div>
-          <input class="location-path" type="text" value="/Users/epsressifer/.espressif/tools">
-        </div>
-  
-        <!--            <div class="workloads-container"-->
-        <!--            :class="{ activeitem: isWorkloadsActive }"-->
-        <!--            >-->
-        <!--              <div class="install-item"-->
-        <!--              :class="{ activeitem: isWorkloadsActive }"-->
-        <!--              v-for="workload in workloads">-->
-        <!--                  -->
-        <!--              <h2>{{ workload.title }}</h2>-->
-        <!--              <div>{{ workload.description }}</div>-->
-        <!--          </div>-->
-  
-        <div class="install-component"
-             :class="{ activeitem: isWorkloadsActive }"
-             v-for="workload in workloads">
-          <div>{{ workload.title }}</div>
-  
- <!--         <div
-            v-for="component in workload.components">
-            <input type="checkbox" v-on:click="toggleDesiredState(component.id)" v-model="component.desiredState === 'installed'"
-                   :value="component.id"/> {{ component.title }} - {{ component.state }} -&gt; {{
-            component.desiredState }}
-          </div>-->
-        </div>
-      </div>
-  
-      <div>
-        <div class="install-item"
-             :class="{ activeitem: isComponentsActive }">
-          <h2>Tools</h2>
-          <ul>
-            Python
-            <ul>
-              <li v-for="python in pythonList">{{ python.title }}</li>
-            </ul>
-            Git
-            <ul>
-              <li>System 4.3.2</li>
-            </ul>
-          </ul>
-        </div>
-  
-  
-        <div class="modify-buttons">
-          <div class="modify-button">
-            <router-link to="/" tag="div">
-              <div class="install-button">Close</div>
-            </router-link>
-          </div>
-          <div class="modify-button">
-            <router-link to="/install" tag="div">
-              <div class="install-button">Install</div>
-            </router-link>
-          </div>
-          <div class="modify-button-tail"></div>
-        </div>
-  
-      </div>
-    </div>
-  </component>
-
-
-
-  <component :is="'script'" id="install-component-template">
-    <div>
-      Installing...
-    </div>
-  </component>
-  
-
   <router-view></router-view>
 </div>
 
@@ -412,10 +195,7 @@
 
   var componentsController;
 
-  var app = Vue.createApp({
-    el: '#app',
-    store: store,
-  });
+  const app = Vue.createApp({});
 
   function onChangeHandler(event) {
     console.log("State definition changed");
@@ -458,10 +238,14 @@
 
 <script type="text/javascript">
   router.addRoute({path: '/', name:'home', component: app.component('entry-component') });
-  router.addRoute({path: '/modify', name:'modify', component: app.component('install-component') });
-  router.addRoute({path: '/install', name:'install', component: app.component('modify-component') });
+  router.addRoute({path: '/modify', name:'modify', component: app.component('modify-component') });
+  router.addRoute({path: '/install', name:'install', component: app.component('install-component') });
   app.use(router);
-  app.mount('#app');
+  app.use(store);
+  router.isReady().then(() => {
+    app.mount('#app');
+  });
+
 </script>
 
 </html>
