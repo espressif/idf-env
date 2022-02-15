@@ -1,7 +1,14 @@
 use clap::{Arg, App};
 
 use chrono::Utc;
-use web_view::*;
+use wry::{
+    application::{
+        event::{Event, StartCause, WindowEvent},
+        event_loop::{ControlFlow, EventLoop},
+        window::WindowBuilder,
+    },
+    webview::WebViewBuilder,
+};
 use serde::{Deserialize};
 use serde_json;
 use crate::rust::install_rust;
@@ -22,145 +29,168 @@ pub enum Cmd {
 pub fn open_url(url: &str) {
     let dt = Utc::now();
     let timestamp: i64 = dt.timestamp();
+    let event_loop = EventLoop::new();
+    let window = WindowBuilder::new()
+        .with_title("Hello World")
+        .build(&event_loop);
+    let webview = WebViewBuilder::new(window.unwrap()).unwrap()
+        .with_url(url).unwrap()
+        .build().unwrap();
 
-    let webview = web_view::builder()
-        .title("Espressif Environment Installer")
-        // t= to avoid caching problems
-        .content(Content::Url(format!("{}?t={}", url, timestamp)))
-        .size(800, 600)
-        .resizable(true)
-        .debug(true)
-        .user_data(())
-        .invoke_handler(|webview, arg| {
-            use Cmd::*;
-            match serde_json::from_str(arg).unwrap() {
-                GetComponentStatus { name } => {
-                    match name.as_str() {
-                        // Note: it's not possible to install rustup separately, it's always required by Rust toolchain
-                        "rustup" => {
-                            let rustup_state = if is_rustup_installed() { "installed" } else { "not installed" };
-                            let eval_str = format!("UpdateComponent('{}',{:?});", name, rustup_state);
-                            println!("Load component {}", name);
-                            println!("Eval: {}", eval_str);
-                            webview.eval(&eval_str)?;
-                        }
-                        "rust-toolchain-nightly" => {
-                            let rust_toolchain_state = if is_rust_toolchain_installed("nightly") { "installed" } else { "not installed" };
-                            let eval_str = format!("UpdateComponent('{}',{:?});", name, rust_toolchain_state);
-                            println!("Load component {}", name);
-                            println!("Eval: {}", eval_str);
-                            webview.eval(&eval_str)?;
-                        }
-                        "rust-toolchain-stable" => {
-                            let rust_toolchain_state = if is_rust_toolchain_installed("stable") { "installed" } else { "not installed" };
-                            let eval_str = format!("UpdateComponent('{}',{:?});", name, rust_toolchain_state);
-                            println!("Load component {}", name);
-                            println!("Eval: {}", eval_str);
-                            webview.eval(&eval_str)?;
-                        }
-                        "rust-toolchain-xtensa" => {
-                            let rust_toolchain_state = if is_rust_toolchain_installed("esp") { "installed" } else { "not installed" };
-                            let eval_str = format!("UpdateComponent('{}',{:?});", name, rust_toolchain_state);
-                            println!("Load component {}", name);
-                            println!("Eval: {}", eval_str);
-                            webview.eval(&eval_str)?;
-                        }
-                        "llvm-xtensa" => {
-                            let toolchain_state = if is_llvm_installed() { "installed" } else { "not installed" };
-                            let eval_str = format!("UpdateComponent('{}',{:?});", name, toolchain_state);
-                            println!("Load component {}", name);
-                            println!("Eval: {}", eval_str);
-                            webview.eval(&eval_str)?;
-                        }
+    #[cfg(debug_assertions)]
+        webview.devtool();
 
-                        _ => {
-                            println!("Unknown component {}", name);
-                        }
-                    }
-                }
+    event_loop.run(move |event, _, control_flow| {
+        *control_flow = ControlFlow::Wait;
 
-                SetComponentDesiredState { name, state } => {
-                    match name.as_str() {
-                        "rust-toolchain-stable" => {
-                            match state.as_str() {
-                                "installed" => {
-                                    if !is_rust_toolchain_installed("stable") {
-                                        install_rust_stable();
-                                    }
-                                }
-                                "uninstalled" => {
-                                    if is_rust_toolchain_installed("stable") {
-
-                                    }
-                                }
-                                _ => {
-                                    println!("Unknown state {} of component {}", state, name);
-                                }
-                            }
-                        }
-
-                        "rust-toolchain-nightly" => {
-                            match state.as_str() {
-                                "installed" => {
-                                    if !is_rust_toolchain_installed("nightly") {
-                                        install_rust_stable();
-                                    }
-                                }
-                                "uninstalled" => {
-                                    if is_rust_toolchain_installed("nightly") {
-
-                                    }
-                                }
-                                _ => {
-                                    println!("Unknown state {} of component {}", state, name);
-                                }
-                            }
-                        }
-
-                        _ => {
-                            println!("Unknown component {}", name);
-                        }
-
-                    }
-                }
-
-                _ => {
-                    println!("Unknown command");
-                }
-            };
-            Ok(())
-        })
-        .run()
-        .unwrap();
+        match event {
+            Event::NewEvents(StartCause::Init) => println!("Wry has started!"),
+            Event::WindowEvent {
+                event: WindowEvent::CloseRequested,
+                ..
+            } => *control_flow = ControlFlow::Exit,
+            _ => (),
+        }
+    });
+    //
+    // let webview = web_view::builder()
+    //     .title("Espressif Environment Installer")
+    //     // t= to avoid caching problems
+    //     .content(Content::Url(format!("{}?t={}", url, timestamp)))
+    //     .size(800, 600)
+    //     .resizable(true)
+    //     .debug(true)
+    //     .user_data(())
+    //     .invoke_handler(|webview, arg| {
+    //         use Cmd::*;
+    //         match serde_json::from_str(arg).unwrap() {
+    //             GetComponentStatus { name } => {
+    //                 match name.as_str() {
+    //                     // Note: it's not possible to install rustup separately, it's always required by Rust toolchain
+    //                     "rustup" => {
+    //                         let rustup_state = if is_rustup_installed() { "installed" } else { "not installed" };
+    //                         let eval_str = format!("UpdateComponent('{}',{:?});", name, rustup_state);
+    //                         println!("Load component {}", name);
+    //                         println!("Eval: {}", eval_str);
+    //                         webview.eval(&eval_str)?;
+    //                     }
+    //                     "rust-toolchain-nightly" => {
+    //                         let rust_toolchain_state = if is_rust_toolchain_installed("nightly") { "installed" } else { "not installed" };
+    //                         let eval_str = format!("UpdateComponent('{}',{:?});", name, rust_toolchain_state);
+    //                         println!("Load component {}", name);
+    //                         println!("Eval: {}", eval_str);
+    //                         webview.eval(&eval_str)?;
+    //                     }
+    //                     "rust-toolchain-stable" => {
+    //                         let rust_toolchain_state = if is_rust_toolchain_installed("stable") { "installed" } else { "not installed" };
+    //                         let eval_str = format!("UpdateComponent('{}',{:?});", name, rust_toolchain_state);
+    //                         println!("Load component {}", name);
+    //                         println!("Eval: {}", eval_str);
+    //                         webview.eval(&eval_str)?;
+    //                     }
+    //                     "rust-toolchain-xtensa" => {
+    //                         let rust_toolchain_state = if is_rust_toolchain_installed("esp") { "installed" } else { "not installed" };
+    //                         let eval_str = format!("UpdateComponent('{}',{:?});", name, rust_toolchain_state);
+    //                         println!("Load component {}", name);
+    //                         println!("Eval: {}", eval_str);
+    //                         webview.eval(&eval_str)?;
+    //                     }
+    //                     "llvm-xtensa" => {
+    //                         let toolchain_state = if is_llvm_installed() { "installed" } else { "not installed" };
+    //                         let eval_str = format!("UpdateComponent('{}',{:?});", name, toolchain_state);
+    //                         println!("Load component {}", name);
+    //                         println!("Eval: {}", eval_str);
+    //                         webview.eval(&eval_str)?;
+    //                     }
+    //
+    //                     _ => {
+    //                         println!("Unknown component {}", name);
+    //                     }
+    //                 }
+    //             }
+    //
+    //             SetComponentDesiredState { name, state } => {
+    //                 match name.as_str() {
+    //                     "rust-toolchain-stable" => {
+    //                         match state.as_str() {
+    //                             "installed" => {
+    //                                 if !is_rust_toolchain_installed("stable") {
+    //                                     install_rust_stable();
+    //                                 }
+    //                             }
+    //                             "uninstalled" => {
+    //                                 if is_rust_toolchain_installed("stable") {
+    //
+    //                                 }
+    //                             }
+    //                             _ => {
+    //                                 println!("Unknown state {} of component {}", state, name);
+    //                             }
+    //                         }
+    //                     }
+    //
+    //                     "rust-toolchain-nightly" => {
+    //                         match state.as_str() {
+    //                             "installed" => {
+    //                                 if !is_rust_toolchain_installed("nightly") {
+    //                                     install_rust_stable();
+    //                                 }
+    //                             }
+    //                             "uninstalled" => {
+    //                                 if is_rust_toolchain_installed("nightly") {
+    //
+    //                                 }
+    //                             }
+    //                             _ => {
+    //                                 println!("Unknown state {} of component {}", state, name);
+    //                             }
+    //                         }
+    //                     }
+    //
+    //                     _ => {
+    //                         println!("Unknown component {}", name);
+    //                     }
+    //
+    //                 }
+    //             }
+    //
+    //             _ => {
+    //                 println!("Unknown command");
+    //             }
+    //         };
+    //         Ok(())
+    //     })
+    //     .run()
+    //     .unwrap();
 }
 
 fn get_gui_runner(_args: &str, matches: &clap::ArgMatches) -> std::result::Result<(), clap::Error> {
     // let app = include_str!("../../gui/index.html");
     let url = matches.value_of("url").unwrap();
-    web_view::builder()
-        .title("Espressif Environment Installer")
-        .content(Content::Url(url))
-        .size(800, 600)
-        .resizable(false)
-        .debug(true)
-        .user_data(())
-        .invoke_handler(|webview, arg| {
-            match arg {
-                "install" => {
-                    println!("Start installation...")
-                }
-                "test_two" => {
-                    // Invoke a JavaScript function!
-                    // webview.eval(&format!("myFunction({}, {})", 123, 456))
-                }
-                _ => {
-                    println!("Operation not implemented: {}", arg)
-                }
-            };
-            Ok(())
-        })
-        .run()
-        .unwrap();
+    // web_view::builder()
+    //     .title("Espressif Environment Installer")
+    //     .content(Content::Url(url))
+    //     .size(800, 600)
+    //     .resizable(false)
+    //     .debug(true)
+    //     .user_data(())
+    //     .invoke_handler(|webview, arg| {
+    //         match arg {
+    //             "install" => {
+    //                 println!("Start installation...")
+    //             }
+    //             "test_two" => {
+    //                 // Invoke a JavaScript function!
+    //                 // webview.eval(&format!("myFunction({}, {})", 123, 456))
+    //             }
+    //             _ => {
+    //                 println!("Operation not implemented: {}", arg)
+    //             }
+    //         };
+    //         Ok(())
+    //     })
+    //     .run()
+    //     .unwrap();
     Ok(())
 }
 

@@ -24,19 +24,13 @@ walkdir = "*"
 zip = "*"
 xz2 = "0.1.6"
 idf-env-core = { path = "../idf-env-core" }
+wry = "0.13.1"
 
 [target.'cfg(windows)'.dependencies]
-once_cell = "1.3.1"
-native-windows-gui = { version = "1.0.12", features = ["high-dpi"] }
 winapi = { version = "*", features = ["setupapi", "handleapi", "processthreadsapi", "winnt", "securitybaseapi", "impl-default", "shellapi"] }
 wmi = "*"
 widestring = "*"
 winreg = "0.7"
-web-view = { git = "https://github.com/Boscop/web-view.git", features = ["edge"] }
-
-[target.'cfg(unix)'.dependencies]
-web-view = { git = "https://github.com/Boscop/web-view.git" }
-
 
 [[bin]]
 name = "idf-env-gui"

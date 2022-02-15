@@ -1,4 +1,3 @@
-
 [package]
 name = "idf-env"
 version = "2.0.0"
@@ -24,8 +23,6 @@ xz2 = "0.1.6"
 idf-env-core = { path =  "../idf-env-core" }
 
 [target.'cfg(windows)'.dependencies]
-once_cell = "1.3.1"
-native-windows-gui = { version = "1.0.12", features = ["high-dpi"] }
 winapi = { version = "*", features = ["setupapi", "handleapi", "processthreadsapi", "winnt", "securitybaseapi", "impl-default", "shellapi"] }
 wmi = "*"
 widestring = "*"
