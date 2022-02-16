@@ -7,20 +7,24 @@ use std::collections::HashMap;
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 #[cfg(unix)]
-fn get_antivirus_property(_property_name: String, _include_inactive: bool) -> Result<()> {
+pub fn get_antivirus_property(_property_name: String, _include_inactive: bool) -> Result<()> {
     println!("None");
     Ok(())
 }
 
+pub fn get_antivirus_name() -> Vec<String> {
+    get_antivirus_property("displayName", false)
+}
+
 #[cfg(windows)]
-fn get_antivirus_property(property_name: String, include_inactive: bool) -> Result<()> {
+fn get_antivirus_property(property_name: &str, include_inactive: bool) -> Vec<String> {
     use wmi::*;
     use wmi::Variant;
 
-    let wmi_con = WMIConnection::with_namespace_path("ROOT\\SecurityCenter2", COMLibrary::new()?.into())?;
+    let mut result:Vec<String> = Vec::new();
+    let wmi_con = WMIConnection::with_namespace_path("ROOT\\SecurityCenter2", COMLibrary::new().unwrap().into()).unwrap();
     let query = format!("SELECT * FROM AntiVirusProduct");
-    let products = wmi_con.raw_query(query)?;
-    let mut is_first = true;
+    let products = wmi_con.raw_query(query).unwrap();
     for antivirus_product in products {
         let prod: HashMap<String, Variant> = antivirus_product;
 
@@ -36,25 +40,14 @@ fn get_antivirus_property(property_name: String, include_inactive: bool) -> Resu
             }
         }
 
-        match property_name == "*" {
-            true => {
-                println!("{:#?}", prod)
-            }
-            _ => {
-                let property_value = &prod[&property_name];
 
-                if let Variant::String(value) = property_value {
-                    if is_first {
-                        is_first = false;
-                    } else {
-                        print!(", ");
-                    }
-                    print!("{}", value)
-                }
-            }
+        let property_value = &prod[property_name];
+
+        if let Variant::String(value) = property_value {
+            result.push(value.clone());
         }
-    }
-    Ok(())
+}
+    result
 }
 
 pub fn get_cmd<'a>() -> App<'a> {
@@ -94,3 +87,4 @@ pub fn get_multi_cmd<'a>() -> App<'a> {
         .subcommand(get_cmd())
         .subcommand(exclusion::get_multi_cmd())
 }
+
