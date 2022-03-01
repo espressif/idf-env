@@ -21,7 +21,7 @@ mod toit;
 async fn app() -> Result<()> {
     Commander::new()
         .options(|app| {
-            app.version("1.2.22")
+            app.version("1.2.23")
                 .name("idf-env")
                 .author("Espressif Systems - https://www.espressif.com")
                 .about("Tool for maintaining ESP-IDF environment on computer.")

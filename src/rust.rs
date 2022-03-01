@@ -11,7 +11,7 @@ use crate::config::get_tool_path;
 use crate::package::{prepare_package, prepare_package_strip_prefix, prepare_single_binary};
 use crate::shell::run_command;
 
-const DEFAULT_RUST_TOOLCHAIN_VERSION:&str = "1.58.0.0";
+const DEFAULT_RUST_TOOLCHAIN_VERSION:&str = "1.59.0.0";
 const DEFAULT_LLVM_VERSION:&str = "esp-13.0.0-20211203";
 
 struct RustToolchain {
