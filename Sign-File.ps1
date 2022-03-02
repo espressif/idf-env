@@ -19,6 +19,14 @@ function FindSignTool {
     if (Test-Path -Path $SignTool -PathType Leaf) {
         return $SignTool
     }
+    $SdkVersionList = "10.0.22000.0", "10.0.20348.0", "10.0.19041.0", "10.0.17763.0"
+    Foreach ($Version in $SdkVersionList)
+    {
+        $SignTool = "${env:ProgramFiles(x86)}\Windows Kits\10\bin\${Version}\x64\signtool.exe"
+        if (Test-Path -Path $SignTool -PathType Leaf) {
+            return $SignTool
+        }
+    }
     "signtool.exe not found"
     Exit 1
 }
@@ -44,7 +52,7 @@ function SignInstaller {
         Exit 1
     }
 
-    $SignParameters = @("sign", "/tr", 'http://timestamp.digicert.com', "/f", $CertificateFile)
+    $SignParameters = @("sign", "/tr", 'http://timestamp.digicert.com', "/td", "SHA256", "/f", $CertificateFile, "/fd", "SHA256")
     if ($env:CERTIFICATE_PASSWORD) {
         "CERTIFICATE_PASSWORD detected, using the password"
         $SignParameters += "/p"
