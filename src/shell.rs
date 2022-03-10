@@ -51,12 +51,26 @@ pub fn run_command(shell: String, arguments: Vec<String>, command: String) -> st
     Ok(())
 }
 
+pub fn wide_null(s: &str) -> Vec<u16> {
+    s.encode_utf16().chain(Some(0)).collect()
+}
 #[cfg(windows)]
 pub fn set_env_variable(key:&str, value:String) {
     use winreg::{enums::HKEY_CURRENT_USER, RegKey};
     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
     let (env, _) = hkcu.create_subkey("Environment").unwrap(); // create_subkey opens with write permissions
     env.set_value(key, &value).unwrap();
+    // It's necessary to notify applications about update of the environment
+    // https://stackoverflow.com/questions/19705401/how-to-set-system-environment-variable-in-c/19705691#19705691
+    let param = wide_null("Environment").as_ptr() as winapi::shared::minwindef::LPARAM;
+    unsafe {
+        winapi::um::winuser::SendNotifyMessageW(
+            winapi::um::winuser::HWND_BROADCAST,
+            winapi::um::winuser::WM_SETTINGCHANGE,
+            0,
+            param
+        );
+    }
 }
 
 #[cfg(windows)]
@@ -66,7 +80,7 @@ pub fn update_env_variable(variable_name: &str, value: &str) {
     let env = hkcu.open_subkey("Environment").unwrap();
     let env_path:String = env.get_value(variable_name).unwrap();
     if !env_path.contains(&value) {
-        let updated_env_path = format!("{};{}", env_path, value);
+        let updated_env_path = format!("{}{};", env_path, value);
         set_env_variable(variable_name, updated_env_path);
     }
 }
