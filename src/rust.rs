@@ -9,7 +9,7 @@ use std::io::Read;
 use std::process::Stdio;
 use crate::config::get_tool_path;
 use crate::package::{prepare_package, prepare_package_strip_prefix, prepare_single_binary};
-use crate::shell::run_command;
+use crate::shell::{run_command, update_env_path};
 
 const DEFAULT_RUST_TOOLCHAIN_VERSION:&str = "1.59.0.0";
 const DEFAULT_LLVM_VERSION:&str = "esp-13.0.0-20211203";
@@ -99,36 +99,6 @@ fn build_rust_toolchain(version:&str, llvm_version: &str, arch:&str) -> RustTool
         llvm_url,
         idf_tool_xtensa_elf_clang
     }
-}
-
-#[cfg(windows)]
-fn set_env_variable(key:&str, value:String) {
-    use winreg::{enums::HKEY_CURRENT_USER, RegKey};
-    let hkcu = RegKey::predef(HKEY_CURRENT_USER);
-    let (env, _) = hkcu.create_subkey("Environment").unwrap(); // create_subkey opens with write permissions
-    env.set_value(key, &value).unwrap();
-}
-
-#[cfg(windows)]
-fn update_env_path(value: &str) {
-    let path_key = "PATH";
-    use winreg::{enums::HKEY_CURRENT_USER, RegKey};
-    let hkcu = RegKey::predef(HKEY_CURRENT_USER);
-    let env = hkcu.open_subkey("Environment").unwrap();
-    let env_path:String = env.get_value(path_key).unwrap();
-    if !env_path.contains(&value) {
-        let updated_env_path = format!("{};{}", env_path, value);
-        set_env_variable(path_key, updated_env_path);
-    }
-}
-
-#[cfg(unix)]
-fn update_env_path(value: &str) {
-}
-
-#[cfg(unix)]
-fn set_env_variable(key:&str, value:&str) {
-
 }
 
 fn install_rust_stable() {

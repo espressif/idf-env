@@ -21,7 +21,7 @@ mod toit;
 async fn app() -> Result<()> {
     Commander::new()
         .options(|app| {
-            app.version("1.2.23")
+            app.version("1.2.24")
                 .name("idf-env")
                 .author("Espressif Systems - https://www.espressif.com")
                 .about("Tool for maintaining ESP-IDF environment on computer.")
@@ -37,6 +37,7 @@ async fn app() -> Result<()> {
         .add_cmd(idf::get_multi_cmd())
         .add_cmd(launcher::get_multi_cmd())
         .add_cmd(rust::get_multi_cmd())
+        .add_cmd(shell::get_multi_cmd())
         .add_cmd(toit::get_multi_cmd())
         .no_cmd(|_args, _matches| {
             println!("No command matched. Use parameter --help");

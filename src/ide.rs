@@ -11,8 +11,8 @@ use crate::config::get_tool_path;
 use crate::package::{prepare_package, prepare_package_strip_prefix, prepare_single_binary};
 use crate::shell::run_command;
 
-const DEFAULT_IDE_URL:&str = "https://dl.espressif.com/dl/idf-eclipse-plugin/ide/Espressif-IDE-2.4.0-win32.win32.x86_64.zip";
-const DEFAULT_IDE_FILE:&str = "Espressif-IDE-2.4.0-win32.win32.x86_64.zip";
+const DEFAULT_IDE_URL:&str = "https://dl.espressif.com/dl/idf-eclipse-plugin/ide/Espressif-IDE-2.4.2-win32.win32.x86_64.zip";
+const DEFAULT_IDE_FILE:&str = "Espressif-IDE-2.4.2-win32.win32.x86_64.zip";
 
 struct Ide {
     dist_url: String,

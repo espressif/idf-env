@@ -106,10 +106,10 @@ idf-env companion start --port COM7
 idf-env companion update
 ```
 
-### Launching shell
+### Working with shell
 
 ```
-idf-env shell
+idf-env shell append --variable path --path c:/Espressif/tools
 ```
 
 ### Working with certificates
