@@ -2,6 +2,9 @@ use std::env;
 use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
 
+use std::fs::File;
+use std::io::{self, BufRead};
+
 use dirs::home_dir;
 use std::path::Path;
 use std::fs::{create_dir_all, remove_dir_all};
@@ -43,6 +46,40 @@ fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::resul
     Ok(())
 }
 
+fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
+    where P: AsRef<Path>, {
+    let file = File::open(filename)?;
+    Ok(io::BufReader::new(file).lines())
+}
+
+fn set_vm_to_ini_file(ini_file: String, vm_path: String) {
+    let mut skip_next_line = false;
+    if let Ok(lines) = read_lines(ini_file) {
+        for line in lines {
+            if let Ok(content) = line {
+                if skip_next_line {
+                    skip_next_line = false;
+                    println!("{}", vm_path);
+                    continue
+                }
+                println!("{}",content);
+                if content == "-vm" {
+                    skip_next_line = true;
+                    continue
+                }
+            }
+        }
+    }
+}
+
+fn get_configure_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+    let ini_file = matches.value_of("ini").unwrap().to_string();
+    let vm_path = matches.value_of("vm").unwrap().to_string();
+
+    set_vm_to_ini_file(ini_file, vm_path);
+    Ok(())
+}
+
 pub fn get_install_cmd<'a>() -> Command<'a, str> {
     Command::new("install")
         .description("Install Espressif-IDE")
@@ -76,9 +113,34 @@ pub fn get_install_cmd<'a>() -> Command<'a, str> {
         )
 }
 
+pub fn get_configure_cmd<'a>() -> Command<'a, str> {
+    Command::new("configure")
+        .description("Configure Espressif-IDE")
+        .options(|app| {
+            app.arg(
+                Arg::with_name("ini")
+                    .short("i")
+                    .long("ini")
+                    .help("Path to Espressif-IDE ini file")
+                    .takes_value(true)
+            )
+                .arg(
+                    Arg::with_name("vm")
+                        .short("m")
+                        .long("vm")
+                        .help("Path to VM")
+                        .takes_value(true)
+                )
+        })
+        .runner(|_args, matches|
+            get_configure_runner(_args, matches)
+        )
+}
+
 pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
     let multi_cmd: MultiCommand<str, str> = Commander::new()
         .add_cmd(get_install_cmd())
+        .add_cmd(get_configure_cmd())
         .into_cmd("ide")
 
         // Optionally specify a description
