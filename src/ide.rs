@@ -3,7 +3,7 @@ use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
 
 use std::fs::File;
-use std::io::{self, BufRead};
+use std::io::{self, BufRead, Write};
 
 use dirs::home_dir;
 use std::path::Path;
@@ -53,21 +53,39 @@ fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
 }
 
 fn set_vm_to_ini_file(ini_file: String, vm_path: String) {
-    let mut skip_next_line = false;
-    if let Ok(lines) = read_lines(ini_file) {
-        for line in lines {
-            if let Ok(content) = line {
-                if skip_next_line {
-                    skip_next_line = false;
-                    println!("{}", vm_path);
-                    continue
+    match read_lines(ini_file.clone()) {
+        Ok(lines) => {
+            let memory_buffer:Vec<String> = lines.map(|r|r.unwrap()).collect();
+            let index = memory_buffer.iter().position(|r| r == "-vm");
+            match index {
+                Some(index) => {
+                    let mut position = 0;
+                    let mut out_file = File::create(ini_file).unwrap();
+                    for line in memory_buffer {
+                        if index+1 == position {
+                            out_file.write_all(vm_path.as_bytes());
+                            out_file.write_all("\r\n".as_bytes());
+                        } else {
+                            out_file.write_all( line.as_bytes());
+                            out_file.write_all("\r\n".as_bytes());
+                        }
+                        position = position + 1;
+                    }
                 }
-                println!("{}",content);
-                if content == "-vm" {
-                    skip_next_line = true;
-                    continue
+                _ => {
+                    let mut out_file =File::create(ini_file).unwrap();
+                    out_file.write_all("-vm\r\n".as_bytes());
+                    out_file.write_all(vm_path.as_bytes());
+                    out_file.write_all("\r\n".as_bytes());
+                    for line in memory_buffer {
+                        out_file.write_all(line.as_bytes());
+                        out_file.write_all("\r\n".as_bytes());
+                    }
                 }
             }
+        }
+        _ => {
+            println!("Unable to open file {}", ini_file);
         }
     }
 }
