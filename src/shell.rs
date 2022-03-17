@@ -73,16 +73,46 @@ pub fn set_env_variable(key:&str, value:String) {
     }
 }
 
+fn append_path(original_path: &str, new_path: &str) -> String {
+    if original_path.len() == 0 {
+        return new_path.to_string();
+    }
+
+    if original_path.contains(new_path) {
+        return original_path.to_string();
+    }
+
+    if original_path.chars().last().unwrap() != ';' {
+        return format!("{};{};", original_path, new_path);
+    }
+
+    format!("{}{};", original_path, new_path)
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::shell::append_path;
+
+    #[test]
+    fn test_append_path() {
+        assert_eq!(append_path("",""), "");
+        assert_eq!(append_path("a",""), "a");
+        assert_eq!(append_path("a","b"), "a;b;");
+        assert_eq!(append_path("","b"), "b");
+        assert_eq!(append_path("a;b;","b"), "a;b;");
+        assert_eq!(append_path("a;c;","b"), "a;c;b;");
+    }
+
+}
+
 #[cfg(windows)]
 pub fn update_env_variable(variable_name: &str, value: &str) {
     use winreg::{enums::HKEY_CURRENT_USER, RegKey};
     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
     let env = hkcu.open_subkey("Environment").unwrap();
     let env_path:String = env.get_value(variable_name).unwrap();
-    if !env_path.contains(&value) {
-        let updated_env_path = format!("{}{};", env_path, value);
-        set_env_variable(variable_name, updated_env_path);
-    }
+    let updated_env_path = append_path(env_path.as_str(), value);
+    set_env_variable(variable_name, updated_env_path);
 }
 
 #[cfg(windows)]
