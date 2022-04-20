@@ -4,15 +4,14 @@ use clap_nested::{Command, Commander, MultiCommand};
 
 use dirs::home_dir;
 use std::path::Path;
-use std::fs::{create_dir_all, remove_dir_all};
-use std::io::Read;
+use std::fs::{remove_dir_all};
 use std::process::Stdio;
 use crate::config::get_tool_path;
-use crate::package::{prepare_package, prepare_package_strip_prefix, prepare_single_binary};
+use crate::package::{prepare_package_strip_prefix, prepare_single_binary};
 use crate::shell::{run_command, update_env_path};
 
-const DEFAULT_RUST_TOOLCHAIN_VERSION:&str = "1.59.0.0";
-const DEFAULT_LLVM_VERSION:&str = "esp-13.0.0-20211203";
+const DEFAULT_RUST_TOOLCHAIN_VERSION:&str = "1.60.0.1";
+const DEFAULT_LLVM_VERSION:&str = "esp-14.0.0-20220415";
 
 struct RustToolchain {
     arch: String,
