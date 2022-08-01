@@ -7,7 +7,7 @@ Tool for maintaining ESP-IDF environment.
 ### Quick start with `cargo`
 
 ```shell
-cargo install idf-env --git https://github.com/espressif/idf-env 
+cargo install idf-env --git https://github.com/espressif/idf-env
 ```
 
 ### Quick start with `PowerShell`
@@ -15,7 +15,7 @@ cargo install idf-env --git https://github.com/espressif/idf-env
 Install serial drivers for ESP boards on Windows. Execute following command in PowerShell:
 
 ```
-Invoke-WebRequest 'https://dl.espressif.com/dl/idf-env/idf-env.exe' -OutFile .\idf-env.exe; .\idf-env.exe driver install --espressif --ftdi --silabs
+Invoke-WebRequest 'https://dl.espressif.com/dl/idf-env/idf-env.exe' -OutFile .\idf-env.exe; .\idf-env.exe driver install --espressif --ftdi --silabs --wch
 ```
 
 # Commands
@@ -40,7 +40,7 @@ idf-env launcher add --shell powershell --to windows-terminal --title "ESP-IDF 4
 ```
 
 ### Working with installations of ESP-IDF
-``` 
+```
 idf-env idf install
 idf-env idf install --idf-version "master" --installer "G:\idf-installer\build\esp-idf-tools-setup-online-unsigned.exe"
 idf-env idf uninstall
@@ -78,14 +78,21 @@ Run in elevated shell - requires Administrator privileges.
 Tools will request elevated privileges by UAC if necessary.
 
 ```
-idf-env driver install --espressif --ftdi --silabs
+idf-env driver install --espressif --ftdi --silabs --wch
 ```
 
 Download drivers without installation:
 
 ```
-idf-env driver download --espressif --ftdi --silabs
+idf-env driver download --espressif --ftdi --silabs --wch
 ```
+
+#### Links for manual download of drivers
+
+- Espressif System - https://dl.espressif.com/dl/idf-driver/idf-driver-esp32-usb-jtag-2021-07-15.zip
+- FTDI - https://www.ftdichip.com/Drivers/CDM/CDM%20v2.12.28%20WHQL%20Certified.zip
+- Silabs - https://www.silabs.com/documents/public/software/CP210x_Universal_Windows_Driver.zip
+- WHC - https://www.wch.cn/downloads/CH341SER_ZIP.html
 
 ### Working with Rust language for Xtensa
 

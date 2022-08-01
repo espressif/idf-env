@@ -186,6 +186,15 @@ fn download_drivers(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result
                             Err(_e) => { println!("Failed");}
                         }
     }
+    if _matches.is_present("wch") {
+        match prepare_package("https://www.wch.cn/downloads/file/5.html".to_string(),
+                        "whc-ch341ser.zip",
+                        get_driver_path("whc-ch341ser-2022-08-01".to_string())) {
+                            Ok(_) => { println!("Ok"); },
+                            Err(_e) => { println!("Failed");}
+                        }
+    }
+
     Ok(())
 }
 
@@ -212,6 +221,10 @@ fn get_install_runner(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::resu
 
         if _matches.is_present("espressif") {
             install_driver(get_driver_path("idf-driver-esp32-usb-jtag-2021-07-15/usb_jtag_debug_unit.inf".to_string()));
+        }
+
+        if _matches.is_present("wch") {
+            install_driver(get_driver_path("whc-ch341ser-2022-08-01/CH343SER/Driver/CH343SER.inf".to_string()));
         }
 
         if _matches.is_present("wait") {
@@ -251,6 +264,12 @@ pub fn get_install_cmd<'a>() -> Command<'a, str> {
                         .short("e")
                         .long("espressif")
                         .help("Install Espressif driver"),
+                )
+                .arg(
+                    Arg::with_name("wch")
+                        .short("c")
+                        .long("wch")
+                        .help("Install WCH CH343/CH9102 driver"),
                 )
                 .arg(
                     Arg::with_name("wait")
@@ -298,6 +317,13 @@ pub fn get_download_cmd<'a>() -> Command<'a, str> {
                         .long("espressif")
                         .help("Install Espressif driver"),
                 )
+                .arg(
+                    Arg::with_name("wch")
+                        .short("c")
+                        .long("wch")
+                        .help("Install WCH CH343/CH9102 driver"),
+                )
+
 
         })
         .runner(|_args, matches| download_drivers(_args, matches)
