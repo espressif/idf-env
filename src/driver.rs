@@ -3,6 +3,7 @@ use clap_nested::{Command, Commander, MultiCommand};
 #[cfg(windows)]
 use std::collections::HashMap;
 
+use crate::package::prepare_package;
 use crate::config;
 
 #[cfg(windows)]
@@ -11,6 +12,7 @@ use core::ptr::null_mut;
 #[cfg(windows)]
 pub mod windows;
 
+use std::{thread, time};
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 #[cfg(unix)]
@@ -121,7 +123,7 @@ fn install_driver(driver_inf: String) {
             null_mut(),
             &mut a as *mut _);
         let error_code = winapi::um::errhandlingapi::GetLastError();
-        let destination_oem = WideCString::from_vec_with_nul(destination_inf_filename_vec).unwrap().to_string_lossy();
+        let destination_oem = WideCString::from_vec_truncate(destination_inf_filename_vec).to_string_lossy();
         if destination_oem.len() != 0 {
             print!("-> {} ", destination_oem);
         }

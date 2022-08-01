@@ -20,7 +20,7 @@ tar = "0.4.37"
 tokio = { version = "1.15.0", features = ["full"] }
 walkdir = "*"
 wmi = "*"
-widestring = "*"
+widestring = "1.0.2"
 winapi = { version = "*", features = ["setupapi", "handleapi", "processthreadsapi", "winnt", "securitybaseapi", "impl-default", "shellapi", "winuser"] }
 zip = "*"
 xz2 = "0.1.6"
