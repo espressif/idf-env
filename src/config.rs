@@ -177,13 +177,16 @@ pub fn get_cmd<'a>() -> Command<'a, str> {
 fn open_idf_config() {
     let mut arguments: Vec<String> = [].to_vec();
     arguments.push(get_json_path());
-    run_command("notepad".to_string(), arguments, "".to_string());
+    match run_command("notepad".to_string(), arguments, "".to_string()) {
+        Ok(_) => { println!("Ok"); },
+        Err(_e) => { println!("Failed");}
+    }
 }
 
 pub fn get_edit_cmd<'a>() -> Command<'a, str> {
     Command::new("edit")
         .description("Open configuration file in editor")
-        .runner(|_args, matches| {
+        .runner(|_args, _matches| {
             open_idf_config();
             Ok(())
         })

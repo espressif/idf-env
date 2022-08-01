@@ -8,7 +8,7 @@ type ResultTokio<T> = std::result::Result<T, Box<dyn std::error::Error + Send + 
 async fn request_url(uri: String) -> ResultTokio<()> {
     let response = reqwest::get(uri).await;
     match response {
-        Ok(r) => {
+        Ok(_r) => {
             return Ok(())
         },
         _ => {

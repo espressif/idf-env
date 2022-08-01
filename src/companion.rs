@@ -8,9 +8,12 @@ use std::io::Read;
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 fn prepare_companion() {
-    prepare_package("https://dl.espressif.com/dl/esp-iwidc/esp-iwidc.zip".to_string(),
+    match prepare_package("https://dl.espressif.com/dl/esp-iwidc/esp-iwidc.zip".to_string(),
                     "esp-iwidc.zip",
-                    "tmp/esp-iwidc".to_string());
+                    "tmp/esp-iwidc".to_string()) {
+                        Ok(_) => { println!("Ok"); },
+                        Err(_e) => { println!("Failed");}
+                    }
 }
 
 fn remove_companion() -> Result<()> {
@@ -18,7 +21,7 @@ fn remove_companion() -> Result<()> {
                     "tmp/esp-iwidc")
 }
 
-fn get_update_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_update_runner(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
     match remove_companion() {
         Ok(_content) => {
             prepare_companion();

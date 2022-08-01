@@ -186,7 +186,10 @@ pub fn prepare_package(package_url: String, package_archive: &str, output_direct
 
     let package_archive = get_dist_path(package_archive);
 
-    download_package(package_url, package_archive.clone());
+    match download_package(package_url, package_archive.clone()) {
+        Ok(_) => { println!("Ok"); },
+        Err(_e) => { println!("Failed");}
+    }
     unzip(package_archive, output_directory).unwrap();
     Ok(())
 }
@@ -202,10 +205,16 @@ pub fn prepare_single_binary(package_url: &str, binary_name: &str, output_direct
 
     if !Path::new(&tool_path).exists() {
         println!("Creating tool directory: {}", tool_path);
-        fs::create_dir_all(&tool_path);
+        match fs::create_dir_all(&tool_path) {
+            Ok(_) => { println!("Ok"); },
+            Err(_e) => { println!("Failed");}
+        }
     }
 
-    download_package(package_url.to_string(), binary_path.to_string());
+    match download_package(package_url.to_string(), binary_path.to_string()) {
+        Ok(_) => { println!("Ok"); },
+        Err(_e) => { println!("Failed");}
+    }
     return binary_path;
 }
 

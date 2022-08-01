@@ -56,12 +56,12 @@ fn uninstall_toit_tools(toit_tools:&ToitTools) {
         println!("Removing: {}", toit_tools.jaguar_destination_dir);
         match remove_dir_all(&toit_tools.jaguar_destination_dir) {
             Ok(_) => { println!("Ok"); },
-            Err(e) => { println!("Unable to remove directory"); }
+            Err(_e) => { println!("Unable to remove directory"); }
         }
     }
 }
 
-fn get_default_toit_tools(matches: &clap::ArgMatches<'_>) -> ToitTools {
+fn get_default_toit_tools(_matches: &clap::ArgMatches<'_>) -> ToitTools {
     build_toit_tools()
 }
 

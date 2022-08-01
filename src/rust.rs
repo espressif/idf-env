@@ -14,11 +14,11 @@ const DEFAULT_RUST_TOOLCHAIN_VERSION:&str = "1.62.1.0";
 const DEFAULT_LLVM_VERSION:&str = "esp-14.0.0-20220415";
 
 struct RustToolchain {
-    arch: String,
-    llvm_release: String,
-    llvm_arch: String,
-    artifact_file_extension: String,
-    version: String,
+    //arch: String,
+    //llvm_release: String,
+    //llvm_arch: String,
+    //artifact_file_extension: String,
+    // version: String,
     rust_dist: String,
     rust_dist_temp: String,
     rust_src_dist: String,
@@ -79,11 +79,11 @@ fn build_rust_toolchain(version:&str, llvm_version: &str, arch:&str) -> RustTool
     let idf_tool_xtensa_elf_clang = format!("{}/{}-{}", get_tool_path("xtensa-esp32-elf-clang".to_string()), llvm_release, arch);
 
     RustToolchain {
-        arch: arch.to_string(),
-        llvm_release,
-        llvm_arch,
-        artifact_file_extension,
-        version: version.to_string(),
+        //arch: arch.to_string(),
+        //llvm_release,
+        //llvm_arch,
+        //artifact_file_extension,
+        //version: version.to_string(),
         rust_dist,
         rust_dist_temp: get_tool_path("rust".to_string()),
         rust_src_dist,

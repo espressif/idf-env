@@ -20,7 +20,7 @@ pub fn run_command(shell: String, arguments: Vec<String>, command: String) -> st
         drop(child_stdin);
 
     }
-    let output = child_process.wait_with_output()?;
+    let _output = child_process.wait_with_output()?;
 
     // println!("output = {:?}", output);
 
