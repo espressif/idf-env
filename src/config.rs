@@ -11,7 +11,7 @@ use json::JsonValue;
 use crate::shell::run_command;
 
 pub fn get_tools_path() -> String {
-    env::var("IDF_TOOLS_PATH").unwrap_or_else(|e|
+    env::var("IDF_TOOLS_PATH").unwrap_or_else(|_e|
         home_dir().unwrap().display().to_string() + "/.espressif"
     )
 }
@@ -47,7 +47,7 @@ pub fn get_idf_id(idf_path: &str) -> String {
     return format!("esp-idf-{:x}", digest);
 }
 
-fn bootstrap_json(json_path: String, tools_path: String) {
+fn bootstrap_json(_json_path: String, tools_path: String) {
     let template = json::object!{
         "$schema": "http://json-schema.org/schema#",
         "$id": "http://dl.espressif.com/dl/schemas/esp_idf",

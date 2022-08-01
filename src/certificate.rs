@@ -27,7 +27,10 @@ fn open_url(url: String) -> ResultTokio<()> {
 
 fn get_verify_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
     let url = matches.value_of("url").unwrap().to_string();
-    open_url(url);
+    match open_url(url) {
+        Ok(_) => { println!("URL verified"); },
+        Err(_e) => { println!("Unable to open URL"); }
+    }
     Ok(())
 
 }

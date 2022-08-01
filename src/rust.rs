@@ -169,7 +169,7 @@ fn install_rust_toolchain(toolchain:&RustToolchain) {
             println!("rustup - found - {}", String::from_utf8_lossy(&child_output.stdout));
         },
         Err(e) => {
-            if let NotFound = e.kind() {
+            if let std::io::ErrorKind::NotFound = e.kind() {
                 println!("rustup was not found.");
                 install_rust();
             }
@@ -184,34 +184,49 @@ fn install_rust_toolchain(toolchain:&RustToolchain) {
         // Some platfroms like Windows are available in single bundle rust + src, because install
         // script in dist is not available for the plaform. It's sufficient to extract the toolchain
         if toolchain.rust_installer.is_empty() {
-            prepare_package_strip_prefix(&toolchain.rust_dist_url,
+            match prepare_package_strip_prefix(&toolchain.rust_dist_url,
                                          &toolchain.rust_dist_file,
                                          toolchain.destination_dir.to_string(),
-                                         "esp");
+                                         "esp") {
+                                            Ok(_) => { println!("Package ready"); },
+                                            Err(_e) => { println!("Unable to prepare package"); }
+                                        }
         } else {
-            prepare_package_strip_prefix(&toolchain.rust_dist_url,
+            match prepare_package_strip_prefix(&toolchain.rust_dist_url,
                                          &toolchain.rust_dist_file,
                                          toolchain.rust_dist_temp.to_string(),
-                                         toolchain.rust_dist.as_str());
+                                         toolchain.rust_dist.as_str()) {
+                                            Ok(_) => { println!("Package ready"); },
+                                            Err(_e) => { println!("Unable to prepare package"); }
+                                        }
 
             let mut arguments: Vec<String> = [].to_vec();
 
             arguments.push("-c".to_string());
             arguments.push(format!("/tmp/rust/install.sh --destdir={} --prefix='' --without=rust-docs", toolchain.destination_dir));
 
-            run_command("/bin/bash".to_string(), arguments.clone(), "".to_string());
+            match run_command("/bin/bash".to_string(), arguments.clone(), "".to_string()) {
+                Ok(_) => { println!("Command succeeded"); },
+                Err(_e) => { println!("Command failed"); }
+            }
 
-            prepare_package_strip_prefix(&toolchain.rust_src_dist_url,
+            match prepare_package_strip_prefix(&toolchain.rust_src_dist_url,
                                          &toolchain.rust_src_dist_file,
                                          toolchain.rust_src_dist_temp.to_string(),
-                                         toolchain.rust_src_dist.as_str());
+                                         toolchain.rust_src_dist.as_str()) {
+                                            Ok(_) => { println!("Package ready"); },
+                                            Err(_e) => { println!("Unable to prepare package"); }
+                                        }
 
             let mut arguments: Vec<String> = [].to_vec();
 
             arguments.push("-c".to_string());
             arguments.push(format!("/tmp/rust-src/install.sh --destdir={} --prefix='' --without=rust-docs", toolchain.destination_dir));
 
-            run_command("/bin/bash".to_string(), arguments, "".to_string());
+            match run_command("/bin/bash".to_string(), arguments, "".to_string()) {
+                Ok(_) => { println!("Command succeeded"); },
+                Err(_e) => { println!("Command failed"); }
+            }
 
         }
     }
@@ -220,11 +235,14 @@ fn install_rust_toolchain(toolchain:&RustToolchain) {
         println!("Previous installation of LLVM exist in: {}", toolchain.idf_tool_xtensa_elf_clang);
         println!("Please, remove the directory before new installation.");
     } else {
-        prepare_package_strip_prefix(&toolchain.llvm_url,
+        match prepare_package_strip_prefix(&toolchain.llvm_url,
                                      &toolchain.llvm_file,
                                      toolchain.idf_tool_xtensa_elf_clang.clone(),
                                      "xtensa-esp32-elf-clang"
-        );
+        ) {
+            Ok(_) => { println!("Package ready"); },
+            Err(_e) => { println!("Unable to prepare package"); }
+        }
     }
 
     println!("Updating environment variables:");
@@ -247,12 +265,18 @@ fn install_rust_toolchain(toolchain:&RustToolchain) {
 fn uninstall_rust_toolchain(toolchain:&RustToolchain) {
     if Path::new(toolchain.destination_dir.as_str()).exists() {
         println!("Removing: {}", toolchain.destination_dir);
-        remove_dir_all(&toolchain.destination_dir);
+        match remove_dir_all(&toolchain.destination_dir) {
+            Ok(_) => { println!("Removed."); },
+            Err(_e) => { println!("Failed to remove."); }
+        }
     }
 
     if Path::new(toolchain.idf_tool_xtensa_elf_clang.as_str()).exists() {
         println!("Removing: {}", toolchain.idf_tool_xtensa_elf_clang);
-        remove_dir_all(&toolchain.idf_tool_xtensa_elf_clang);
+        match remove_dir_all(&toolchain.idf_tool_xtensa_elf_clang) {
+            Ok(_) => { println!("Removed."); },
+            Err(_e) => { println!("Failed to remove."); }
+        }
     }
 }
 

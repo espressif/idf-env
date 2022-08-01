@@ -20,7 +20,7 @@ fn remove_companion() -> Result<()> {
 
 fn get_update_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
     match remove_companion() {
-        Ok(content) => {
+        Ok(_content) => {
             prepare_companion();
             println!("Web Companion updated");
         }

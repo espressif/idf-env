@@ -1,18 +1,11 @@
-use std::env;
 use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
 
 use std::fs::File;
 use std::io::{self, BufRead, Write};
 
-use dirs::home_dir;
 use std::path::Path;
-use std::fs::{create_dir_all, remove_dir_all};
-use std::io::Read;
-use std::process::Stdio;
-use crate::config::get_tool_path;
-use crate::package::{prepare_package, prepare_package_strip_prefix, prepare_single_binary};
-use crate::shell::run_command;
+use crate::package::{prepare_package_strip_prefix};
 
 const DEFAULT_IDE_URL:&str = "https://dl.espressif.com/dl/idf-eclipse-plugin/ide/Espressif-IDE-2.4.2-win32.win32.x86_64.zip";
 const DEFAULT_IDE_FILE:&str = "Espressif-IDE-2.4.2-win32.win32.x86_64.zip";

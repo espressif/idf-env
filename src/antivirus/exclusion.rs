@@ -95,8 +95,12 @@ fn get_remove_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result
     #[cfg(windows)]
     if !windows::is_app_elevated() {
         #[cfg(windows)]
-        windows::run_self_elevated();
-        return Ok(());
+        match windows::run_self_elevated() {
+            Ok(_) => return Ok(()),
+            Err(_e) => {
+                println!("Unable to elevate the process.");
+            }
+        }
     }
 
     let chunk_size:usize = matches.value_of("chunk").unwrap().to_string().parse().unwrap();

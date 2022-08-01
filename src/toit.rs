@@ -1,15 +1,11 @@
-use std::env;
 use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
 
 use dirs::home_dir;
 use std::path::Path;
-use std::fs::{create_dir_all, remove_dir_all};
-use std::io::Read;
-use std::process::Stdio;
-use crate::config::get_tool_path;
-use crate::package::{prepare_package, prepare_package_strip_prefix, prepare_single_binary};
-use crate::shell::{run_command, update_env_path};
+use std::fs::{remove_dir_all};
+use crate::package::{prepare_package};
+use crate::shell::{update_env_path};
 
 struct ToitTools {
     jaguar_dist_file: String,
@@ -35,9 +31,15 @@ fn install_toit_tools(toit_tools:&ToitTools) {
         println!("Previous installation of Toit - Jaguar exist in: {}", toit_tools.jaguar_destination_dir);
         println!("Please, remove the directory before new installation.");
     } else {
-        prepare_package(toit_tools.jaguar_dist_url.to_string(),
+        match prepare_package(toit_tools.jaguar_dist_url.to_string(),
                                      &toit_tools.jaguar_dist_file,
-                                     toit_tools.jaguar_destination_dir.to_string());
+                                     toit_tools.jaguar_destination_dir.to_string()) {
+                                        Ok(_) => { println!("Toit package ready"); },
+                                        Err(_e) => {
+                                            println!("Unable to prepare the package.");
+                                            return;
+                                        }
+                                     }
     }
 
     #[cfg(windows)]

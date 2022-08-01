@@ -1,21 +1,19 @@
 use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
-use git2::{FetchOptions, Repository, Submodule};
+use git2::{Repository};
 use std::path::Path;
 use std::io::{Cursor};
 use std::process;
-use tokio::{runtime::Handle, io::BufReader};
+use tokio::{runtime::Handle};
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 use std::env;
 
 use std::process::Stdio;
-use std::io::{Write};
 use std::io::Read;
 
-use std::time::{Duration, Instant};
-use dirs::home_dir;
+use std::time::{Instant};
 
 use crate::config::{add_idf_config, get_git_path, get_tool_path, get_dist_path, get_python_env_path, update_property};
 use crate::config::get_tools_path;
@@ -53,7 +51,7 @@ fn download_installer() -> Result<()> {
 }
 
 async fn excecute_async(command: String, arguments:Vec<String>){
-    let mut child_process = tokio::process::Command::new(command)
+    let _child_process = tokio::process::Command::new(command)
         .args(arguments)
         .status()
         .await;
@@ -400,7 +398,7 @@ fn get_initializer_arguments() -> Vec<String> {
     arguments
 }
 
-fn get_shell_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_shell_runner(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
     println!("Starting process");
     // let root = Path::new("C:\\esp");
     // assert!(env::set_current_dir(&root).is_ok());
@@ -550,7 +548,6 @@ fn get_mirror_switch_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std:
                 repo.remote_set_url("origin", url.as_str());
             }
 
-            let f = FetchOptions::new();
             for mut submodule_repo_reference in repo.submodules().unwrap() {
                 submodule_repo_reference.init(false);
                 let progress = matches.is_present("progress");
