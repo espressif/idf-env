@@ -4,7 +4,6 @@ use std::path::Path;
 use std::io::Cursor;
 use std::fs::File;
 use std::path::PathBuf;
-use flate2::read::GzDecoder;
 use tar::Archive;
 use xz2::read::XzDecoder;
 
@@ -179,12 +178,18 @@ pub fn prepare_package(package_url: String, package_archive: &str, output_direct
     let dist_path = get_dist_path("");
     if !Path::new(&dist_path).exists() {
         println!("Creating dist directory: {}", dist_path);
-        fs::create_dir_all(&dist_path);
+        match fs::create_dir_all(&dist_path)  {
+            Ok(_) => { println!("Ok"); },
+            Err(_e) => { println!("Failed");}
+        }
     }
 
     let package_archive = get_dist_path(package_archive);
 
-    download_package(package_url, package_archive.clone());
+    match download_package(package_url, package_archive.clone()) {
+        Ok(_) => { println!("Ok"); },
+        Err(_e) => { println!("Failed");}
+    }
     unzip(package_archive, output_directory).unwrap();
     Ok(())
 }
@@ -200,10 +205,16 @@ pub fn prepare_single_binary(package_url: &str, binary_name: &str, output_direct
 
     if !Path::new(&tool_path).exists() {
         println!("Creating tool directory: {}", tool_path);
-        fs::create_dir_all(&tool_path);
+        match fs::create_dir_all(&tool_path) {
+            Ok(_) => { println!("Ok"); },
+            Err(_e) => { println!("Failed");}
+        }
     }
 
-    download_package(package_url.to_string(), binary_path.to_string());
+    match download_package(package_url.to_string(), binary_path.to_string()) {
+        Ok(_) => { println!("Ok"); },
+        Err(_e) => { println!("Failed");}
+    }
     return binary_path;
 }
 
@@ -216,12 +227,18 @@ pub fn prepare_package_strip_prefix(package_url: &str, package_archive: &str, ou
     let dist_path = get_dist_path("");
     if !Path::new(&dist_path).exists() {
         println!("Creating dist directory: {}", dist_path);
-        fs::create_dir_all(&dist_path);
+        match fs::create_dir_all(&dist_path) {
+            Ok(_) => { println!("Ok"); },
+            Err(_e) => { println!("Failed");}
+        }
     }
 
     let package_archive = get_dist_path(package_archive);
 
-    download_package(package_url.to_string(), package_archive.to_string());
+    match download_package(package_url.to_string(), package_archive.to_string()) {
+        Ok(_) => { println!("Downloaded"); },
+        Err(_e) => { println!("Unable to download package"); }
+    }
     if !Path::new(&output_directory).exists() {
         let package_archive = package_archive.to_string();
         if package_archive.ends_with(".zip") {

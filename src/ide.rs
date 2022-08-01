@@ -1,18 +1,11 @@
-use std::env;
 use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
 
 use std::fs::File;
 use std::io::{self, BufRead, Write};
 
-use dirs::home_dir;
 use std::path::Path;
-use std::fs::{create_dir_all, remove_dir_all};
-use std::io::Read;
-use std::process::Stdio;
-use crate::config::get_tool_path;
-use crate::package::{prepare_package, prepare_package_strip_prefix, prepare_single_binary};
-use crate::shell::run_command;
+use crate::package::{prepare_package_strip_prefix};
 
 const DEFAULT_IDE_URL:&str = "https://dl.espressif.com/dl/idf-eclipse-plugin/ide/Espressif-IDE-2.4.2-win32.win32.x86_64.zip";
 const DEFAULT_IDE_FILE:&str = "Espressif-IDE-2.4.2-win32.win32.x86_64.zip";
@@ -26,10 +19,13 @@ struct Ide {
 
 fn install_ide(ide:&Ide) {
 
-    prepare_package_strip_prefix(&ide.dist_url,
+    match prepare_package_strip_prefix(&ide.dist_url,
                                  &ide.dist_file,
                                  ide.destination_dir.clone(),
-                                 &ide.prefix);
+                                 &ide.prefix) {
+                                    Ok(_) => { println!("Ok"); },
+                                    Err(_e) => { println!("Failed");}
+                                }
 
 
 }
@@ -63,23 +59,27 @@ fn set_vm_to_ini_file(ini_file: String, vm_path: String) {
                     let mut out_file = File::create(ini_file).unwrap();
                     for line in memory_buffer {
                         if index+1 == position {
-                            out_file.write_all(vm_path.as_bytes());
-                            out_file.write_all("\r\n".as_bytes());
+                            let content = format!("{}\r\n", vm_path);
+                            match out_file.write_all(content.as_bytes()) {
+                                Ok(_) => { println!("Ok"); },
+                                Err(_e) => { println!("Failed");}
+                            }
                         } else {
-                            out_file.write_all( line.as_bytes());
-                            out_file.write_all("\r\n".as_bytes());
+                            let content = format!("{}\r\n", line);
+                            match out_file.write_all( content.as_bytes()) {
+                                Ok(_) => { println!("Ok"); },
+                                Err(_e) => { println!("Failed");}
+                            }
                         }
                         position = position + 1;
                     }
                 }
                 _ => {
                     let mut out_file =File::create(ini_file).unwrap();
-                    out_file.write_all("-vm\r\n".as_bytes());
-                    out_file.write_all(vm_path.as_bytes());
-                    out_file.write_all("\r\n".as_bytes());
-                    for line in memory_buffer {
-                        out_file.write_all(line.as_bytes());
-                        out_file.write_all("\r\n".as_bytes());
+                    let content = format!("-vm\r\n{}\r\n", vm_path);
+                    match out_file.write_all(content.as_bytes()) {
+                        Ok(_) => { println!("Ok"); },
+                        Err(_e) => { println!("Failed");}
                     }
                 }
             }

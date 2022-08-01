@@ -41,7 +41,10 @@ fn process_exclusion(operation: String, file_list:Vec<String>, chunk_size: usize
         arguments.push(path.clone());
 
         #[cfg(windows)]
-        windows::run("powershell".to_string(), arguments);
+        match windows::run("powershell".to_string(), arguments) {
+            Ok(_) => { println!("Ok"); },
+            Err(_e) => { println!("Failed");}
+        }
     }
     // thread::sleep(time::Duration::from_millis(100000));
 
@@ -53,16 +56,25 @@ fn add_exclusions(file_list:Vec<String>, chunk_size: usize) {
 
 fn nuke_exclusions() {
     #[cfg(windows)]
-    windows::run_with_stdin("powershell".to_string(), "foreach ($Path in (Get-MpPreference).ExclusionPath) { Remove-MpPreference -ExclusionPath $Path }".to_string());
+    match windows::run_with_stdin("powershell".to_string(), "foreach ($Path in (Get-MpPreference).ExclusionPath) { Remove-MpPreference -ExclusionPath $Path }".to_string()) {
+        Ok(_) => { println!("Ok"); },
+        Err(_e) => { println!("Failed");}
+    }
      #[cfg(windows)]
-    windows::run_with_stdin("powershell".to_string(), "foreach ($Process in (Get-MpPreference).ExclusionProcess) { Remove-MpPreference -ExclusionProcess $Process }".to_string());
+    match windows::run_with_stdin("powershell".to_string(), "foreach ($Process in (Get-MpPreference).ExclusionProcess) { Remove-MpPreference -ExclusionProcess $Process }".to_string()) {
+        Ok(_) => { println!("Ok"); },
+        Err(_e) => { println!("Failed");}
+    }
 }
 
 fn get_add_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
     #[cfg(windows)]
     if !windows::is_app_elevated() {
         #[cfg(windows)]
-        windows::run_self_elevated();
+        match windows::run_self_elevated() {
+            Ok(_) => { println!("Ok"); },
+            Err(_e) => { println!("Failed");}
+        }
         return Ok(());
     }
 
@@ -95,8 +107,12 @@ fn get_remove_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result
     #[cfg(windows)]
     if !windows::is_app_elevated() {
         #[cfg(windows)]
-        windows::run_self_elevated();
-        return Ok(());
+        match windows::run_self_elevated() {
+            Ok(_) => return Ok(()),
+            Err(_e) => {
+                println!("Unable to elevate the process.");
+            }
+        }
     }
 
     let chunk_size:usize = matches.value_of("chunk").unwrap().to_string().parse().unwrap();

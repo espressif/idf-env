@@ -13,7 +13,6 @@ use core::ptr::null_mut;
 pub mod windows;
 
 use std::{thread, time};
-
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 #[cfg(unix)]
@@ -124,7 +123,7 @@ fn install_driver(driver_inf: String) {
             null_mut(),
             &mut a as *mut _);
         let error_code = winapi::um::errhandlingapi::GetLastError();
-        let destination_oem = WideCString::from_vec_with_nul(destination_inf_filename_vec).unwrap().to_string_lossy();
+        let destination_oem = WideCString::from_vec_truncate(destination_inf_filename_vec).to_string_lossy();
         if destination_oem.len() != 0 {
             print!("-> {} ", destination_oem);
         }
@@ -164,19 +163,28 @@ fn download_drivers(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result
 #[cfg(windows)]
 fn download_drivers(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
     if _matches.is_present("silabs") {
-        prepare_package("https://www.silabs.com/documents/public/software/CP210x_Universal_Windows_Driver.zip".to_string(),
+        match prepare_package("https://www.silabs.com/documents/public/software/CP210x_Universal_Windows_Driver.zip".to_string(),
                         "cp210x.zip",
-                        get_driver_path("silabs-2021-05-03".to_string()));
+                        get_driver_path("silabs-2021-05-03".to_string())) {
+                            Ok(_) => { println!("Ok"); },
+                            Err(_e) => { println!("Failed");}
+                        }
     }
     if _matches.is_present("ftdi") {
-        prepare_package("https://www.ftdichip.com/Drivers/CDM/CDM%20v2.12.28%20WHQL%20Certified.zip".to_string(),
+        match prepare_package("https://www.ftdichip.com/Drivers/CDM/CDM%20v2.12.28%20WHQL%20Certified.zip".to_string(),
                         "ftdi.zip",
-                        get_driver_path("ftdi-2021-05-03".to_string()));
+                        get_driver_path("ftdi-2021-05-03".to_string())) {
+                            Ok(_) => { println!("Ok"); },
+                            Err(_e) => { println!("Failed");}
+                        }
     }
     if _matches.is_present("espressif") {
-        prepare_package("https://dl.espressif.com/dl/idf-driver/idf-driver-esp32-usb-jtag-2021-07-15.zip".to_string(),
+        match prepare_package("https://dl.espressif.com/dl/idf-driver/idf-driver-esp32-usb-jtag-2021-07-15.zip".to_string(),
                         "idf-driver-esp32-usb-jtag-2021-07-15.zip",
-                        get_driver_path("idf-driver-esp32-usb-jtag-2021-07-15".to_string()));
+                        get_driver_path("idf-driver-esp32-usb-jtag-2021-07-15".to_string())) {
+                            Ok(_) => { println!("Ok"); },
+                            Err(_e) => { println!("Failed");}
+                        }
     }
     Ok(())
 }
@@ -187,7 +195,10 @@ fn get_install_runner(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::resu
 
     // Download drivers, if app is self-elevated this flag serves to avoid downloading in elevated mode.
     if !_matches.is_present("no-download") {
-        download_drivers(_args, _matches);
+        match download_drivers(_args, _matches) {
+            Ok(_) => { println!("Ok"); },
+            Err(_e) => { println!("Failed");}
+        }
     }
 
     if windows::is_app_elevated() {
@@ -209,7 +220,10 @@ fn get_install_runner(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::resu
         }
     } else {
         if !windows::is_app_elevated() {
-            windows::run_self_elevated_with_extra_argument("--no-download".to_string());
+            match windows::run_self_elevated_with_extra_argument("--no-download".to_string()) {
+                Ok(_) => { println!("Ok"); },
+                Err(_e) => { println!("Failed");}
+            }
             return Ok(());
         }
     }

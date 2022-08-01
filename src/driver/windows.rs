@@ -117,7 +117,7 @@ pub fn run_elevated(arguments: Vec<String>) {
 
 pub fn run(command:String, arguments:Vec<String>) -> Result<bool, Error> {
     println!("Executing: {} {:?}", command, arguments);
-    let mut child_process = std::process::Command::new(command)
+    let mut _child_process = std::process::Command::new(command)
         .args(arguments)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
