@@ -4,7 +4,6 @@ use clap_nested::{Command, Commander, MultiCommand};
 use crate::package::{prepare_package, remove_package};
 use std::process::Stdio;
 use std::io::Read;
-use std::error::Error;
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 

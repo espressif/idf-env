@@ -3,7 +3,6 @@ use clap_nested::{Command, Commander, MultiCommand};
 #[cfg(windows)]
 use std::collections::HashMap;
 
-use crate::package::prepare_package;
 use crate::config;
 
 #[cfg(windows)]
@@ -11,8 +10,6 @@ use core::ptr::null_mut;
 
 #[cfg(windows)]
 pub mod windows;
-
-use std::{thread, time};
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 

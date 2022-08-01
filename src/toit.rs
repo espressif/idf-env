@@ -52,7 +52,10 @@ fn install_toit_tools(toit_tools:&ToitTools) {
 fn uninstall_toit_tools(toit_tools:&ToitTools) {
     if Path::new(toit_tools.jaguar_destination_dir.as_str()).exists() {
         println!("Removing: {}", toit_tools.jaguar_destination_dir);
-        remove_dir_all(&toit_tools.jaguar_destination_dir);
+        match remove_dir_all(&toit_tools.jaguar_destination_dir) {
+            Ok(_) => { println!("Ok"); },
+            Err(e) => { println!("Unable to remove directory"); }
+        }
     }
 }
 
