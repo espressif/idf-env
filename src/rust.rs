@@ -31,7 +31,11 @@ struct RustToolchain {
     destination_dir: String,
     llvm_file: String,
     llvm_url: String,
-    idf_tool_xtensa_elf_clang: String
+    idf_tool_xtensa_elf_clang: String,
+    extra_tools: String,
+    mingw_url: String,
+    mingw_dist_file: String,
+    mingw_destination_directory: String
 }
 
 fn get_llvm_arch(arch:&str) -> &str {
@@ -67,7 +71,7 @@ fn get_llvm_version_with_underscores(llvm_version: &str) -> String {
     llvm_dot_version.replace(".","_")
 }
 
-fn build_rust_toolchain(version:&str, llvm_version: &str, arch:&str) -> RustToolchain {
+fn build_rust_toolchain(version:&str, llvm_version: &str, arch:&str, extra_tools:&str) -> RustToolchain {
     let llvm_release = llvm_version.to_string();
     let artifact_file_extension = get_artifact_file_extension(arch).to_string();
     let llvm_arch = get_llvm_arch(arch).to_string();
@@ -80,6 +84,10 @@ fn build_rust_toolchain(version:&str, llvm_version: &str, arch:&str) -> RustTool
     let rust_src_dist_url = format!("https://github.com/esp-rs/rust-build/releases/download/v{}/{}", version, rust_src_dist_file);
     let llvm_url = format!("https://github.com/espressif/llvm-project/releases/download/{}/{}", llvm_release, llvm_file);
     let idf_tool_xtensa_elf_clang = format!("{}/{}-{}", get_tool_path("xtensa-esp32-elf-clang".to_string()), llvm_release, arch);
+    let mingw_release = "x86_64-12.1.0-release-posix-seh-rt_v10-rev3".to_string();
+    let mingw_dist_file = format!("{}.7z", mingw_release);
+    let mingw_url = format!("https://github.com/niXman/mingw-builds-binaries/releases/download/12.1.0-rt_v10-rev3/{}", mingw_dist_file);
+    let mingw_destination_directory = format!("{}/{}", get_tool_path("mingw".to_string()), mingw_release);
 
     RustToolchain {
         arch: arch.to_string(),
@@ -99,7 +107,11 @@ fn build_rust_toolchain(version:&str, llvm_version: &str, arch:&str) -> RustTool
         destination_dir: format!("{}/.rustup/toolchains/esp", home_dir().unwrap().display().to_string()),
         llvm_file,
         llvm_url,
-        idf_tool_xtensa_elf_clang
+        idf_tool_xtensa_elf_clang,
+        extra_tools: extra_tools.to_string(),
+        mingw_url,
+        mingw_dist_file,
+        mingw_destination_directory
     }
 }
 
@@ -154,6 +166,23 @@ fn install_rust_nightly(default_host: &str) {
 fn install_rust(default_host: &str) {
     install_rust_stable(default_host);
     install_rust_nightly(default_host);
+}
+
+fn install_mingw(toolchain:&RustToolchain) {
+    if Path::new(toolchain.destination_dir.as_str()).exists() {
+        println!("Previous installation of MinGW exist in: {}", toolchain.destination_dir);
+        println!("Please, remove the directory before new installation.");
+        return;
+    }
+
+    match prepare_package_strip_prefix(&toolchain.mingw_url,
+        &toolchain.mingw_dist_file,
+        toolchain.mingw_destination_directory.clone(),
+        "xtensa-esp32-elf-clang"
+) {
+Ok(_) => { println!("Package ready"); },
+Err(_e) => { println!("Unable to prepare package"); }
+}
 }
 
 fn install_rust_toolchain(toolchain:&RustToolchain) {
@@ -267,6 +296,18 @@ fn install_rust_toolchain(toolchain:&RustToolchain) {
     // println!("LIBCLANG_PATH=\"{}\"", libclang_path);
     // set_env_variable("LIBCLANG_PATH", libclang_path);
 
+    // Install additional dependencies specific for the host
+    match toolchain.extra_tools.as_str() {
+        "mingw" => {
+            match arch {
+                "x86_64-pc-windows-gnu" => {
+                    install_mingw(toolchain);
+                }
+                _ => { println!("Ok"); }
+            }
+        },
+        _ => { println!("No extra tools selected"); }
+    }
 }
 
 fn uninstall_rust_toolchain(toolchain:&RustToolchain) {
@@ -295,11 +336,14 @@ fn get_default_rust_toolchain(matches: &clap::ArgMatches<'_>) -> RustToolchain {
         .unwrap();
     let llvm_version = matches.value_of("llvm-version")
         .unwrap();
+    let extra_tools = matches.value_of("extra-tools")
+        .unwrap();
 
     build_rust_toolchain(
         toolchain_version,
         llvm_version,
-        default_host_triple)
+        default_host_triple,
+        extra_tools)
 }
 
 fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
@@ -352,6 +396,15 @@ pub fn get_install_cmd<'a>() -> Command<'a, str> {
                         .takes_value(true)
                         .default_value(guess_host_triple::guess_host_triple().unwrap())
                 )
+                .arg(
+                    Arg::with_name("extra-tools")
+                        .short("e")
+                        .long("extra-tools")
+                        .help("Extra tools which should be deployed. E.g. MinGW")
+                        .takes_value(true)
+                        .default_value("")
+                )
+
         })
         .runner(|_args, matches|
             get_install_runner(_args, matches)

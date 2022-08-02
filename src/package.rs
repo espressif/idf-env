@@ -243,6 +243,8 @@ pub fn prepare_package_strip_prefix(package_url: &str, package_archive: &str, ou
         let package_archive = package_archive.to_string();
         if package_archive.ends_with(".zip") {
             unzip_strip_prefix(package_archive, output_directory, strip_prefix).unwrap();
+        } else if package_archive.ends_with(".7z") {
+            un7zip_strip_prefix(package_archive, output_directory, strip_prefix).unwrap();
         } else {
             untar_strip_prefix(package_archive, output_directory, strip_prefix).unwrap();
         }
