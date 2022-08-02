@@ -14,7 +14,7 @@ const DEFAULT_RUST_TOOLCHAIN_VERSION:&str = "1.62.1.0";
 const DEFAULT_LLVM_VERSION:&str = "esp-14.0.0-20220415";
 
 struct RustToolchain {
-    //arch: String,
+    arch: String,
     //llvm_release: String,
     //llvm_arch: String,
     //artifact_file_extension: String,
@@ -39,6 +39,7 @@ fn get_llvm_arch(arch:&str) -> &str {
         "x86_64-apple-darwin" => "macos",
         "x86_64-unknown-linux-gnu" => "linux-amd64",
         "x86_64-pc-windows-msvc" => "win64",
+        "x86_64-pc-windows-gnu" => "win64",
         _ => arch
     }
 }
@@ -46,6 +47,7 @@ fn get_llvm_arch(arch:&str) -> &str {
 fn get_artifact_file_extension(arch:&str) -> &str {
     match arch {
         "x86_64-pc-windows-msvc" => "zip",
+        "x86_64-pc-windows-gnu" => "zip",
         _ => "tar.xz"
     }
 }
@@ -53,6 +55,7 @@ fn get_artifact_file_extension(arch:&str) -> &str {
 fn get_rust_installer(arch:&str) -> &str {
     match arch {
         "x86_64-pc-windows-msvc" => "",
+        "x86_64-pc-windows-gnu" => "",
         _ => "./install.sh"
     }
 }
@@ -79,7 +82,7 @@ fn build_rust_toolchain(version:&str, llvm_version: &str, arch:&str) -> RustTool
     let idf_tool_xtensa_elf_clang = format!("{}/{}-{}", get_tool_path("xtensa-esp32-elf-clang".to_string()), llvm_release, arch);
 
     RustToolchain {
-        //arch: arch.to_string(),
+        arch: arch.to_string(),
         //llvm_release,
         //llvm_arch,
         //artifact_file_extension,
@@ -100,7 +103,7 @@ fn build_rust_toolchain(version:&str, llvm_version: &str, arch:&str) -> RustTool
     }
 }
 
-fn install_rust_stable() {
+fn install_rust_stable(default_host: &str) {
     let rustup_init_path = prepare_single_binary("https://win.rustup.rs/x86_64",
                          "rustup-init.exe",
                           "rustup");
@@ -109,6 +112,8 @@ fn install_rust_stable() {
         .arg("--default-toolchain")
         .arg("stable")
         .arg("-y")
+        .arg("--default-host")
+        .arg(default_host)
         .stdout(Stdio::piped())
         .output()
     {
@@ -122,7 +127,7 @@ fn install_rust_stable() {
     }
 }
 
-fn install_rust_nightly() {
+fn install_rust_nightly(default_host: &str) {
 
     let rustup_path = format!("{}/.cargo/bin/rustup.exe", env::var("USERPROFILE").unwrap());
 
@@ -130,6 +135,8 @@ fn install_rust_nightly() {
     match std::process::Command::new(rustup_path)
         .arg("install")
         .arg("nightly")
+        .arg("--default-host")
+        .arg(default_host)
         .stdout(Stdio::piped())
         .output()
     {
@@ -144,9 +151,9 @@ fn install_rust_nightly() {
 
 }
 
-fn install_rust() {
-    install_rust_stable();
-    install_rust_nightly();
+fn install_rust(default_host: &str) {
+    install_rust_stable(default_host);
+    install_rust_nightly(default_host);
 }
 
 fn install_rust_toolchain(toolchain:&RustToolchain) {
@@ -160,18 +167,18 @@ fn install_rust_toolchain(toolchain:&RustToolchain) {
             let result = String::from_utf8_lossy(&child_output.stdout);
             if !result.contains("stable") {
                 println!("stable toolchain not found");
-                install_rust_stable();
+                install_rust_stable(&toolchain.arch);
             }
             if !result.contains("nightly") {
                 println!("nightly toolchain not found");
-                install_rust_nightly();
+                install_rust_nightly(&toolchain.arch);
             }
             println!("rustup - found - {}", String::from_utf8_lossy(&child_output.stdout));
         },
         Err(e) => {
             if let std::io::ErrorKind::NotFound = e.kind() {
                 println!("rustup was not found.");
-                install_rust();
+                install_rust(&toolchain.arch);
             }
         },
     }
@@ -281,7 +288,8 @@ fn uninstall_rust_toolchain(toolchain:&RustToolchain) {
 }
 
 fn get_default_rust_toolchain(matches: &clap::ArgMatches<'_>) -> RustToolchain {
-    let triple = guess_host_triple::guess_host_triple().unwrap();
+    let default_host_triple = matches.value_of("default-host")
+        .unwrap();
 
     let toolchain_version = matches.value_of("toolchain-version")
         .unwrap();
@@ -291,7 +299,7 @@ fn get_default_rust_toolchain(matches: &clap::ArgMatches<'_>) -> RustToolchain {
     build_rust_toolchain(
         toolchain_version,
         llvm_version,
-        triple)
+        default_host_triple)
 }
 
 fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
@@ -336,6 +344,14 @@ pub fn get_install_cmd<'a>() -> Command<'a, str> {
                         .takes_value(true)
                         .default_value(DEFAULT_LLVM_VERSION)
                 )
+                .arg(
+                    Arg::with_name("default-host")
+                        .short("d")
+                        .long("default-host")
+                        .help("Default host triple for Rust installation")
+                        .takes_value(true)
+                        .default_value(guess_host_triple::guess_host_triple().unwrap())
+                )
         })
         .runner(|_args, matches|
             get_install_runner(_args, matches)
@@ -362,6 +378,15 @@ pub fn get_reinstall_cmd<'a>() -> Command<'a, str> {
                         .takes_value(true)
                         .default_value(DEFAULT_LLVM_VERSION)
                 )
+                .arg(
+                    Arg::with_name("default-host")
+                        .short("d")
+                        .long("default-host")
+                        .help("Default host triple for Rust installation")
+                        .takes_value(true)
+                        .default_value(guess_host_triple::guess_host_triple().unwrap())
+                )
+
         })
         .runner(|_args, matches|
             get_reinstall_runner(_args, matches)
@@ -388,6 +413,15 @@ pub fn get_uninstall_cmd<'a>() -> Command<'a, str> {
                         .takes_value(true)
                         .default_value(DEFAULT_LLVM_VERSION)
                 )
+                .arg(
+                    Arg::with_name("default-host")
+                        .short("d")
+                        .long("default-host")
+                        .help("Default host triple for Rust installation")
+                        .takes_value(true)
+                        .default_value(guess_host_triple::guess_host_triple().unwrap())
+                )
+
         })
         .runner(|_args, matches|
             get_uninstall_runner(_args, matches)
