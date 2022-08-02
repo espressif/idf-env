@@ -187,9 +187,9 @@ fn download_drivers(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result
                         }
     }
     if _matches.is_present("wch") {
-        match prepare_package("https://www.wch.cn/downloads/file/5.html".to_string(),
-                        "whc-ch341ser.zip",
-                        get_driver_path("whc-ch341ser-2022-08-01".to_string())) {
+        match prepare_package("https://www.wch.cn/downloads/file/314.html".to_string(),
+                        "whc-ch343ser.zip",
+                        get_driver_path("whc-ch343ser-2022-08-02".to_string())) {
                             Ok(_) => { println!("Ok"); },
                             Err(_e) => { println!("Failed");}
                         }
@@ -224,7 +224,7 @@ fn get_install_runner(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::resu
         }
 
         if _matches.is_present("wch") {
-            install_driver(get_driver_path("whc-ch341ser-2022-08-01/CH343SER/Driver/CH343SER.inf".to_string()));
+            install_driver(get_driver_path("whc-ch343ser-2022-08-02/CH343SER/Driver/CH343SER.INF".to_string()));
         }
 
         if _matches.is_present("wait") {
