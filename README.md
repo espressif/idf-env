@@ -106,7 +106,7 @@ idf-env rust install --default-host x86_64-pc-windows-gnu --extra-tools=mingw
 ```
 
 Installation with system version of MinGW:
-```
+
 ```
 idf-env rust install --default-host x86_64-pc-windows-gnu
 ```

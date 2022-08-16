@@ -244,7 +244,8 @@ pub fn prepare_package_strip_prefix(package_url: &str, package_archive: &str, ou
         if package_archive.ends_with(".zip") {
             unzip_strip_prefix(package_archive, output_directory, strip_prefix).unwrap();
         } else if package_archive.ends_with(".7z") {
-            un7zip_strip_prefix(package_archive, output_directory, strip_prefix).unwrap();
+            println!("7z is not supported file format");
+            // sevenz_rust::decompress_file(package_archive, output_directory).expect("complete");
         } else {
             untar_strip_prefix(package_archive, output_directory, strip_prefix).unwrap();
         }

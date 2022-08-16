@@ -10,7 +10,7 @@ use crate::config::get_tool_path;
 use crate::package::{prepare_package_strip_prefix, prepare_single_binary};
 use crate::shell::{run_command, update_env_path};
 
-const DEFAULT_RUST_TOOLCHAIN_VERSION:&str = "1.62.1.0";
+const DEFAULT_RUST_TOOLCHAIN_VERSION:&str = "1.63.0.0";
 const DEFAULT_LLVM_VERSION:&str = "esp-14.0.0-20220415";
 
 struct RustToolchain {
@@ -85,8 +85,11 @@ fn build_rust_toolchain(version:&str, llvm_version: &str, arch:&str, extra_tools
     let llvm_url = format!("https://github.com/espressif/llvm-project/releases/download/{}/{}", llvm_release, llvm_file);
     let idf_tool_xtensa_elf_clang = format!("{}/{}-{}", get_tool_path("xtensa-esp32-elf-clang".to_string()), llvm_release, arch);
     let mingw_release = "x86_64-12.1.0-release-posix-seh-rt_v10-rev3".to_string();
-    let mingw_dist_file = format!("{}.7z", mingw_release);
-    let mingw_url = format!("https://github.com/niXman/mingw-builds-binaries/releases/download/12.1.0-rt_v10-rev3/{}", mingw_dist_file);
+    let mingw_dist_file = format!("{}.zip", mingw_release);
+    // Temporal solution - repackaging 7z to zip, because Rust based decompression crate does not have BCJ support: https://github.com/dyz1990/sevenz-rust/issues/1
+    //let mingw_dist_file = format!("{}.7z", mingw_release);
+    //let mingw_url = format!("https://github.com/niXman/mingw-builds-binaries/releases/download/12.1.0-rt_v10-rev3/{}", mingw_dist_file);
+    let mingw_url = format!("https://github.com/esp-rs/rust-build/releases/download/mingw-12/{}", mingw_dist_file);
     let mingw_destination_directory = format!("{}/{}", get_tool_path("mingw".to_string()), mingw_release);
 
     RustToolchain {
@@ -169,8 +172,8 @@ fn install_rust(default_host: &str) {
 }
 
 fn install_mingw(toolchain:&RustToolchain) {
-    if Path::new(toolchain.destination_dir.as_str()).exists() {
-        println!("Previous installation of MinGW exist in: {}", toolchain.destination_dir);
+    if Path::new(toolchain.mingw_destination_directory.as_str()).exists() {
+        println!("Previous installation of MinGW exist in: {}", toolchain.mingw_destination_directory);
         println!("Please, remove the directory before new installation.");
         return;
     }
@@ -178,7 +181,7 @@ fn install_mingw(toolchain:&RustToolchain) {
     match prepare_package_strip_prefix(&toolchain.mingw_url,
         &toolchain.mingw_dist_file,
         toolchain.mingw_destination_directory.clone(),
-        "xtensa-esp32-elf-clang"
+        "mingw64"
 ) {
 Ok(_) => { println!("Package ready"); },
 Err(_e) => { println!("Unable to prepare package"); }
@@ -299,9 +302,10 @@ fn install_rust_toolchain(toolchain:&RustToolchain) {
     // Install additional dependencies specific for the host
     match toolchain.extra_tools.as_str() {
         "mingw" => {
-            match arch {
+            match toolchain.arch.as_str() {
                 "x86_64-pc-windows-gnu" => {
                     install_mingw(toolchain);
+                    update_env_path(&toolchain.mingw_destination_directory);
                 }
                 _ => { println!("Ok"); }
             }
