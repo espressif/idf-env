@@ -111,6 +111,11 @@ Installation with system version of MinGW:
 idf-env rust install --default-host x86_64-pc-windows-gnu
 ```
 
+Install specific version of the toolchain
+
+```
+idf-env rust install --default-host x86_64-pc-windows-gnu --toolchain-version 1.63.0.0 --extra-tools=mingw
+```
 
 #### Installation of Rust toolchain for Windows with MSVC
 
