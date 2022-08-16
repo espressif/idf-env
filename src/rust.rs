@@ -305,7 +305,7 @@ fn install_rust_toolchain(toolchain:&RustToolchain) {
             match toolchain.arch.as_str() {
                 "x86_64-pc-windows-gnu" => {
                     install_mingw(toolchain);
-                    update_env_path(&toolchain.mingw_destination_directory);
+                    update_env_path(format!("{}/bin", toolchain.mingw_destination_directory).as_str());
                 }
                 _ => { println!("Ok"); }
             }
