@@ -125,7 +125,7 @@ fn install_rust_stable(default_host: &str) {
     println!("rustup stable");
     match std::process::Command::new(rustup_init_path)
         .arg("--default-toolchain")
-        .arg("stable")
+        .arg("nightly")
         .arg("-y")
         .arg("--default-host")
         .arg(default_host)
