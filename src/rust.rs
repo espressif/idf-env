@@ -3,7 +3,7 @@ use clap_nested::{Command, Commander, MultiCommand};
 
 use dirs::home_dir;
 use std::path::Path;
-use std::fs::{remove_dir_all};
+use std::fs::{remove_dir_all, copy};
 use std::process::Stdio;
 use crate::config::get_tool_path;
 use crate::package::{prepare_package_strip_prefix, prepare_package, prepare_single_binary};
@@ -282,13 +282,24 @@ Err(_e) => { println!("Unable to prepare package"); }
 fn install_extra_crates(extra_crates:&Vec<RustCrate>) {
     for extra_crate in extra_crates.into_iter() {
         println!("Installing crate {}", extra_crate.name);
+        let tmp_path = get_tool_path(extra_crate.name.to_string());
         match prepare_package(
             extra_crate.url.to_string(),
             &extra_crate.dist_file,
-            get_tool_path(extra_crate.name.to_string())
+            tmp_path
         ) {
-            Ok(_) => { println!("Create {} installed.", extra_crate.name); },
-            Err(_e) => { println!("Unable to install crate {}.", extra_crate.name); }
+            Ok(_) => {
+                let source = format!("{}/{}", get_tool_path(extra_crate.name.to_string()), extra_crate.dist_bin);
+                match copy(source.clone(), extra_crate.bin.to_string()) {
+                    Ok(_) => {
+                        println!("Create {} installed.", extra_crate.name);
+                    },
+                    Err(_e) => {
+                        println!("Unable to copy crate binary from {} to {}", source, extra_crate.bin)
+                    }
+                }
+            },
+            Err(_e) => { println!("Unable to unpack bianry crate {}.", extra_crate.name); }
         };
     }
 }

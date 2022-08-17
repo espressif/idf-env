@@ -5,6 +5,7 @@ use std::io::Cursor;
 use std::fs::File;
 use std::path::PathBuf;
 use tar::Archive;
+use flate2::read::GzDecoder;
 use xz2::read::XzDecoder;
 
 use tokio::runtime::Handle;
@@ -114,7 +115,7 @@ pub fn unzip_strip_prefix(file_path: String, output_directory: String, strip_pre
     Ok(())
 }
 
-pub fn untar_strip_prefix(file_path: String, output_directory: String, strip_prefix: &str) -> Result<()> {
+pub fn untarxz_strip_prefix(file_path: String, output_directory: String, strip_prefix: &str) -> Result<()> {
     let tar_xz = File::open(file_path)?;
     let tar = XzDecoder::new(tar_xz);
     let mut archive = Archive::new(tar);
@@ -122,6 +123,58 @@ pub fn untar_strip_prefix(file_path: String, output_directory: String, strip_pre
         .filter_map(|e| e.ok())
         .map(|mut entry| -> Result<PathBuf> {
             let path = entry.path()?.strip_prefix(strip_prefix)?.to_owned();
+            let full_path = format!("{}/{}", output_directory, path.display().to_string());
+            entry.unpack(&full_path)?;
+            Ok(full_path.parse().unwrap())
+        })
+        .filter_map(|e| e.ok())
+        .for_each(|x| println!("> {}", x.display()));
+    Ok(())
+}
+
+pub fn untarxz(file_path: String, output_directory: String) -> Result<()> {
+    let tar_xz = File::open(file_path)?;
+    let tar = XzDecoder::new(tar_xz);
+    let mut archive = Archive::new(tar);
+    archive.entries()?
+        .filter_map(|e| e.ok())
+        .map(|mut entry| -> Result<PathBuf> {
+            let path = entry.path()?.to_owned();
+            let full_path = format!("{}/{}", output_directory, path.display().to_string());
+            entry.unpack(&full_path)?;
+            Ok(full_path.parse().unwrap())
+        })
+        .filter_map(|e| e.ok())
+        .for_each(|x| println!("> {}", x.display()));
+    Ok(())
+}
+
+
+pub fn untargz_strip_prefix(file_path: String, output_directory: String, strip_prefix: &str) -> Result<()> {
+    let tar_gz = File::open(file_path)?;
+    let tar = GzDecoder::new(tar_gz);
+    let mut archive = Archive::new(tar);
+    archive.entries()?
+        .filter_map(|e| e.ok())
+        .map(|mut entry| -> Result<PathBuf> {
+            let path = entry.path()?.strip_prefix(strip_prefix)?.to_owned();
+            let full_path = format!("{}/{}", output_directory, path.display().to_string());
+            entry.unpack(&full_path)?;
+            Ok(full_path.parse().unwrap())
+        })
+        .filter_map(|e| e.ok())
+        .for_each(|x| println!("> {}", x.display()));
+    Ok(())
+}
+
+pub fn untargz(file_path: String, output_directory: String) -> Result<()> {
+    let tar_gz = File::open(file_path)?;
+    let tar = GzDecoder::new(tar_gz);
+    let mut archive = Archive::new(tar);
+    archive.entries()?
+        .filter_map(|e| e.ok())
+        .map(|mut entry| -> Result<PathBuf> {
+            let path = entry.path()?.to_owned();
             let full_path = format!("{}/{}", output_directory, path.display().to_string());
             entry.unpack(&full_path)?;
             Ok(full_path.parse().unwrap())
@@ -187,15 +240,29 @@ pub fn prepare_package(package_url: String, package_archive: &str, output_direct
     let package_archive = get_dist_path(package_archive);
 
     match download_package(package_url, package_archive.clone()) {
-        Ok(_) => { println!("Ok"); },
-        Err(_e) => { println!("Failed");}
+        Ok(_) => { println!("Download ok"); },
+        Err(_e) => { println!("Download failed");}
     }
 
-    if package_archive.ends_with(".zip") {
-        unzip(package_archive, output_directory).unwrap();
-    } else {
-        untar_strip_prefix(package_archive, output_directory, "").unwrap();
+    println!("Extracting to {}", output_directory);
+    let extension = Path::new(package_archive.as_str()).extension().unwrap().to_str().unwrap();
+    match extension {
+        "zip" => {
+            unzip(package_archive, output_directory).unwrap();
+        }
+        "gz" => {
+            match fs::create_dir_all(&output_directory)  {
+                Ok(_) => { println!("Creating {} - Ok", output_directory); },
+                Err(_e) => { println!("Creating {} - Failed", output_directory);}
+            }
+            untargz(package_archive, output_directory).unwrap();
+        }
+        "xz" => {
+            untarxz(package_archive, output_directory).unwrap();
+        }
+        _ => { println!("Unsuported file extension."); }
     }
+
     Ok(())
 }
 
@@ -246,13 +313,19 @@ pub fn prepare_package_strip_prefix(package_url: &str, package_archive: &str, ou
     }
     if !Path::new(&output_directory).exists() {
         let package_archive = package_archive.to_string();
-        if package_archive.ends_with(".zip") {
-            unzip_strip_prefix(package_archive, output_directory, strip_prefix).unwrap();
-        } else if package_archive.ends_with(".7z") {
-            println!("7z is not supported file format");
-            // sevenz_rust::decompress_file(package_archive, output_directory).expect("complete");
-        } else {
-            untar_strip_prefix(package_archive, output_directory, strip_prefix).unwrap();
+        let extension = Path::new(package_archive.as_str()).extension().unwrap().to_str().unwrap();
+
+        match extension {
+            "zip" => {
+                unzip_strip_prefix(package_archive, output_directory, strip_prefix).unwrap();
+            }
+            "gz" => {
+                untargz_strip_prefix(package_archive, output_directory, strip_prefix).unwrap();
+            }
+            "xz" => {
+                untarxz_strip_prefix(package_archive, output_directory, strip_prefix).unwrap();
+            }
+            _ => { println!("Unsuported file extension."); }
         }
     }
     Ok(())
