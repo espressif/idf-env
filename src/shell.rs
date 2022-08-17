@@ -78,6 +78,12 @@ fn append_path(original_path: &str, new_path: &str) -> String {
         return new_path.to_string();
     }
 
+    // Make sure that only proper path delimeters are used for the platform
+    #[cfg(windows)]
+    let normalized_path = new_path.replace("/", "\\");
+    #[cfg(windows)]
+    let new_path = normalized_path.as_str();
+
     if original_path.contains(new_path) {
         return original_path.to_string();
     }

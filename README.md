@@ -96,14 +96,39 @@ idf-env driver download --espressif --ftdi --silabs --wch
 
 ### Working with Rust language for Xtensa
 
-Requires: installed rustup
+Boostrap whole Rust installation.
+
+
+#### Installation for Rust toolchain Windows with GNU
+
+```
+idf-env rust install --default-host x86_64-pc-windows-gnu --extra-tools=mingw --extra-crates="ldproxy"
+```
+
+Installation with system version of MinGW:
+
+```
+idf-env rust install --default-host x86_64-pc-windows-gnu
+```
+
+Install specific version of the toolchain
+
+```
+idf-env rust install --default-host x86_64-pc-windows-gnu --toolchain-version 1.63.0.0 --extra-tools=mingw
+```
+
+#### Installation of Rust toolchain for Windows with MSVC
 
 ```
 idf-env rust install
+idf-env rust install --default-host x86_64-pc-windows-msvc
+```
+
+#### Other operations
+```
 idf-env rust reinstall
 idf-env rust uninstall
 ```
-
 
 ### Web IDE Companion
 
