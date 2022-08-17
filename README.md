@@ -102,7 +102,7 @@ Boostrap whole Rust installation.
 #### Installation for Rust toolchain Windows with GNU
 
 ```
-idf-env rust install --default-host x86_64-pc-windows-gnu --extra-tools=mingw
+idf-env rust install --default-host x86_64-pc-windows-gnu --extra-tools=mingw --extra-crates="cargo-generate,ldproxy"
 ```
 
 Installation with system version of MinGW:

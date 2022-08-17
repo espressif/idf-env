@@ -190,7 +190,12 @@ pub fn prepare_package(package_url: String, package_archive: &str, output_direct
         Ok(_) => { println!("Ok"); },
         Err(_e) => { println!("Failed");}
     }
-    unzip(package_archive, output_directory).unwrap();
+
+    if package_archive.ends_with(".zip") {
+        unzip(package_archive, output_directory).unwrap();
+    } else {
+        untar_strip_prefix(package_archive, output_directory, "").unwrap();
+    }
     Ok(())
 }
 
