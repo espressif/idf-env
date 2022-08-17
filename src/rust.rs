@@ -108,9 +108,13 @@ fn get_rust_crate(name: &str, arch: &str) -> Option<RustCrate> {
             })
         },
         "cargo-generate" => {
+            let url = match arch {
+                "x86_64-pc-windows-msvc" => { format!("https://github.com/cargo-generate/cargo-generate/releases/download/v{}/cargo-generate-v{}-{}.tar.gz", "0.16.0", "0.16.0", "x86_64-pc-windows-msvc") },
+                _ => { "".to_string() }
+            };
             Some(RustCrate {
                 name: name.to_string(),
-                url: format!("https://github.com/cargo-generate/cargo-generate/releases/download/v{}/cargo-generate-v{}-{}.tar.gz", "0.16.0", "0.16.0", "x86_64-pc-windows-msvc"),
+                url,
                 dist_file: format!("cargo-generate-{}.tar.gz", arch),
                 dist_bin: format!("cargo-generate{}", os_bin_extension),
                 bin: format!("{}/bin/cargo-generate{}", get_cargo_home(), os_bin_extension)
@@ -282,25 +286,49 @@ Err(_e) => { println!("Unable to prepare package"); }
 fn install_extra_crates(extra_crates:&Vec<RustCrate>) {
     for extra_crate in extra_crates.into_iter() {
         println!("Installing crate {}", extra_crate.name);
-        let tmp_path = get_tool_path(extra_crate.name.to_string());
-        match prepare_package(
-            extra_crate.url.to_string(),
-            &extra_crate.dist_file,
-            tmp_path
-        ) {
-            Ok(_) => {
-                let source = format!("{}/{}", get_tool_path(extra_crate.name.to_string()), extra_crate.dist_bin);
-                match copy(source.clone(), extra_crate.bin.to_string()) {
-                    Ok(_) => {
-                        println!("Create {} installed.", extra_crate.name);
-                    },
-                    Err(_e) => {
-                        println!("Unable to copy crate binary from {} to {}", source, extra_crate.bin)
-                    }
+
+        if extra_crate.url.is_empty() {
+            // Binary crate is not available, install from source code
+            let cargo_path = format!("{}/bin/cargo.exe", get_cargo_home());
+
+            println!("{} install {}", cargo_path, extra_crate.name);
+            match std::process::Command::new(cargo_path)
+                .arg("install")
+                .arg(extra_crate.name.to_string())
+                .stdout(Stdio::piped())
+                .output()
+            {
+                Ok(child_output) => {
+                    let result = String::from_utf8_lossy(&child_output.stdout);
+                    println!("Crate installed: {}", result);
                 }
-            },
-            Err(_e) => { println!("Unable to unpack bianry crate {}.", extra_crate.name); }
-        };
+                Err(e) => {
+                    println!("Crate installation failed: {}", e);
+                }
+            }
+
+        } else {
+            // Binary crate is available donwload it
+            let tmp_path = get_tool_path(extra_crate.name.to_string());
+            match prepare_package(
+                extra_crate.url.to_string(),
+                &extra_crate.dist_file,
+                tmp_path
+            ) {
+                Ok(_) => {
+                    let source = format!("{}/{}", get_tool_path(extra_crate.name.to_string()), extra_crate.dist_bin);
+                    match copy(source.clone(), extra_crate.bin.to_string()) {
+                        Ok(_) => {
+                            println!("Create {} installed.", extra_crate.name);
+                        },
+                        Err(_e) => {
+                            println!("Unable to copy crate binary from {} to {}", source, extra_crate.bin)
+                        }
+                    }
+                },
+                Err(_e) => { println!("Unable to unpack bianry crate {}.", extra_crate.name); }
+            };
+        }
     }
 }
 
