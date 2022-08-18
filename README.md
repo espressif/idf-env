@@ -121,7 +121,7 @@ idf-env rust install --default-host x86_64-pc-windows-gnu --toolchain-version 1.
 
 ```
 idf-env rust install
-idf-env rust install --default-host x86_64-pc-windows-msvc
+idf-env rust install --default-host x86_64-pc-windows-msvc --extra-tools=vctools
 ```
 
 #### Other operations
