@@ -332,6 +332,38 @@ fn install_extra_crates(extra_crates:&Vec<RustCrate>) {
     }
 }
 
+fn install_vctools() {
+    // installer: https://docs.microsoft.com/en-us/visualstudio/install/use-command-line-parameters-to-install-visual-studio?view=vs-2022
+    // Windows 10 SDK - https://docs.microsoft.com/en-us/visualstudio/install/workload-component-id-vs-build-tools?view=vs-2022&preserve-view=true
+    // .\vs_BuildTools.exe --passive --wait --add Microsoft.VisualStudio.Component.Windows10SDK.20348
+    // .\vs_BuildTools.exe --passive --wait --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.Windows10SDK.20348
+    // path C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.33.31629\bin\Hostx64\x64
+
+    let vs_build_tools = prepare_single_binary("https://aka.ms/vs/17/release/vs_buildtools.exe",
+                         "vs_buildtools.exe",
+                          "vs_buildtools");
+    println!("Running VS BuildTools: vs_BuildTools.exe --passive --wait --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.Windows10SDK.20348");
+
+    match std::process::Command::new(vs_build_tools)
+        .arg("--passive")
+        .arg("--wait")
+        .arg("--add")
+        .arg("Microsoft.VisualStudio.Component.VC.Tools.x86.x64")
+        .arg("--add")
+        .arg("Microsoft.VisualStudio.Component.Windows10SDK.20348")
+        .stdout(Stdio::piped())
+        .output()
+    {
+        Ok(child_output) => {
+            let result = String::from_utf8_lossy(&child_output.stdout);
+            println!("{}", result);
+        }
+        Err(e) => {
+            println!("Error: {}", e);
+        }
+    }
+}
+
 fn install_rust_toolchain(toolchain:&RustToolchain) {
     match std::process::Command::new("rustup")
         .arg("toolchain")
@@ -444,6 +476,7 @@ fn install_rust_toolchain(toolchain:&RustToolchain) {
     // set_env_variable("LIBCLANG_PATH", libclang_path);
 
     // Install additional dependencies specific for the host
+    // for extra_tool in toolchain.extra_tools
     match toolchain.extra_tools.as_str() {
         "mingw" => {
             match toolchain.arch.as_str() {
@@ -454,6 +487,10 @@ fn install_rust_toolchain(toolchain:&RustToolchain) {
                 _ => { println!("Ok"); }
             }
         },
+        "vctools" => {
+            install_vctools();
+            update_env_path("C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Tools\\MSVC\\14.33.31629\\bin\\Hostx64\\x64");
+        }
         _ => { println!("No extra tools selected"); }
     }
 
