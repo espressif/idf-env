@@ -1,12 +1,15 @@
-use std::process::Stdio;
-#[cfg(windows)]
-use std::io::{Write};
-
 use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
+#[cfg(windows)]
+use std::io::Write;
+use std::process::Stdio;
 
 #[cfg(windows)]
-pub fn run_command(shell: String, arguments: Vec<String>, command: String) -> std::result::Result<(), clap::Error> {
+pub fn run_command(
+    shell: String,
+    arguments: Vec<String>,
+    command: String,
+) -> std::result::Result<(), clap::Error> {
     // println!("arguments = {:?}", arguments);
     let mut child_process = std::process::Command::new(shell)
         .args(arguments)
@@ -19,7 +22,6 @@ pub fn run_command(shell: String, arguments: Vec<String>, command: String) -> st
         child_stdin.write_all(&*command.into_bytes())?;
         // Close stdin to finish and avoid indefinite blocking
         drop(child_stdin);
-
     }
     let _output = child_process.wait_with_output()?;
 
@@ -28,9 +30,12 @@ pub fn run_command(shell: String, arguments: Vec<String>, command: String) -> st
     Ok(())
 }
 
-
 #[cfg(unix)]
-pub fn run_command(shell: String, arguments: Vec<String>, command: String) -> std::result::Result<(), clap::Error> {
+pub fn run_command(
+    shell: String,
+    arguments: Vec<String>,
+    command: String,
+) -> std::result::Result<(), clap::Error> {
     // Unix - pass command as parameter for initializer
     let mut arguments = arguments.clone();
     if !command.is_empty() {
@@ -44,9 +49,7 @@ pub fn run_command(shell: String, arguments: Vec<String>, command: String) -> st
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()?;
-    {
-
-    }
+    {}
     let output = child_process.wait_with_output()?;
     println!("output = {:?}", output);
     Ok(())
@@ -58,7 +61,7 @@ pub fn wide_null(s: &str) -> Vec<u16> {
 }
 
 #[cfg(windows)]
-pub fn set_env_variable(key:&str, value:String) {
+pub fn set_env_variable(key: &str, value: String) {
     use winreg::{enums::HKEY_CURRENT_USER, RegKey};
     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
     let (env, _) = hkcu.create_subkey("Environment").unwrap(); // create_subkey opens with write permissions
@@ -71,7 +74,7 @@ pub fn set_env_variable(key:&str, value:String) {
             winapi::um::winuser::HWND_BROADCAST,
             winapi::um::winuser::WM_SETTINGCHANGE,
             0,
-            param
+            param,
         );
     }
 }
@@ -104,14 +107,13 @@ mod tests {
 
     #[test]
     fn test_append_path() {
-        assert_eq!(append_path("",""), "");
-        assert_eq!(append_path("a",""), "a");
-        assert_eq!(append_path("a","b"), "a;b;");
-        assert_eq!(append_path("","b"), "b");
-        assert_eq!(append_path("a;b;","b"), "a;b;");
-        assert_eq!(append_path("a;c;","b"), "a;c;b;");
+        assert_eq!(append_path("", ""), "");
+        assert_eq!(append_path("a", ""), "a");
+        assert_eq!(append_path("a", "b"), "a;b;");
+        assert_eq!(append_path("", "b"), "b");
+        assert_eq!(append_path("a;b;", "b"), "a;b;");
+        assert_eq!(append_path("a;c;", "b"), "a;c;b;");
     }
-
 }
 
 #[cfg(windows)]
@@ -119,7 +121,7 @@ pub fn update_env_variable(variable_name: &str, value: &str) {
     use winreg::{enums::HKEY_CURRENT_USER, RegKey};
     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
     let env = hkcu.open_subkey("Environment").unwrap();
-    let env_path:String = env.get_value(variable_name).unwrap();
+    let env_path: String = env.get_value(variable_name).unwrap();
     let updated_env_path = append_path(env_path.as_str(), value);
     set_env_variable(variable_name, updated_env_path);
 }
@@ -140,10 +142,9 @@ pub fn update_env_path(value: &str) {
 }
 
 #[cfg(unix)]
-pub fn set_env_variable(key:&str, value:&str) {
+pub fn set_env_variable(key: &str, value: &str) {
     todo!();
 }
-
 
 pub fn get_cmd<'a>() -> Command<'a, str> {
     Command::new("append")
@@ -156,13 +157,13 @@ pub fn get_cmd<'a>() -> Command<'a, str> {
                     .help("Name of environment variable")
                     .takes_value(true),
             )
-                .arg(
-                    Arg::with_name("path")
-                        .short("p")
-                        .long("path")
-                        .help("Path which should be added to the variable")
-                        .takes_value(true),
-                )
+            .arg(
+                Arg::with_name("path")
+                    .short("p")
+                    .long("path")
+                    .help("Path which should be added to the variable")
+                    .takes_value(true),
+            )
         })
         .runner(|_args, matches| {
             let variable_name = matches.value_of("variable").unwrap().to_string();
@@ -176,7 +177,6 @@ pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
     let multi_cmd: MultiCommand<str, str> = Commander::new()
         .add_cmd(get_cmd())
         .into_cmd("shell")
-
         // Optionally specify a description
         .description("Detection of Antivirus and handling exception registration.");
 

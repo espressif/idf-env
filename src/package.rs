@@ -1,15 +1,14 @@
+use crate::config::{get_dist_path, get_tool_path};
 use anyhow::Context;
-use std::{fs, io};
-use std::path::Path;
-use std::io::Cursor;
-use std::fs::File;
-use std::path::PathBuf;
-use tar::Archive;
 use flate2::read::GzDecoder;
-use xz2::read::XzDecoder;
-
+use std::fs::File;
+use std::io::Cursor;
+use std::path::Path;
+use std::path::PathBuf;
+use std::{fs, io};
+use tar::Archive;
 use tokio::runtime::Handle;
-use crate::config::{ get_dist_path, get_tool_path };
+use xz2::read::XzDecoder;
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
@@ -59,7 +58,11 @@ pub fn unzip(file_path: String, output_directory: String) -> Result<()> {
     Ok(())
 }
 
-pub fn unzip_strip_prefix(file_path: String, output_directory: String, strip_prefix: &str) -> Result<()> {
+pub fn unzip_strip_prefix(
+    file_path: String,
+    output_directory: String,
+    strip_prefix: &str,
+) -> Result<()> {
     let file_name = std::path::Path::new(&file_path);
     let file = fs::File::open(&file_name).unwrap();
 
@@ -115,11 +118,16 @@ pub fn unzip_strip_prefix(file_path: String, output_directory: String, strip_pre
     Ok(())
 }
 
-pub fn untarxz_strip_prefix(file_path: String, output_directory: String, strip_prefix: &str) -> Result<()> {
+pub fn untarxz_strip_prefix(
+    file_path: String,
+    output_directory: String,
+    strip_prefix: &str,
+) -> Result<()> {
     let tar_xz = File::open(file_path)?;
     let tar = XzDecoder::new(tar_xz);
     let mut archive = Archive::new(tar);
-    archive.entries()?
+    archive
+        .entries()?
         .filter_map(|e| e.ok())
         .map(|mut entry| -> Result<PathBuf> {
             let path = entry.path()?.strip_prefix(strip_prefix)?.to_owned();
@@ -136,7 +144,8 @@ pub fn untarxz(file_path: String, output_directory: String) -> Result<()> {
     let tar_xz = File::open(file_path)?;
     let tar = XzDecoder::new(tar_xz);
     let mut archive = Archive::new(tar);
-    archive.entries()?
+    archive
+        .entries()?
         .filter_map(|e| e.ok())
         .map(|mut entry| -> Result<PathBuf> {
             let path = entry.path()?.to_owned();
@@ -149,12 +158,16 @@ pub fn untarxz(file_path: String, output_directory: String) -> Result<()> {
     Ok(())
 }
 
-
-pub fn untargz_strip_prefix(file_path: String, output_directory: String, strip_prefix: &str) -> Result<()> {
+pub fn untargz_strip_prefix(
+    file_path: String,
+    output_directory: String,
+    strip_prefix: &str,
+) -> Result<()> {
     let tar_gz = File::open(file_path)?;
     let tar = GzDecoder::new(tar_gz);
     let mut archive = Archive::new(tar);
-    archive.entries()?
+    archive
+        .entries()?
         .filter_map(|e| e.ok())
         .map(|mut entry| -> Result<PathBuf> {
             let path = entry.path()?.strip_prefix(strip_prefix)?.to_owned();
@@ -171,7 +184,8 @@ pub fn untargz(file_path: String, output_directory: String) -> Result<()> {
     let tar_gz = File::open(file_path)?;
     let tar = GzDecoder::new(tar_gz);
     let mut archive = Archive::new(tar);
-    archive.entries()?
+    archive
+        .entries()?
         .filter_map(|e| e.ok())
         .map(|mut entry| -> Result<PathBuf> {
             let path = entry.path()?.to_owned();
@@ -192,8 +206,8 @@ async fn fetch_url(url: String, output: String) -> Result<()> {
             let mut content = Cursor::new(r.bytes().await?);
             std::io::copy(&mut content, &mut file)?;
 
-            return Ok(())
-        },
+            return Ok(());
+        }
         _ => {
             println!("Download of {} failed", url);
             // Exit code is 0, there is temporal issue with Windows Installer which does not recover from error exit code
@@ -217,12 +231,18 @@ async fn download_zip(url: String, output: String) -> Result<()> {
 pub fn download_package(package_url: String, package_archive: String) -> Result<()> {
     let handle = Handle::current().clone();
     let th = std::thread::spawn(move || {
-        handle.block_on(download_zip(package_url, package_archive)).unwrap();
+        handle
+            .block_on(download_zip(package_url, package_archive))
+            .unwrap();
     });
     Ok(th.join().unwrap())
 }
 
-pub fn prepare_package(package_url: String, package_archive: &str, output_directory: String) -> Result<()> {
+pub fn prepare_package(
+    package_url: String,
+    package_archive: &str,
+    output_directory: String,
+) -> Result<()> {
     if Path::new(&output_directory).exists() {
         println!("Using cached directory: {}", output_directory);
         return Ok(());
@@ -231,42 +251,64 @@ pub fn prepare_package(package_url: String, package_archive: &str, output_direct
     let dist_path = get_dist_path("");
     if !Path::new(&dist_path).exists() {
         println!("Creating dist directory: {}", dist_path);
-        match fs::create_dir_all(&dist_path)  {
-            Ok(_) => { println!("Ok"); },
-            Err(_e) => { println!("Failed");}
+        match fs::create_dir_all(&dist_path) {
+            Ok(_) => {
+                println!("Ok");
+            }
+            Err(_e) => {
+                println!("Failed");
+            }
         }
     }
 
     let package_archive = get_dist_path(package_archive);
 
     match download_package(package_url, package_archive.clone()) {
-        Ok(_) => { println!("Download ok"); },
-        Err(_e) => { println!("Download failed");}
+        Ok(_) => {
+            println!("Download ok");
+        }
+        Err(_e) => {
+            println!("Download failed");
+        }
     }
 
     println!("Extracting to {}", output_directory);
-    let extension = Path::new(package_archive.as_str()).extension().unwrap().to_str().unwrap();
+    let extension = Path::new(package_archive.as_str())
+        .extension()
+        .unwrap()
+        .to_str()
+        .unwrap();
     match extension {
         "zip" => {
             unzip(package_archive, output_directory).unwrap();
         }
         "gz" => {
-            match fs::create_dir_all(&output_directory)  {
-                Ok(_) => { println!("Creating {} - Ok", output_directory); },
-                Err(_e) => { println!("Creating {} - Failed", output_directory);}
+            match fs::create_dir_all(&output_directory) {
+                Ok(_) => {
+                    println!("Creating {} - Ok", output_directory);
+                }
+                Err(_e) => {
+                    println!("Creating {} - Failed", output_directory);
+                }
             }
             untargz(package_archive, output_directory).unwrap();
         }
         "xz" => {
             untarxz(package_archive, output_directory).unwrap();
         }
-        _ => { println!("Unsuported file extension."); }
+        _ => {
+            println!("Unsuported file extension.");
+        }
     }
 
     Ok(())
 }
 
-pub fn prepare_single_binary(package_url: &str, binary_name: &str, output_directory: &str) -> String {
+pub fn prepare_single_binary(
+    package_url: &str,
+    binary_name: &str,
+    output_directory: &str,
+) -> String {
     let tool_path = get_tool_path(output_directory.to_string());
     let binary_path = format!("{}/{}", tool_path, binary_name);
 
@@ -278,19 +320,32 @@ pub fn prepare_single_binary(package_url: &str, binary_name: &str, output_direct
     if !Path::new(&tool_path).exists() {
         println!("Creating tool directory: {}", tool_path);
         match fs::create_dir_all(&tool_path) {
-            Ok(_) => { println!("Ok"); },
-            Err(_e) => { println!("Failed");}
+            Ok(_) => {
+                println!("Ok");
+            }
+            Err(_e) => {
+                println!("Failed");
+            }
         }
     }
 
     match download_package(package_url.to_string(), binary_path.to_string()) {
-        Ok(_) => { println!("Ok"); },
-        Err(_e) => { println!("Failed");}
+        Ok(_) => {
+            println!("Ok");
+        }
+        Err(_e) => {
+            println!("Failed");
+        }
     }
     return binary_path;
 }
 
-pub fn prepare_package_strip_prefix(package_url: &str, package_archive: &str, output_directory: String, strip_prefix: &str) -> Result<()> {
+pub fn prepare_package_strip_prefix(
+    package_url: &str,
+    package_archive: &str,
+    output_directory: String,
+    strip_prefix: &str,
+) -> Result<()> {
     if Path::new(&output_directory).exists() {
         println!("Using cached directory: {}", output_directory);
         return Ok(());
@@ -300,20 +355,32 @@ pub fn prepare_package_strip_prefix(package_url: &str, package_archive: &str, ou
     if !Path::new(&dist_path).exists() {
         println!("Creating dist directory: {}", dist_path);
         match fs::create_dir_all(&dist_path) {
-            Ok(_) => { println!("Ok"); },
-            Err(_e) => { println!("Failed");}
+            Ok(_) => {
+                println!("Ok");
+            }
+            Err(_e) => {
+                println!("Failed");
+            }
         }
     }
 
     let package_archive = get_dist_path(package_archive);
 
     match download_package(package_url.to_string(), package_archive.to_string()) {
-        Ok(_) => { println!("Downloaded"); },
-        Err(_e) => { println!("Unable to download package"); }
+        Ok(_) => {
+            println!("Downloaded");
+        }
+        Err(_e) => {
+            println!("Unable to download package");
+        }
     }
     if !Path::new(&output_directory).exists() {
         let package_archive = package_archive.to_string();
-        let extension = Path::new(package_archive.as_str()).extension().unwrap().to_str().unwrap();
+        let extension = Path::new(package_archive.as_str())
+            .extension()
+            .unwrap()
+            .to_str()
+            .unwrap();
 
         match extension {
             "zip" => {
@@ -325,7 +392,9 @@ pub fn prepare_package_strip_prefix(package_url: &str, package_archive: &str, ou
             "xz" => {
                 untarxz_strip_prefix(package_archive, output_directory, strip_prefix).unwrap();
             }
-            _ => { println!("Unsuported file extension."); }
+            _ => {
+                println!("Unsuported file extension.");
+            }
         }
     }
     Ok(())
@@ -333,10 +402,12 @@ pub fn prepare_package_strip_prefix(package_url: &str, package_archive: &str, ou
 
 pub fn remove_package(package_archive: &str, output_directory: &str) -> Result<()> {
     if Path::new(package_archive).exists() {
-        fs::remove_file(package_archive).with_context(|| format!("Unable to delete `{}`", package_archive))?;
+        fs::remove_file(package_archive)
+            .with_context(|| format!("Unable to delete `{}`", package_archive))?;
     }
     if Path::new(output_directory).exists() {
-        fs::remove_dir_all(output_directory).with_context(|| format!("Unable to delete `{}`", output_directory))?;
+        fs::remove_dir_all(output_directory)
+            .with_context(|| format!("Unable to delete `{}`", output_directory))?;
     }
     Ok(())
 }

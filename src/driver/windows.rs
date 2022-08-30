@@ -1,20 +1,14 @@
+use std::ffi::OsStr;
+use std::io::Write;
+use std::iter::once;
+use std::os::windows::prelude::*;
+use std::process::Stdio;
+use std::ptr::null_mut;
 use tokio::io::Error;
 use winapi::um::handleapi::CloseHandle;
-use winapi::um::processthreadsapi::GetCurrentProcess;
-use winapi::um::processthreadsapi::OpenProcessToken;
+use winapi::um::processthreadsapi::{GetCurrentProcess, OpenProcessToken};
 use winapi::um::securitybaseapi::GetTokenInformation;
-use winapi::um::winnt::HANDLE;
-use winapi::um::winnt::TOKEN_ELEVATION;
-use winapi::um::winnt::TOKEN_QUERY;
-use winapi::um::winnt::TokenElevation;
-use std::ptr::null_mut;
-
-use std::ffi::OsStr;
-use std::os::windows::prelude::*;
-use std::iter::once;
-
-use std::process::Stdio;
-use std::io::{Write};
+use winapi::um::winnt::{TokenElevation, HANDLE, TOKEN_ELEVATION, TOKEN_QUERY};
 
 /// Based on: https://users.rust-lang.org/t/how-do-i-determine-if-i-have-admin-rights-on-windows/35710/8
 /// Returns true if the current process has admin rights, otherwise false.
@@ -55,7 +49,14 @@ impl QueryAccessToken {
             let size = std::mem::size_of::<TOKEN_ELEVATION>() as u32;
             let mut ret_size = size;
             // The weird looking repetition of `as *mut _` is casting the reference to a c_void pointer.
-            if GetTokenInformation(self.0, TokenElevation, &mut elevation as *mut _ as *mut _, size, &mut ret_size) != 0 {
+            if GetTokenInformation(
+                self.0,
+                TokenElevation,
+                &mut elevation as *mut _ as *mut _,
+                size,
+                &mut ret_size,
+            ) != 0
+            {
                 Ok(elevation.TokenIsElevated != 0)
             } else {
                 Err(Error::last_os_error())
@@ -77,30 +78,40 @@ pub fn to_wchar(str: &str) -> Vec<winapi::um::winnt::WCHAR> {
     OsStr::new(str).encode_wide().chain(once(0)).collect()
 }
 
-
 pub fn run_elevated(arguments: Vec<String>) {
     // Based on https://github.com/rust-lang/rustup/pull/1117/files
     let current_exe = std::env::current_exe().unwrap().display().to_string();
-    let argument_string = arguments.clone().into_iter().map(|i| format!("{} ", i.to_string())).collect::<String>();
+    let argument_string = arguments
+        .clone()
+        .into_iter()
+        .map(|i| format!("{} ", i.to_string()))
+        .collect::<String>();
     let parameters_string = format!("{}", argument_string);
     let operation = to_wchar("runas");
     let path = to_wchar(&current_exe);
     let parameters = to_wchar(&parameters_string);
     let sw_showminnoactive = 7;
-    println!("Requesting elevation of privileges for: {} {}", current_exe, parameters_string);
+    println!(
+        "Requesting elevation of privileges for: {} {}",
+        current_exe, parameters_string
+    );
 
     let result = unsafe {
         // https://docs.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shellexecutew
-        winapi::um::shellapi::ShellExecuteW(null_mut(),
-                                            operation.as_ptr(),
-                                            path.as_ptr(),
-                                            parameters.as_ptr(),
-                                            null_mut(),
-                                            sw_showminnoactive)
+        winapi::um::shellapi::ShellExecuteW(
+            null_mut(),
+            operation.as_ptr(),
+            path.as_ptr(),
+            parameters.as_ptr(),
+            null_mut(),
+            sw_showminnoactive,
+        )
     };
 
     match result {
-        _ => { println!("Exit code: {:?}", result); }
+        _ => {
+            println!("Exit code: {:?}", result);
+        }
     }
 
     // pub fn ShellExecuteA(
@@ -111,11 +122,9 @@ pub fn run_elevated(arguments: Vec<String>) {
     //     lpDirectory: LPCSTR,
     //     nShowCmd: c_int,
     // ) -> HINSTANCE;
-
-
 }
 
-pub fn run(command:String, arguments:Vec<String>) -> Result<bool, Error> {
+pub fn run(command: String, arguments: Vec<String>) -> Result<bool, Error> {
     println!("Executing: {} {:?}", command, arguments);
     let mut _child_process = std::process::Command::new(command)
         .args(arguments)
@@ -131,7 +140,7 @@ pub fn run(command:String, arguments:Vec<String>) -> Result<bool, Error> {
     Ok(true)
 }
 
-pub fn run_with_stdin(command:String, stdin:String) -> Result<bool, Error> {
+pub fn run_with_stdin(command: String, stdin: String) -> Result<bool, Error> {
     println!("Executing: {} {}", command, stdin);
     let mut child_process = std::process::Command::new(command)
         .stdin(Stdio::piped())
@@ -146,7 +155,6 @@ pub fn run_with_stdin(command:String, stdin:String) -> Result<bool, Error> {
     Ok(true)
 }
 
-
 pub fn run_self_elevated() -> Result<bool, Error> {
     if !is_app_elevated() {
         let mut arguments: Vec<String> = std::env::args().collect();
@@ -156,7 +164,7 @@ pub fn run_self_elevated() -> Result<bool, Error> {
     Ok(true)
 }
 
-pub fn run_self_elevated_with_extra_argument(argument:String) -> Result<bool, Error>{
+pub fn run_self_elevated_with_extra_argument(argument: String) -> Result<bool, Error> {
     if !is_app_elevated() {
         let mut arguments: Vec<String> = std::env::args().collect();
         arguments.remove(0);

@@ -1,9 +1,9 @@
-mod exclusion;
-
 use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
 #[cfg(windows)]
 use std::collections::HashMap;
+
+mod exclusion;
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
@@ -15,10 +15,11 @@ fn get_antivirus_property(_property_name: String, _include_inactive: bool) -> Re
 
 #[cfg(windows)]
 fn get_antivirus_property(property_name: String, include_inactive: bool) -> Result<()> {
-    use wmi::*;
     use wmi::Variant;
+    use wmi::*;
 
-    let wmi_con = WMIConnection::with_namespace_path("ROOT\\SecurityCenter2", COMLibrary::new()?.into())?;
+    let wmi_con =
+        WMIConnection::with_namespace_path("ROOT\\SecurityCenter2", COMLibrary::new()?.into())?;
     let query = format!("SELECT * FROM AntiVirusProduct");
     let products = wmi_con.raw_query(query)?;
     let mut is_first = true;
@@ -70,12 +71,12 @@ pub fn get_cmd<'a>() -> Command<'a, str> {
                     .takes_value(true)
                     .default_value("*"),
             )
-                .arg(
-                    Arg::with_name("include-inactive")
-                        .short("i")
-                        .long("include-inactive")
-                        .help("Include all antivirus registration"),
-                )
+            .arg(
+                Arg::with_name("include-inactive")
+                    .short("i")
+                    .long("include-inactive")
+                    .help("Include all antivirus registration"),
+            )
         })
         .runner(|_args, matches| {
             let property_name = matches.value_of("property").unwrap().to_string();
@@ -95,7 +96,6 @@ pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
         .add_cmd(get_cmd())
         .add_cmd(exclusion::get_multi_cmd())
         .into_cmd("antivirus")
-
         // Optionally specify a description
         .description("Detection of Antivirus and handling exception registration.");
 
