@@ -12,7 +12,7 @@ fn get_tool_files(tool_name: String, filter: String) -> Vec<String> {
         let metadata = e.metadata().unwrap();
         if metadata.is_file() && e.file_name().to_string_lossy().ends_with(&filter) {
             // println!("{}", e.path().display());
-            result_list.push(e.path().display().to_string().replace("/", "\\"));
+            result_list.push(e.path().display().to_string().replace('/', "\\"));
         }
     }
     result_list
@@ -247,5 +247,5 @@ pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
         // Optionally specify a description
         .description("Work with antivirus exclusions.");
 
-    return multi_cmd;
+    multi_cmd
 }

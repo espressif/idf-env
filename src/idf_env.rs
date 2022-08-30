@@ -43,7 +43,7 @@ async fn app() -> Result<()> {
             Ok(())
         })
         .run();
-    return Ok(());
+    Ok(())
 }
 
 #[tokio::main]

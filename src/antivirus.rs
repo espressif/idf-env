@@ -81,11 +81,8 @@ pub fn get_cmd<'a>() -> Command<'a, str> {
         .runner(|_args, matches| {
             let property_name = matches.value_of("property").unwrap().to_string();
             let include_inactive = matches.is_present("include-inactive");
-            match get_antivirus_property(property_name, include_inactive) {
-                Err(error) => {
-                    println!("Error: {:?}", error);
-                }
-                _ => {}
+            if let Err(error) = get_antivirus_property(property_name, include_inactive) {
+                println!("Error: {:?}", error);
             };
             Ok(())
         })
@@ -99,5 +96,5 @@ pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
         // Optionally specify a description
         .description("Detection of Antivirus and handling exception registration.");
 
-    return multi_cmd;
+    multi_cmd
 }

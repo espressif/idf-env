@@ -64,7 +64,7 @@ fn set_vm_to_ini_file(ini_file: String, vm_path: String) {
                 Some(index) => {
                     let mut position = 0;
                     let mut out_file = File::create(ini_file).unwrap();
-                    for line in memory_buffer {
+                    memory_buffer.into_iter().for_each(|line| {
                         if index + 1 == position {
                             let content = format!("{}\r\n", vm_path);
                             match out_file.write_all(content.as_bytes()) {
@@ -86,8 +86,8 @@ fn set_vm_to_ini_file(ini_file: String, vm_path: String) {
                                 }
                             }
                         }
-                        position = position + 1;
-                    }
+                        position += 1;
+                    });
                 }
                 _ => {
                     let mut out_file = File::create(ini_file).unwrap();
@@ -181,5 +181,5 @@ pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
         // Optionally specify a description
         .description("Maintain Espressif-IDE.");
 
-    return multi_cmd;
+    multi_cmd
 }

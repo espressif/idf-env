@@ -5,7 +5,6 @@ use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
 use dirs::home_dir;
 use json::JsonValue;
-use md5;
 use std::env;
 use std::fs;
 use std::path::Path;
@@ -40,13 +39,13 @@ pub fn get_selected_idf_path() -> String {
 
 fn get_json_path() -> String {
     let idf_json_path = format!("{}/esp_idf.json", get_tools_path());
-    return idf_json_path;
+    idf_json_path
 }
 
 pub fn get_idf_id(idf_path: &str) -> String {
-    let idf_path_with_slash = format!("{}", idf_path.replace("\\", "/"));
+    let idf_path_with_slash = idf_path.replace('\\', "/");
     let digest = md5::compute(idf_path_with_slash);
-    return format!("esp-idf-{:x}", digest);
+    format!("esp-idf-{:x}", digest)
 }
 
 fn bootstrap_json(_json_path: String, tools_path: String) {
@@ -74,12 +73,12 @@ fn load_json() -> json::JsonValue {
     }
 
     let content = fs::read_to_string(json_path).expect("Failure");
-    return json::parse(&content.to_string()).unwrap();
+    json::parse(&content).unwrap()
 }
 
 pub fn get_property(property_name: String) -> String {
     let parsed_json = load_json();
-    return parsed_json[property_name].to_string();
+    parsed_json[property_name].to_string()
 }
 
 fn print_property(property_name: String) {
@@ -92,13 +91,13 @@ pub fn get_git_path() -> String {
 
 pub fn get_property_with_idf_id(property_name: String, idf_id: String) -> String {
     let parsed_json = load_json();
-    return parsed_json["idfInstalled"][idf_id][property_name].to_string();
+    parsed_json["idfInstalled"][idf_id][property_name].to_string()
 }
 
 pub fn get_property_with_path(property_name: String, idf_path: String) -> String {
     let parsed_json = load_json();
     let idf_id = get_idf_id(&idf_path);
-    return parsed_json["idfInstalled"][idf_id][property_name].to_string();
+    parsed_json["idfInstalled"][idf_id][property_name].to_string()
 }
 
 fn print_property_with_path(property_name: String, idf_path: String) {
@@ -282,5 +281,5 @@ pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
         // Optionally specify a description
         .description("Maintain configuration of ESP-IDF installations.");
 
-    return multi_cmd;
+    multi_cmd
 }

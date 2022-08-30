@@ -145,5 +145,5 @@ pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
         // Optionally specify a description
         .description("Toit environment.");
 
-    return multi_cmd;
+    multi_cmd
 }

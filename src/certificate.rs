@@ -15,11 +15,12 @@ async fn request_url(uri: String) -> ResultTokio<()> {
 }
 
 fn open_url(url: String) -> ResultTokio<()> {
-    let handle = Handle::current().clone();
+    let handle = Handle::current();
     let th = std::thread::spawn(move || {
         handle.block_on(request_url(url)).unwrap();
     });
-    Ok(th.join().unwrap())
+    th.join().unwrap();
+    Ok(())
 }
 
 fn get_verify_runner(
@@ -58,6 +59,5 @@ pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
         .add_cmd(get_verify_cmd())
         .into_cmd("certificate")
         .description("Manage HTTPS certificates");
-
-    return multi_cmd;
+    multi_cmd
 }

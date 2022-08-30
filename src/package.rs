@@ -37,7 +37,7 @@ pub fn unzip(file_path: String, output_directory: String) -> Result<()> {
             }
         }
 
-        if (&*file.name()).ends_with('/') {
+        if file.name().ends_with('/') {
             println!("* extracted: \"{}\"", outpath.display());
             fs::create_dir_all(&outpath).unwrap();
         } else {
@@ -95,7 +95,7 @@ pub fn unzip_strip_prefix(
             }
         }
 
-        if (&*file.name()).ends_with('/') {
+        if file.name().ends_with('/') {
             if !Path::new(file.name()).exists() {
                 println!("* created: \"{}\"", outpath.display());
                 fs::create_dir_all(&outpath).unwrap();
@@ -131,7 +131,7 @@ pub fn untarxz_strip_prefix(
         .filter_map(|e| e.ok())
         .map(|mut entry| -> Result<PathBuf> {
             let path = entry.path()?.strip_prefix(strip_prefix)?.to_owned();
-            let full_path = format!("{}/{}", output_directory, path.display().to_string());
+            let full_path = format!("{}/{}", output_directory, path.display());
             entry.unpack(&full_path)?;
             Ok(full_path.parse().unwrap())
         })
@@ -149,7 +149,7 @@ pub fn untarxz(file_path: String, output_directory: String) -> Result<()> {
         .filter_map(|e| e.ok())
         .map(|mut entry| -> Result<PathBuf> {
             let path = entry.path()?.to_owned();
-            let full_path = format!("{}/{}", output_directory, path.display().to_string());
+            let full_path = format!("{}/{}", output_directory, path.display());
             entry.unpack(&full_path)?;
             Ok(full_path.parse().unwrap())
         })
@@ -171,7 +171,7 @@ pub fn untargz_strip_prefix(
         .filter_map(|e| e.ok())
         .map(|mut entry| -> Result<PathBuf> {
             let path = entry.path()?.strip_prefix(strip_prefix)?.to_owned();
-            let full_path = format!("{}/{}", output_directory, path.display().to_string());
+            let full_path = format!("{}/{}", output_directory, path.display());
             entry.unpack(&full_path)?;
             Ok(full_path.parse().unwrap())
         })
@@ -189,7 +189,7 @@ pub fn untargz(file_path: String, output_directory: String) -> Result<()> {
         .filter_map(|e| e.ok())
         .map(|mut entry| -> Result<PathBuf> {
             let path = entry.path()?.to_owned();
-            let full_path = format!("{}/{}", output_directory, path.display().to_string());
+            let full_path = format!("{}/{}", output_directory, path.display());
             entry.unpack(&full_path)?;
             Ok(full_path.parse().unwrap())
         })
@@ -229,13 +229,14 @@ async fn download_zip(url: String, output: String) -> Result<()> {
 }
 
 pub fn download_package(package_url: String, package_archive: String) -> Result<()> {
-    let handle = Handle::current().clone();
+    let handle = Handle::current();
     let th = std::thread::spawn(move || {
         handle
             .block_on(download_zip(package_url, package_archive))
             .unwrap();
     });
-    Ok(th.join().unwrap())
+    th.join().unwrap();
+    Ok(())
 }
 
 pub fn prepare_package(
@@ -337,7 +338,7 @@ pub fn prepare_single_binary(
             println!("Failed");
         }
     }
-    return binary_path;
+    binary_path
 }
 
 pub fn prepare_package_strip_prefix(

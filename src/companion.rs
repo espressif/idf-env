@@ -104,5 +104,5 @@ pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
             "ESP-IDF Desktop Web Companion for flashing and monitoring device from Web IDE.",
         );
 
-    return multi_cmd;
+    multi_cmd
 }

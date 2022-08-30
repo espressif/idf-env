@@ -99,5 +99,5 @@ pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
         // Optionally specify a description
         .description("Manage ESP-IDF launchers.");
 
-    return multi_cmd;
+    multi_cmd
 }

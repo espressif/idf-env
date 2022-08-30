@@ -53,15 +53,15 @@ fn get_driver_property(property_name: String, filter: String) -> Result<()> {
 
 fn get_installed_driver_property(property_name: String) -> Result<()> {
     // Driver classes: https://docs.microsoft.com/en-us/windows-hardware/drivers/install/system-defined-device-setup-classes-available-to-vendors?redirectedfrom=MSDN
-    return get_driver_property(
+    get_driver_property(
         property_name,
         "ClassGuid=\"{4d36e978-e325-11ce-bfc1-08002be10318}\"".to_string(),
-    );
+    )
 }
 
 fn get_missing_driver_property(property_name: String) -> Result<()> {
     // https://stackoverflow.com/questions/11367639/get-a-list-of-devices-with-missing-drivers-using-powershell
-    return get_driver_property(property_name, "ConfigManagerErrorCode>0".to_string());
+    get_driver_property(property_name, "ConfigManagerErrorCode>0".to_string())
 }
 
 pub fn get_cmd<'a>() -> Command<'a, str> {
@@ -405,5 +405,5 @@ pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
         // Optionally specify a description
         .description("Detection of Antivirus and handling exception registration.");
 
-    return multi_cmd;
+    multi_cmd
 }

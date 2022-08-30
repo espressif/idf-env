@@ -1,8 +1,8 @@
 use crate::config::{
-    add_idf_config, get_git_path, get_python_env_path, get_selected_idf_path, update_property,
+    get_git_path, get_selected_idf_path, update_property,
 };
 #[cfg(windows)]
-use crate::config::{get_dist_path, get_tool_path, get_tools_path};
+use crate::config::{add_idf_config, get_dist_path, get_tool_path, get_tools_path, get_python_env_path};
 #[cfg(windows)]
 use crate::package::prepare_package;
 use crate::shell::run_command;
@@ -29,10 +29,10 @@ fn execute_command(command: String, arguments: Vec<String>) -> Result<()> {
     let argument_string = arguments
         .clone()
         .into_iter()
-        .map(|i| format!("{} ", i.to_string()))
+        .map(|i| format!("{} ", i))
         .collect::<String>();
     println!("Executing: {} {}", command, argument_string);
-    let handle = Handle::current().clone();
+    let handle = Handle::current();
     let th = std::thread::spawn(move || handle.block_on(excecute_async(command, arguments)));
     th.join().unwrap();
     Ok(())
@@ -114,32 +114,33 @@ fn get_reset_cmd<'a>() -> Command<'a, str> {
         })
 }
 
-#[cfg(windows)]
-fn get_idf_base_directory() -> String {
-    "C:/esp".to_string()
-}
-
-#[cfg(unix)]
 fn get_idf_base_directory() -> String {
     home_dir().unwrap().display().to_string() + "/esp"
 }
 
-#[cfg(windows)]
-fn get_esp_idf_directory(idf_name: String) -> String {
-    format!("{}/{}", get_idf_base_directory(), idf_name).replace("/", "\\")
-}
-
-#[cfg(unix)]
-fn get_esp_idf_directory(idf_name: String) -> String {
-    format!("{}/{}", get_idf_base_directory(), idf_name)
+fn get_esp_idf_directory(idf_version: String) -> String {
+    let parsed_version: String = idf_version
+        .chars()
+        .map(|x| match x {
+            '/' => '-',
+            _ => x,
+        })
+        .collect();
+    format!(
+        "{}frameworks/esp-idf-{}",
+        get_idf_base_directory(),
+        parsed_version
+    )
 }
 
 fn get_install_runner(
     _args: &str,
     _matches: &clap::ArgMatches<'_>,
 ) -> std::result::Result<(), clap::Error> {
-    let esp_idf = get_esp_idf_directory("esp-idf-master/".to_string());
-    println!("ESP-IDF Path: {}", esp_idf);
+    let targets = "esp32,esp32s2";
+    let idf_version = "release/v4.4";
+    let espidf_path = get_esp_idf_directory(idf_version.to_string());
+    println!("ESP-IDF Path: {}", espidf_path);
 
     #[cfg(windows)]
     match prepare_package(
@@ -180,77 +181,111 @@ fn get_install_runner(
     #[cfg(unix)]
     let python_path = "/usr/bin/python".to_string();
 
-    let virtual_env_path = get_python_env_path("4.4".to_string(), "3.8".to_string());
+    // let virtual_env_path = get_python_env_path("4.4".to_string(), "3.8".to_string());
 
-    if !Path::new(&esp_idf).exists() {
-        // let clone_command = format!("git clone --shallow-since=2020-01-01 --jobs 8 --recursive git@github.com:espressif/esp-idf.git ");
+    if !Path::new(&espidf_path).exists() {
         let mut arguments: Vec<String> = [].to_vec();
         arguments.push("clone".to_string());
-        arguments.push("--shallow-since=2020-01-01".to_string());
         arguments.push("--jobs".to_string());
         arguments.push("8".to_string());
+        arguments.push("--branch".to_string());
+        arguments.push(idf_version.to_string());
+        arguments.push("--depth".to_string());
+        arguments.push("1".to_string());
+        arguments.push("--shallow-submodules".to_string());
         arguments.push("--recursive".to_string());
         arguments.push("https://github.com/espressif/esp-idf.git".to_string());
-        // arguments.push("git@github.com:espressif/esp-idf.git".to_string());
-        arguments.push(esp_idf.clone());
-        println!("Cloning: {} {:?}", git_path, arguments);
+        arguments.push(espidf_path.clone());
+        println!("Dowloading esp-idf {}", idf_version);
         match run_command(git_path, arguments, "".to_string()) {
             Ok(_) => {
-                println!("Ok");
+                println!("Cloned esp-idf suscessfuly");
             }
             Err(_e) => {
-                println!("Failed");
+                println!("Clonning esp-idf failed");
             }
         }
     }
 
-    if !Path::new(&virtual_env_path).exists() {
-        println!("Creating virtual environment: {}", virtual_env_path);
-        let mut arguments: Vec<String> = [].to_vec();
-        arguments.push("-m".to_string());
-        arguments.push("virtualenv".to_string());
-        arguments.push(virtual_env_path.clone());
-        match run_command(python_path, arguments, "".to_string()) {
-            Ok(_) => {
-                println!("Ok");
-            }
-            Err(_e) => {
-                println!("Failed");
-            }
-        }
-    }
-    #[cfg(windows)]
-    let python_path = format!("{}/Scripts/python.exe", virtual_env_path);
-    #[cfg(unix)]
-    let python_path = format!("{}/bin/python", virtual_env_path);
+    // if !Path::new(&virtual_env_path).exists() {
+    //     println!("Creating virtual environment: {}", virtual_env_path);
+    //     let mut arguments: Vec<String> = [].to_vec();
+    //     arguments.push("-m".to_string());
+    //     arguments.push("virtualenv".to_string());
+    //     arguments.push(virtual_env_path.clone());
+    //     match run_command(python_path, arguments, "".to_string()) {
+    //         Ok(_) => {
+    //             println!("Ok");
+    //         }
+    //         Err(_e) => {
+    //             println!("Failed");
+    //         }
+    //     }
+    // }
+    // #[cfg(windows)]
+    // let python_path = format!("{}/Scripts/python.exe", virtual_env_path);
+    // #[cfg(unix)]
+    // let python_path = format!("{}/bin/python", virtual_env_path);
 
-    let idf_tools = format!("{}/tools/idf_tools.py", esp_idf);
+    // let idf_tools = format!("{}/tools/idf_tools.py", esp_idf);
 
+    // let mut arguments: Vec<String> = [].to_vec();
+    // arguments.push(idf_tools.clone());
+    // arguments.push("install".to_string());
+    // match run_command(python_path.clone(), arguments, "".to_string()) {
+    //     Ok(_) => {
+    //         println!("Ok");
+    //     }
+    //     Err(_e) => {
+    //         println!("Failed");
+    //     }
+    // }
+
+    // let mut arguments: Vec<String> = [].to_vec();
+    // arguments.push(idf_tools);
+    // arguments.push("install-python-env".to_string());
+    // match run_command(python_path.clone(), arguments, "".to_string()) {
+    //     Ok(_) => {
+    //         println!("Ok");
+    //     }
+    //     Err(_e) => {
+    //         println!("Failed");
+    //     }
+    // }
+
+    // add_idf_config(esp_idf, "4.4".to_string(), python_path);
+
+    println!(
+        "Installing esp-idf for {} with {}/install.sh",
+        targets, espidf_path
+    );
+    let install_script_path = format!("{}/install.sh", espidf_path);
     let mut arguments: Vec<String> = [].to_vec();
-    arguments.push(idf_tools.clone());
+    arguments.push(targets.to_string());
+    match run_command(install_script_path, arguments, "".to_string()) {
+        Ok(_) => {
+            println!("ESP-IDF installation succeeded");
+        }
+        Err(_e) => {
+            println!("ESP-IDF installation failed");
+        }
+    }
+
+    println!("Installing CMake");
+    let mut arguments: Vec<String> = [].to_vec();
+    let idf_tools_scritp_path = format!("{}/tools/idf_tools.py", espidf_path);
+    arguments.push(idf_tools_scritp_path);
     arguments.push("install".to_string());
-    match run_command(python_path.clone(), arguments, "".to_string()) {
+    arguments.push("cmake".to_string());
+    match run_command(python_path, arguments, "".to_string()) {
         Ok(_) => {
-            println!("Ok");
+            println!("CMake installation succeeded");
         }
         Err(_e) => {
-            println!("Failed");
+            println!("CMake installation failed");
         }
     }
 
-    let mut arguments: Vec<String> = [].to_vec();
-    arguments.push(idf_tools);
-    arguments.push("install-python-env".to_string());
-    match run_command(python_path.clone(), arguments, "".to_string()) {
-        Ok(_) => {
-            println!("Ok");
-        }
-        Err(_e) => {
-            println!("Failed");
-        }
-    }
-
-    add_idf_config(esp_idf, "4.4".to_string(), python_path);
     Ok(())
 }
 
@@ -525,7 +560,7 @@ fn get_mirror_switch_runner(
             change_submodules_mirror(repo, submodule_url.clone());
         }
         Err(e) => {
-            println!("failed to open: {}", e.to_string());
+            println!("failed to open: {}", e);
             std::process::exit(1);
         }
     };
@@ -593,7 +628,7 @@ fn get_mirror_switch_runner(
             }
         }
         Err(e) => {
-            println!("failed to open: {}", e.to_string());
+            println!("failed to open: {}", e);
             std::process::exit(1);
         }
     };
@@ -685,5 +720,5 @@ pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
         // Optionally specify a description
         .description("Maintain configuration of ESP-IDF installations.");
 
-    return multi_cmd;
+    multi_cmd
 }

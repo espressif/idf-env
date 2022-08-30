@@ -85,9 +85,9 @@ fn get_rust_installer(arch: &str) -> &str {
 
 /* Transforms esp-13.0.0-20211203 to 13_0_0 */
 fn get_llvm_version_with_underscores(llvm_version: &str) -> String {
-    let version: Vec<&str> = llvm_version.split("-").collect();
+    let version: Vec<&str> = llvm_version.split('-').collect();
     let llvm_dot_version = version[1];
-    llvm_dot_version.replace(".", "_")
+    llvm_dot_version.replace('.', "_")
 }
 
 fn get_cargo_home() -> String {
@@ -161,7 +161,7 @@ fn get_rust_crate(name: &str, arch: &str) -> Option<RustCrate> {
 
 fn get_extra_crates(crates_list: &str, arch: &str) -> Vec<RustCrate> {
     crates_list
-        .split(",")
+        .split(',')
         .into_iter()
         .filter_map(|s| get_rust_crate(s, arch))
         .collect()
