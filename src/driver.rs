@@ -3,7 +3,9 @@ use clap_nested::{Command, Commander, MultiCommand};
 #[cfg(windows)]
 use std::collections::HashMap;
 
+#[cfg(windows)]
 use crate::package::prepare_package;
+#[cfg(windows)]
 use crate::config;
 
 #[cfg(windows)]
@@ -12,6 +14,7 @@ use core::ptr::null_mut;
 #[cfg(windows)]
 pub mod windows;
 
+#[cfg(windows)]
 use std::{thread, time};
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
@@ -85,9 +88,7 @@ pub fn get_cmd<'a>() -> Command<'a, str> {
         })
 }
 
-#[cfg(unix)]
-fn install_driver(driver_inf: String, driver_url: String, _driver_archive: String) {}
-
+#[cfg(windows)]
 use widestring::WideCString;
 
 #[cfg(windows)]
@@ -150,6 +151,7 @@ fn get_install_runner(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::resu
     Ok(())
 }
 
+#[cfg(windows)]
 pub fn get_driver_path(driver_name:String) -> String {
     let drivers_path = config::get_tool_path("idf-driver".to_string());
     format!("{}/{}", drivers_path, driver_name)

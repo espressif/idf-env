@@ -114,6 +114,9 @@ fn get_idf_base_directory() -> String {
 }
 
 #[cfg(unix)]
+use crate::idf::env::home_dir;
+
+#[cfg(unix)]
 fn get_idf_base_directory() -> String {
     home_dir().unwrap().display().to_string() + "/esp"
 }

@@ -1,4 +1,5 @@
 use std::process::Stdio;
+#[cfg(windows)]
 use std::io::{Write};
 
 use clap::Arg;
@@ -37,7 +38,7 @@ pub fn run_command(shell: String, arguments: Vec<String>, command: String) -> st
     }
 
     //println!("arguments = {:?}", arguments);
-    let mut child_process = std::process::Command::new(shell)
+    let child_process = std::process::Command::new(shell)
         .args(arguments)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
@@ -51,9 +52,11 @@ pub fn run_command(shell: String, arguments: Vec<String>, command: String) -> st
     Ok(())
 }
 
+#[cfg(windows)]
 pub fn wide_null(s: &str) -> Vec<u16> {
     s.encode_utf16().chain(Some(0)).collect()
 }
+
 #[cfg(windows)]
 pub fn set_env_variable(key:&str, value:String) {
     use winreg::{enums::HKEY_CURRENT_USER, RegKey};
@@ -136,7 +139,7 @@ pub fn update_env_path(value: &str) {
 
 #[cfg(unix)]
 pub fn set_env_variable(key:&str, value:&str) {
-
+    todo!()
 }
 
 
