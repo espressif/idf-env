@@ -48,7 +48,18 @@ pub fn get_idf_id(idf_path: &str) -> String {
     format!("esp-idf-{:x}", digest)
 }
 
-fn bootstrap_json(_json_path: String, tools_path: String) {
+fn bootstrap_json(json_path: String, tools_path: String) {
+    if !Path::new(&get_json_path()).exists() {
+        println!("Creating tools.json file: {}", json_path);
+        match fs::create_dir_all(&tools_path) {
+            Ok(_) => {
+                println!("File tools.json created");
+            }
+            Err(_e) => {
+                println!("File tools.json creation failed");
+            }
+        }
+    }
     let template = json::object! {
         "$schema": "http://json-schema.org/schema#",
         "$id": "http://dl.espressif.com/dl/schemas/esp_idf",
