@@ -13,7 +13,7 @@ struct ToitTools {
 }
 
 fn build_toit_tools() -> ToitTools {
-    let jaguar_dist_file = format!("jag_windows.zip");
+    let jaguar_dist_file = "jag_windows.zip".to_string();
     let jaguar_dist_url = format!(
         "https://github.com/toitlang/jaguar/releases/latest/download/{}",
         jaguar_dist_file
@@ -24,7 +24,7 @@ fn build_toit_tools() -> ToitTools {
         jaguar_dist_url,
         jaguar_destination_dir: format!(
             "{}/AppData/Local/Programs/jaguar",
-            home_dir().unwrap().display().to_string()
+            home_dir().unwrap().display()
         ),
     }
 }
@@ -85,7 +85,7 @@ fn get_install_runner(
     _args: &str,
     matches: &clap::ArgMatches<'_>,
 ) -> std::result::Result<(), clap::Error> {
-    let toit_tools = get_default_toit_tools(&matches);
+    let toit_tools = get_default_toit_tools(matches);
     if matches.is_present("jaguar") {
         install_toit_tools(&toit_tools);
     }

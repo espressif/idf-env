@@ -80,7 +80,7 @@ pub fn set_env_variable(key: &str, value: String) {
 }
 
 fn append_path(original_path: &str, new_path: &str) -> String {
-    if original_path.len() == 0 {
+    if original_path.is_empty() {
         return new_path.to_string();
     }
 

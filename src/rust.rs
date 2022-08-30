@@ -321,7 +321,7 @@ fn install_mingw(toolchain: &RustToolchain) {
 }
 
 fn install_extra_crates(extra_crates: &Vec<RustCrate>) {
-    for extra_crate in extra_crates.into_iter() {
+    for extra_crate in extra_crates.iter() {
         println!("Installing crate {}", extra_crate.name);
 
         if extra_crate.url.is_empty() {
