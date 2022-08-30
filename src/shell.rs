@@ -48,7 +48,7 @@ pub fn run_command(shell: String, arguments: Vec<String>, command: String) -> st
 
     }
     let output = child_process.wait_with_output()?;
-    //println!("output = {:?}", output);
+    println!("output = {:?}", output);
     Ok(())
 }
 
@@ -131,15 +131,17 @@ pub fn update_env_path(value: &str) {
 
 #[cfg(unix)]
 pub fn update_env_variable(variable_name: &str, value: &str) {
+    todo!();
 }
 
 #[cfg(unix)]
 pub fn update_env_path(value: &str) {
+    todo!();
 }
 
 #[cfg(unix)]
 pub fn set_env_variable(key:&str, value:&str) {
-    todo!()
+    todo!();
 }
 
 

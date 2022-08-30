@@ -1,4 +1,5 @@
 use clap::Arg;
+use dirs::home_dir;
 use clap_nested::{Command, Commander, MultiCommand};
 use git2::{Repository};
 use std::path::Path;
@@ -13,10 +14,11 @@ use std::io::Read;
 
 use std::time::{Instant};
 
-use crate::config::{add_idf_config, get_git_path, get_tool_path, get_dist_path, get_python_env_path, update_property};
-use crate::config::get_tools_path;
-use crate::config::get_selected_idf_path;
+use crate::config::{add_idf_config, get_git_path, get_python_env_path, get_selected_idf_path, update_property};
+#[cfg(windows)]
 use crate::package::prepare_package;
+#[cfg(windows)]
+use crate::config::{get_tool_path, get_tools_path, get_dist_path};
 use crate::shell::run_command;
 
 async fn excecute_async(command: String, arguments:Vec<String>){
@@ -112,9 +114,6 @@ fn get_reset_cmd<'a>() -> Command<'a, str> {
 fn get_idf_base_directory() -> String {
     "C:/esp".to_string()
 }
-
-#[cfg(unix)]
-use crate::idf::env::home_dir;
 
 #[cfg(unix)]
 fn get_idf_base_directory() -> String {
