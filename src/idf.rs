@@ -223,10 +223,10 @@ fn get_install_runner(
         arguments.push(installation_path.clone());
         match run_command(git_path.clone(), arguments, "".to_string()) {
             Ok(_) => {
-                println!("Esp-idf {} clon succeded", version);
+                println!("\t Esp-idf {} clon succeded", version);
             }
             Err(_e) => {
-                println!("Esp-idf {} clon failed", version);
+                println!("\t Esp-idf {} clon failed", version);
             }
         }
     }
@@ -261,10 +261,10 @@ fn get_install_runner(
         arguments.push(virtual_env_path.clone());
         match run_command(python_path, arguments, "".to_string()) {
             Ok(_) => {
-                println!("Virtual environment creation succeded");
+                println!("\t Virtual environment creation succeded");
             }
             Err(_e) => {
-                println!("Virtual environment creation failed");
+                println!("\t Virtual environment creation failed");
             }
         }
     }
@@ -285,10 +285,10 @@ fn get_install_runner(
     arguments.push(targets.to_string());
     match run_command(install_script_path.clone(), arguments, "".to_string()) {
         Ok(_) => {
-            println!("Esp-idf {} insatllation succeded", version);
+            println!("\t Esp-idf {} insatllation succeded", version);
         }
         Err(_e) => {
-            println!("Esp-idf {} installation failed", version);
+            println!("\t Esp-idf {} installation failed", version);
         }
     }
 
@@ -298,10 +298,10 @@ fn get_install_runner(
     arguments.push("install".to_string());
     match run_command(python_path.clone(), arguments, "".to_string()) {
         Ok(_) => {
-            println!("{} install succeded", idf_tools_scritp_path);
+            println!("\t {} install succeded", idf_tools_scritp_path);
         }
         Err(_e) => {
-            println!("{} install failed", idf_tools_scritp_path);
+            println!("\t {} install failed", idf_tools_scritp_path);
         }
     }
 
@@ -310,10 +310,10 @@ fn get_install_runner(
     arguments.push("install-python-env".to_string());
     match run_command(python_path.clone(), arguments, "".to_string()) {
         Ok(_) => {
-            println!("{} install-python-env succeded", idf_tools_scritp_path);
+            println!("\t {} install-python-env succeded", idf_tools_scritp_path);
         }
         Err(_e) => {
-            println!("{} install-python-env failed", idf_tools_scritp_path);
+            println!("\t {} install-python-env failed", idf_tools_scritp_path);
         }
     }
 
@@ -330,10 +330,10 @@ fn get_install_runner(
     arguments.push("cmake".to_string());
     match run_command(python_path, arguments, "".to_string()) {
         Ok(_) => {
-            println!("CMake installation succeeded");
+            println!("\t CMake installation succeeded");
         }
         Err(_e) => {
-            println!("CMake installation failed");
+            println!("\t CMake installation failed");
         }
     }
 

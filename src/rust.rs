@@ -695,7 +695,7 @@ pub fn get_install_cmd<'a>() -> Command<'a, str> {
             )
             .arg(
                 Arg::with_name("extra-tools")
-                    .short("t")
+                    .short("x")
                     .long("extra-tools")
                     .help("Extra tools which should be deployed. E.g. MinGW")
                     .takes_value(true)

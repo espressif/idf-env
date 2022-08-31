@@ -53,10 +53,10 @@ fn bootstrap_json(json_path: String, tools_path: String) {
         println!("Creating tools.json file: {}", json_path);
         match fs::create_dir_all(&tools_path) {
             Ok(_) => {
-                println!("File tools.json created");
+                println!("\t File tools.json creation suceeded");
             }
             Err(_e) => {
-                println!("File tools.json creation failed");
+                println!("\t File tools.json creation failed");
             }
         }
     }
