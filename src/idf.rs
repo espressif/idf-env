@@ -1,9 +1,7 @@
 use crate::config::{
-    add_idf_config, get_git_path, get_selected_idf_path, update_property, get_python_env_path
+    add_idf_config, get_git_path, get_python_env_path, get_selected_idf_path, get_tool_path,
+    get_tools_path, update_property,
 };
-#[cfg(windows)]
-use crate::config::{get_tool_path, get_tools_path};
-#[cfg(windows)]
 use crate::package::prepare_package;
 use crate::shell::run_command;
 use clap::Arg;
@@ -124,25 +122,26 @@ fn get_esp_idf_directory(idf_version: String) -> String {
             _ => x,
         })
         .collect();
-    format!(
-        "{}/frameworks/esp-idf-{}",
-        get_tools_path(),
-        parsed_version
-    )
+    format!("{}/frameworks/esp-idf-{}", get_tools_path(), parsed_version)
 }
 
 fn get_install_runner(
     _args: &str,
-    _matches: &clap::ArgMatches<'_>,
+    matches: &clap::ArgMatches<'_>,
 ) -> std::result::Result<(), clap::Error> {
-    let targets = "esp32,esp32s2";
-    let idf_version = "release/v4.4";
+
+
+    let idf_version = matches.value_of("idf-version").unwrap();
+    println!("idf_version: {}", idf_version);
+    let targets = matches.value_of("target").unwrap();
+    println!("targets: {}", targets);
+    
     let espidf_path = get_esp_idf_directory(idf_version.to_string());
     println!("ESP-IDF Path: {}", espidf_path);
 
-
-     #[cfg(windows)]
+    #[cfg(windows)]
     println!("Downloading Git package");
+     #[cfg(windows)]
     match prepare_package(
         "https://dl.espressif.com/dl/idf-git/idf-git-2.30.1-win64.zip".to_string(),
         "idf-git-2.30.1-win64.zip",
@@ -155,8 +154,6 @@ fn get_install_runner(
             println!("Failed");
         }
     }
-
-
 
     #[cfg(windows)]
     let git_path = get_tool_path("idf-git/2.30.1/cmd/git.exe".to_string());
@@ -188,6 +185,8 @@ fn get_install_runner(
             }
         }
     }
+
+    #[cfg(windows)]
     println!("Downloading Python package");
     #[cfg(windows)]
     match prepare_package(
@@ -231,7 +230,6 @@ fn get_install_runner(
 
     let idf_tools_scritp_path = format!("{}/tools/idf_tools.py", espidf_path);
     println!("idf_tools_scritp_path: {}", idf_tools_scritp_path);
-
 
     #[cfg(windows)]
     let install_script_path = format!("{}/install.bat", espidf_path);
@@ -326,7 +324,16 @@ pub fn get_install_cmd<'a>() -> Command<'a, str> {
                     .short("x")
                     .long("idf-version")
                     .takes_value(true)
+                    .default_value("release/v4.4")
                     .help("ESP-IDF version"),
+            )
+            .arg(
+                Arg::with_name("target")
+                    .short("t")
+                    .long("target")
+                    .takes_value(true)
+                    .default_value("esp32,esp32s2,esp32s3")
+                    .help("Comma or space separated list of targets [esp32,esp32s2,esp32s3,esp32c3,all]."),
             )
             .arg(
                 Arg::with_name("idf-path")
@@ -428,10 +435,7 @@ pub fn get_shell_cmd<'a>() -> Command<'a, str> {
 }
 
 #[cfg(unix)]
-fn run_build(
-    idf_path: &String,
-    shell_initializer: &str,
-) -> std::result::Result<(), clap::Error> {
+fn run_build(idf_path: &String, shell_initializer: &str) -> std::result::Result<(), clap::Error> {
     // println!("Starting process");
     let root = Path::new(&idf_path);
     assert!(env::set_current_dir(&root).is_ok());
