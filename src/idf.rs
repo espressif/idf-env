@@ -195,10 +195,10 @@ fn get_install_runner(
     println!("{} Downloading Git package", emoji::DOWNLOAD);
     #[cfg(windows)]
     if let Err(_e) = prepare_package(
-            "https://dl.espressif.com/dl/idf-git/idf-git-2.30.1-win64.zip".to_string(),
-            "idf-git-2.30.1-win64.zip",
-            get_tool_path("idf-git/2.30.1".to_string()),
-        ) {
+        "https://dl.espressif.com/dl/idf-git/idf-git-2.30.1-win64.zip".to_string(),
+        "idf-git-2.30.1-win64.zip",
+        get_tool_path("idf-git/2.30.1".to_string()),
+    ) {
         return Err(clap::Error::with_description(
             format!("{} Git package download failed", emoji::ERROR).as_str(),
             clap::ErrorKind::InvalidValue,
@@ -237,15 +237,15 @@ fn get_install_runner(
     println!("{} Downloading Python package", emoji::DOWNLOAD);
     #[cfg(windows)]
     if let Err(_e) = prepare_package(
-            "https://dl.espressif.com/dl/idf-python/idf-python-3.8.7-embed-win64.zip".to_string(),
-            "idf-python-3.8.7-embed-win64.zip",
-            get_tool_path("idf-python/3.8.7".to_string()),
-        ) {
+        "https://dl.espressif.com/dl/idf-python/idf-python-3.8.7-embed-win64.zip".to_string(),
+        "idf-python-3.8.7-embed-win64.zip",
+        get_tool_path("idf-python/3.8.7".to_string()),
+    ) {
         return Err(clap::Error::with_description(
             format!("{} Python package download failed", emoji::ERROR).as_str(),
             clap::ErrorKind::InvalidValue,
         ));
-    } 
+    }
 
     #[cfg(windows)]
     let python_path = get_tool_path("idf-python/3.8.7/python.exe".to_string());
@@ -301,10 +301,7 @@ fn get_install_runner(
         ));
     }
 
-    println!(
-        "{} Installing idf_tools.py",
-        emoji::WRENCH
-    );
+    println!("{} Installing idf_tools.py", emoji::WRENCH);
     let idf_tools_scritp_path = format!("{}/tools/idf_tools.py", installation_path);
     let mut arguments: Vec<String> = [].to_vec();
     arguments.push(idf_tools_scritp_path.clone());
@@ -314,12 +311,9 @@ fn get_install_runner(
             format!("{} {} install failed", emoji::ERROR, idf_tools_scritp_path).as_str(),
             clap::ErrorKind::InvalidValue,
         ));
-    } 
+    }
 
-    println!(
-        "{} Installing idf_tools.py python-env",
-        emoji::WRENCH
-    );
+    println!("{} Installing idf_tools.py python-env", emoji::WRENCH);
     let mut arguments: Vec<String> = [].to_vec();
     arguments.push(idf_tools_scritp_path.clone());
     arguments.push("install-python-env".to_string());
@@ -351,8 +345,9 @@ fn get_install_runner(
             format!("{} CMake installation failed", emoji::ERROR).as_str(),
             clap::ErrorKind::InvalidValue,
         ));
-    } 
+    }
     
+    println!("{} ESP-IDF installed suscesfully", emoji::CHECK);
     Ok(())
 }
 
