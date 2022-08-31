@@ -13,6 +13,7 @@ use dirs::home_dir;
 use espflash::Chip;
 use git2::Repository;
 use std::env;
+use std::fmt::format;
 use std::io::Read;
 use std::path::Path;
 use std::process::Stdio;
@@ -184,7 +185,10 @@ fn get_install_runner(
         - version: {:?}
         - path: {:?}
         - targets: {:?}",
-        emoji::DISC, version, installation_path, targets
+        emoji::DISC,
+        version,
+        installation_path,
+        targets
     );
 
     #[cfg(windows)]
@@ -199,7 +203,10 @@ fn get_install_runner(
             println!("{} Git package download succeded", emoji::CHECK);
         }
         Err(_e) => {
-            println!("{} Git package download failed", emoji::ERROR);
+            return Err(clap::Error::with_description(
+                format!("{} Git package download failed", emoji::ERROR).as_str(),
+                clap::ErrorKind::InvalidValue,
+            ));
         }
     }
 
@@ -228,7 +235,10 @@ fn get_install_runner(
                 println!("\t{} Esp-idf {} clon succeded", emoji::CHECK, version);
             }
             Err(_e) => {
-                println!("\t{} Esp-idf {} clon failed", emoji::ERROR, version);
+                return Err(clap::Error::with_description(
+                    format!("{} Esp-idf {} clon failed", emoji::ERROR, version).as_str(),
+                    clap::ErrorKind::InvalidValue,
+                ));
             }
         }
     }
@@ -245,18 +255,31 @@ fn get_install_runner(
             println!("{} Python package download succeded", emoji::CHECK);
         }
         Err(_e) => {
-            println!("{} Python package download failed", emoji::ERROR);
+            return Err(clap::Error::with_description(
+                format!("{} Python package download failed", emoji::ERROR).as_str(),
+                clap::ErrorKind::InvalidValue,
+            ));
         }
     }
     #[cfg(windows)]
     let python_path = get_tool_path("idf-python/3.8.7/python.exe".to_string());
     #[cfg(unix)]
     let python_path = "/usr/bin/python".to_string();
+    if !Path::new(&python_path).exists() {
+        return Err(clap::Error::with_description(
+            format!("{} Python not found at {}", emoji::ERROR, python_path).as_str(),
+            clap::ErrorKind::InvalidValue,
+        ));
+    }
 
     let virtual_env_path = get_python_env_path("4.4".to_string(), "3.9".to_string());
 
     if !Path::new(&virtual_env_path).exists() {
-        println!("{} Creating virtual environment {}", emoji::WRENCH, virtual_env_path);
+        println!(
+            "{} Creating virtual environment {}",
+            emoji::WRENCH,
+            virtual_env_path
+        );
         let mut arguments: Vec<String> = [].to_vec();
         arguments.push("-m".to_string());
         arguments.push("virtualenv".to_string());
@@ -266,7 +289,10 @@ fn get_install_runner(
                 println!("\t{} Virtual environment creation succeded", emoji::CHECK);
             }
             Err(_e) => {
-                println!("\t{} Virtual environment creation failed", emoji::ERROR);
+                return Err(clap::Error::with_description(
+                    format!("{} Virtual environment creation failed", emoji::ERROR).as_str(),
+                    clap::ErrorKind::InvalidValue,
+                ));
             }
         }
     }
@@ -281,16 +307,25 @@ fn get_install_runner(
     let install_script_path = format!("{}/install.sh", installation_path);
     println!(
         "{} Installing esp-idf with: {} for {}",
-        emoji::WRENCH, install_script_path, targets
+        emoji::WRENCH,
+        install_script_path,
+        targets
     );
     let mut arguments: Vec<String> = [].to_vec();
     arguments.push(targets.to_string());
     match run_command(install_script_path.clone(), arguments, "".to_string()) {
         Ok(_) => {
-            println!("\t{} Esp-idf {} insatllation succeded", emoji::CHECK, version);
+            println!(
+                "\t{} Esp-idf {} insatllation succeded",
+                emoji::CHECK,
+                version
+            );
         }
         Err(_e) => {
-            println!("\t{} Esp-idf {} installation failed", emoji::ERROR, version);
+            return Err(clap::Error::with_description(
+                format!("{} Esp-idf {} installation failed", emoji::ERROR, version).as_str(),
+                clap::ErrorKind::InvalidValue,
+            ));
         }
     }
 
@@ -300,10 +335,17 @@ fn get_install_runner(
     arguments.push("install".to_string());
     match run_command(python_path.clone(), arguments, "".to_string()) {
         Ok(_) => {
-            println!("\t{} {} install succeded", emoji::CHECK, idf_tools_scritp_path);
+            println!(
+                "\t{} {} install succeded",
+                emoji::CHECK,
+                idf_tools_scritp_path
+            );
         }
         Err(_e) => {
-            println!("\t{} {} install failed", emoji::ERROR, idf_tools_scritp_path);
+            return Err(clap::Error::with_description(
+                format!("{} {} install failed", emoji::ERROR, idf_tools_scritp_path).as_str(),
+                clap::ErrorKind::InvalidValue,
+            ));
         }
     }
 
@@ -312,10 +354,22 @@ fn get_install_runner(
     arguments.push("install-python-env".to_string());
     match run_command(python_path.clone(), arguments, "".to_string()) {
         Ok(_) => {
-            println!("\t{} {} install-python-env succeded", emoji::CHECK, idf_tools_scritp_path);
+            println!(
+                "\t{} {} install-python-env succeded",
+                emoji::CHECK,
+                idf_tools_scritp_path
+            );
         }
         Err(_e) => {
-            println!("\t{} {} install-python-env failed", emoji::ERROR, idf_tools_scritp_path);
+            return Err(clap::Error::with_description(
+                format!(
+                    "{} {} install-python-env failed",
+                    emoji::ERROR,
+                    idf_tools_scritp_path
+                )
+                .as_str(),
+                clap::ErrorKind::InvalidValue,
+            ));
         }
     }
 
@@ -335,7 +389,11 @@ fn get_install_runner(
             println!("\t{} CMake installation succeeded", emoji::CHECK);
         }
         Err(_e) => {
-            println!("\t{} CMake installation failed", emoji::ERROR);
+            return Err(clap::Error::with_description(
+                format!("{} CMake installation failed", emoji::ERROR)
+                .as_str(),
+                clap::ErrorKind::InvalidValue,
+            ));
         }
     }
 
