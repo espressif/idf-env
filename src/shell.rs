@@ -50,7 +50,7 @@ pub fn run_command(
         .stderr(Stdio::piped())
         .spawn()?;
     {}
-    let output = child_process.wait_with_output()?;
+    let _output = child_process.wait_with_output()?;
     // println!("output = {:?}", output);
     Ok(())
 }

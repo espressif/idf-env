@@ -119,7 +119,7 @@ fn print_property_with_id(property_name: String, idf_id: String) {
     print!("{}", get_property_with_idf_id(property_name, idf_id));
 }
 
-pub fn update_property(property_name: String, property_value: String) {
+pub fn update_property(property_name: &str, property_value: String) {
     let mut parsed_json = load_json();
     parsed_json[property_name] = JsonValue::String(property_value);
     fs::write(get_json_path(), format!("{:#}", parsed_json)).unwrap();
@@ -263,7 +263,7 @@ fn get_set_runner(
     matches: &clap::ArgMatches<'_>,
 ) -> std::result::Result<(), clap::Error> {
     let git_path = matches.value_of("git").unwrap().to_string();
-    update_property("gitPath".to_string(), git_path);
+    update_property("gitPath", git_path);
     Ok(())
 }
 
