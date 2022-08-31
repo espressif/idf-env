@@ -38,14 +38,14 @@ pub fn unzip(file_path: String, output_directory: String) -> Result<()> {
         }
 
         if file.name().ends_with('/') {
-            println!("* extracted: \"{}\"", outpath.display());
+            // println!("* extracted: \"{}\"", outpath.display());
             fs::create_dir_all(&outpath).unwrap();
         } else {
-            println!(
-                "* extracted: \"{}\" ({} bytes)",
-                outpath.display(),
-                file.size()
-            );
+            // println!(
+            //     "* extracted: \"{}\" ({} bytes)",
+            //     outpath.display(),
+            //     file.size()
+            // );
             if let Some(p) = outpath.parent() {
                 if !p.exists() {
                     fs::create_dir_all(&p).unwrap();
@@ -251,25 +251,24 @@ pub fn prepare_package(
 
     let dist_path = get_dist_path("");
     if !Path::new(&dist_path).exists() {
-        println!("Creating dist directory: {}", dist_path);
+        println!("Creating dist directory at {}", dist_path);
         match fs::create_dir_all(&dist_path) {
             Ok(_) => {
-                println!("Ok");
+                println!("Succeeded");
             }
             Err(_e) => {
                 println!("Failed");
             }
         }
     }
-
     let package_archive = get_dist_path(package_archive);
-
+    println!("Downloading file {} from {}", package_archive.clone(), package_url);
     match download_package(package_url, package_archive.clone()) {
         Ok(_) => {
-            println!("Download ok");
+            println!("Succeeded");
         }
         Err(_e) => {
-            println!("Download failed");
+            println!("Failed");
         }
     }
 

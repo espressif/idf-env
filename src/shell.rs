@@ -25,7 +25,7 @@ pub fn run_command(
     }
     let _output = child_process.wait_with_output()?;
 
-    // println!("output = {:?}", output);
+    // println!("output = {:?}", _output);
 
     Ok(())
 }
