@@ -230,17 +230,12 @@ fn get_install_runner(
         arguments.push("--recursive".to_string());
         arguments.push("https://github.com/espressif/esp-idf.git".to_string());
         arguments.push(installation_path.clone());
-        match run_command(git_path.clone(), arguments, "".to_string()) {
-            Ok(_) => {
-                println!("\t{} Esp-idf {} clon succeded", emoji::CHECK, version);
-            }
-            Err(_e) => {
-                return Err(clap::Error::with_description(
-                    format!("{} Esp-idf {} clon failed", emoji::ERROR, version).as_str(),
-                    clap::ErrorKind::InvalidValue,
-                ));
-            }
-        }
+        if let Err(_e) = run_command(git_path.clone(), arguments, "".to_string()) {
+            return Err(clap::Error::with_description(
+                format!("{} Esp-idf {} clon failed", emoji::ERROR, version).as_str(),
+                clap::ErrorKind::InvalidValue,
+            ));
+        } 
     }
 
     #[cfg(windows)]
@@ -284,16 +279,11 @@ fn get_install_runner(
         arguments.push("-m".to_string());
         arguments.push("virtualenv".to_string());
         arguments.push(virtual_env_path.clone());
-        match run_command(python_path, arguments, "".to_string()) {
-            Ok(_) => {
-                println!("\t{} Virtual environment creation succeded", emoji::CHECK);
-            }
-            Err(_e) => {
-                return Err(clap::Error::with_description(
-                    format!("{} Virtual environment creation failed", emoji::ERROR).as_str(),
-                    clap::ErrorKind::InvalidValue,
-                ));
-            }
+        if let Err(_e) = run_command(python_path, arguments, "".to_string()) {
+            return Err(clap::Error::with_description(
+                format!("{} Virtual environment creation failed", emoji::ERROR).as_str(),
+                clap::ErrorKind::InvalidValue,
+            ));
         }
     }
     #[cfg(windows)]

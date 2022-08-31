@@ -49,16 +49,14 @@ pub fn get_idf_id(idf_path: &str) -> String {
     format!("esp-idf-{:x}", digest)
 }
 
-fn bootstrap_json(json_path: String, tools_path: String) {
+fn bootstrap_json(json_path: String, tools_path: String) -> std::result::Result<(), clap::Error> {
     if !Path::new(&get_json_path()).exists() {
         println!("{} Creating tools.json file: {}", emoji::WRENCH, json_path);
-        match fs::create_dir_all(&tools_path) {
-            Ok(_) => {
-                println!("\t{} File tools.json creation suceeded", emoji::CHECK);
-            }
-            Err(_e) => {
-                println!("\t{} File tools.json creation failed", emoji::ERROR);
-            }
+        if let Err(_e) = fs::create_dir_all(&tools_path) {
+            return Err(clap::Error::with_description(
+                format!("{} File tools.json creation failed", emoji::ERROR).as_str(),
+                clap::ErrorKind::InvalidValue,
+            ));
         }
     }
     let template = json::object! {
@@ -79,7 +77,8 @@ fn load_json() -> json::JsonValue {
     if !Path::new(&json_path).exists() {
         println!(
             "{} Configuration file not found, creating new one: {}",
-            emoji::WARN, json_path
+            emoji::WARN,
+            json_path
         );
         bootstrap_json(json_path.clone(), get_tools_path());
     }
