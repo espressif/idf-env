@@ -70,6 +70,7 @@ fn bootstrap_json(json_path: String, tools_path: String) -> std::result::Result<
         "idfInstalled": json::JsonValue::new_object()
     };
     fs::write(get_json_path(), template.to_string()).unwrap();
+    Ok(())
 }
 
 fn load_json() -> json::JsonValue {

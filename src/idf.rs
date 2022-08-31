@@ -194,20 +194,15 @@ fn get_install_runner(
     #[cfg(windows)]
     println!("{} Downloading Git package", emoji::DOWNLOAD);
     #[cfg(windows)]
-    match prepare_package(
-        "https://dl.espressif.com/dl/idf-git/idf-git-2.30.1-win64.zip".to_string(),
-        "idf-git-2.30.1-win64.zip",
-        get_tool_path("idf-git/2.30.1".to_string()),
-    ) {
-        Ok(_) => {
-            println!("{} Git package download succeded", emoji::CHECK);
-        }
-        Err(_e) => {
-            return Err(clap::Error::with_description(
-                format!("{} Git package download failed", emoji::ERROR).as_str(),
-                clap::ErrorKind::InvalidValue,
-            ));
-        }
+    if let Err(_e) = prepare_package(
+            "https://dl.espressif.com/dl/idf-git/idf-git-2.30.1-win64.zip".to_string(),
+            "idf-git-2.30.1-win64.zip",
+            get_tool_path("idf-git/2.30.1".to_string()),
+        ) {
+        return Err(clap::Error::with_description(
+            format!("{} Git package download failed", emoji::ERROR).as_str(),
+            clap::ErrorKind::InvalidValue,
+        ));
     }
 
     #[cfg(windows)]
@@ -235,27 +230,23 @@ fn get_install_runner(
                 format!("{} Esp-idf {} clon failed", emoji::ERROR, version).as_str(),
                 clap::ErrorKind::InvalidValue,
             ));
-        } 
+        }
     }
 
     #[cfg(windows)]
     println!("{} Downloading Python package", emoji::DOWNLOAD);
     #[cfg(windows)]
-    match prepare_package(
-        "https://dl.espressif.com/dl/idf-python/idf-python-3.8.7-embed-win64.zip".to_string(),
-        "idf-python-3.8.7-embed-win64.zip",
-        get_tool_path("idf-python/3.8.7".to_string()),
-    ) {
-        Ok(_) => {
-            println!("{} Python package download succeded", emoji::CHECK);
-        }
-        Err(_e) => {
-            return Err(clap::Error::with_description(
-                format!("{} Python package download failed", emoji::ERROR).as_str(),
-                clap::ErrorKind::InvalidValue,
-            ));
-        }
-    }
+    if let Err(_e) = prepare_package(
+            "https://dl.espressif.com/dl/idf-python/idf-python-3.8.7-embed-win64.zip".to_string(),
+            "idf-python-3.8.7-embed-win64.zip",
+            get_tool_path("idf-python/3.8.7".to_string()),
+        ) {
+        return Err(clap::Error::with_description(
+            format!("{} Python package download failed", emoji::ERROR).as_str(),
+            clap::ErrorKind::InvalidValue,
+        ));
+    } 
+
     #[cfg(windows)]
     let python_path = get_tool_path("idf-python/3.8.7/python.exe".to_string());
     #[cfg(unix)]
@@ -303,64 +294,45 @@ fn get_install_runner(
     );
     let mut arguments: Vec<String> = [].to_vec();
     arguments.push(targets.to_string());
-    match run_command(install_script_path.clone(), arguments, "".to_string()) {
-        Ok(_) => {
-            println!(
-                "\t{} Esp-idf {} insatllation succeded",
-                emoji::CHECK,
-                version
-            );
-        }
-        Err(_e) => {
-            return Err(clap::Error::with_description(
-                format!("{} Esp-idf {} installation failed", emoji::ERROR, version).as_str(),
-                clap::ErrorKind::InvalidValue,
-            ));
-        }
+    if let Err(_e) = run_command(install_script_path.clone(), arguments, "".to_string()) {
+        return Err(clap::Error::with_description(
+            format!("{} Esp-idf {} installation failed", emoji::ERROR, version).as_str(),
+            clap::ErrorKind::InvalidValue,
+        ));
     }
 
+    println!(
+        "{} Installing idf_tools.py",
+        emoji::WRENCH
+    );
     let idf_tools_scritp_path = format!("{}/tools/idf_tools.py", installation_path);
     let mut arguments: Vec<String> = [].to_vec();
     arguments.push(idf_tools_scritp_path.clone());
     arguments.push("install".to_string());
-    match run_command(python_path.clone(), arguments, "".to_string()) {
-        Ok(_) => {
-            println!(
-                "\t{} {} install succeded",
-                emoji::CHECK,
-                idf_tools_scritp_path
-            );
-        }
-        Err(_e) => {
-            return Err(clap::Error::with_description(
-                format!("{} {} install failed", emoji::ERROR, idf_tools_scritp_path).as_str(),
-                clap::ErrorKind::InvalidValue,
-            ));
-        }
-    }
+    if let Err(_e) = run_command(python_path.clone(), arguments, "".to_string()) {
+        return Err(clap::Error::with_description(
+            format!("{} {} install failed", emoji::ERROR, idf_tools_scritp_path).as_str(),
+            clap::ErrorKind::InvalidValue,
+        ));
+    } 
 
+    println!(
+        "{} Installing idf_tools.py python-env",
+        emoji::WRENCH
+    );
     let mut arguments: Vec<String> = [].to_vec();
     arguments.push(idf_tools_scritp_path.clone());
     arguments.push("install-python-env".to_string());
-    match run_command(python_path.clone(), arguments, "".to_string()) {
-        Ok(_) => {
-            println!(
-                "\t{} {} install-python-env succeded",
-                emoji::CHECK,
+    if let Err(_e) = run_command(python_path.clone(), arguments, "".to_string()) {
+        return Err(clap::Error::with_description(
+            format!(
+                "{} {} install-python-env failed",
+                emoji::ERROR,
                 idf_tools_scritp_path
-            );
-        }
-        Err(_e) => {
-            return Err(clap::Error::with_description(
-                format!(
-                    "{} {} install-python-env failed",
-                    emoji::ERROR,
-                    idf_tools_scritp_path
-                )
-                .as_str(),
-                clap::ErrorKind::InvalidValue,
-            ));
-        }
+            )
+            .as_str(),
+            clap::ErrorKind::InvalidValue,
+        ));
     }
 
     add_idf_config(
@@ -374,19 +346,13 @@ fn get_install_runner(
     arguments.push(idf_tools_scritp_path);
     arguments.push("install".to_string());
     arguments.push("cmake".to_string());
-    match run_command(python_path, arguments, "".to_string()) {
-        Ok(_) => {
-            println!("\t{} CMake installation succeeded", emoji::CHECK);
-        }
-        Err(_e) => {
-            return Err(clap::Error::with_description(
-                format!("{} CMake installation failed", emoji::ERROR)
-                .as_str(),
-                clap::ErrorKind::InvalidValue,
-            ));
-        }
-    }
-
+    if let Err(_e) = run_command(python_path, arguments, "".to_string()) {
+        return Err(clap::Error::with_description(
+            format!("{} CMake installation failed", emoji::ERROR).as_str(),
+            clap::ErrorKind::InvalidValue,
+        ));
+    } 
+    
     Ok(())
 }
 
