@@ -10,6 +10,7 @@ mod certificate;
 mod companion;
 mod config;
 mod driver;
+mod emoji;
 mod ide;
 mod idf;
 mod launcher;

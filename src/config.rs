@@ -1,5 +1,6 @@
 extern crate json;
 
+use crate::emoji;
 use crate::shell::run_command;
 use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
@@ -50,13 +51,13 @@ pub fn get_idf_id(idf_path: &str) -> String {
 
 fn bootstrap_json(json_path: String, tools_path: String) {
     if !Path::new(&get_json_path()).exists() {
-        println!("Creating tools.json file: {}", json_path);
+        println!("{} Creating tools.json file: {}", emoji::WRENCH, json_path);
         match fs::create_dir_all(&tools_path) {
             Ok(_) => {
-                println!("\t File tools.json creation suceeded");
+                println!("\t{} File tools.json creation suceeded", emoji::CHECK);
             }
             Err(_e) => {
-                println!("\t File tools.json creation failed");
+                println!("\t{} File tools.json creation failed", emoji::ERROR);
             }
         }
     }
@@ -77,8 +78,8 @@ fn load_json() -> json::JsonValue {
     let json_path = get_json_path();
     if !Path::new(&json_path).exists() {
         println!(
-            "Configuration file not found, creating new one: {}",
-            json_path
+            "{} Configuration file not found, creating new one: {}",
+            emoji::WARN, json_path
         );
         bootstrap_json(json_path.clone(), get_tools_path());
     }
