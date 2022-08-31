@@ -182,12 +182,15 @@ fn get_install_runner(
 
     println!(
         "{} Installing esp-idf with:
-        - version: {:?}
-        - path: {:?}
-        - targets: {:?}",
+        {} version: {:?}
+        {} path: {:?}
+        {} targets: {:?}",
         emoji::DISC,
+        emoji::DIAMOND,
         version,
+        emoji::DIAMOND,
         installation_path,
+        emoji::DIAMOND,
         targets
     );
 
@@ -346,7 +349,7 @@ fn get_install_runner(
             clap::ErrorKind::InvalidValue,
         ));
     }
-    
+
     println!("{} ESP-IDF installed suscesfully", emoji::CHECK);
     Ok(())
 }
