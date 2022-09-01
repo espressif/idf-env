@@ -157,10 +157,10 @@ fn parse_targets(build_target: &str) -> String {
     let mut espidf_targets: String = String::new();
     for chip in chips {
         if espidf_targets.is_empty() {
-            espidf_targets = espidf_targets + &chip.to_string().to_lowercase().replace("-", "");
+            espidf_targets = espidf_targets + &chip.to_string().to_lowercase().replace('-', "");
         } else {
             espidf_targets =
-                espidf_targets + "," + &chip.to_string().to_lowercase().replace("-", "");
+                espidf_targets + "," + &chip.to_string().to_lowercase().replace('-', "");
         }
     }
     espidf_targets
@@ -176,10 +176,10 @@ fn get_install_runner(
     let targets = parse_targets(targets);
     let minified = matches.is_present("minified");
 
-    let mut installation_path = get_esp_idf_directory(version);
+    let mut path = get_tools_path();
     if matches.is_present("path") {
-        installation_path = matches.value_of("path").unwrap().to_string();
-        env::set_var("IDF_TOOLS_PATH", &installation_path);
+        path = matches.value_of("path").unwrap().to_string();
+        env::set_var("IDF_TOOLS_PATH", &path);
     }
 
     println!(
@@ -192,7 +192,7 @@ fn get_install_runner(
         emoji::DIAMOND,
         version,
         emoji::DIAMOND,
-        installation_path,
+        path,
         emoji::DIAMOND,
         targets,
         emoji::DIAMOND,
@@ -217,9 +217,17 @@ fn get_install_runner(
     let git_path = get_tool_path("idf-git/2.30.1/cmd/git.exe".to_string());
     #[cfg(unix)]
     let git_path = "/usr/bin/git".to_string();
+
+    if !Path::new(&git_path).exists() {
+        return Err(clap::Error::with_description(
+            format!("{} Git not found at {}", emoji::ERROR, git_path).as_str(),
+            clap::ErrorKind::InvalidValue,
+        ));
+    }
     update_property("gitPath", git_path.clone());
 
     println!("{} Cloning esp-idf {}", emoji::DOWNLOAD, version);
+    let installation_path = get_esp_idf_directory(version);
     if !Path::new(&installation_path).exists() {
         let mut arguments: Vec<String> = [].to_vec();
         arguments.push("clone".to_string());
@@ -233,7 +241,7 @@ fn get_install_runner(
         arguments.push("--recursive".to_string());
         arguments.push(format!("{}.git", url));
         arguments.push(installation_path.clone());
-        if let Err(_e) = run_command(git_path.clone(), arguments, "".to_string()) {
+        if let Err(_e) = run_command(git_path, arguments, "".to_string()) {
             return Err(clap::Error::with_description(
                 format!("{} Esp-idf {} clon failed", emoji::ERROR, version).as_str(),
                 clap::ErrorKind::InvalidValue,
@@ -294,6 +302,13 @@ fn get_install_runner(
     let install_script_path = format!("{}/install.bat", installation_path);
     #[cfg(unix)]
     let install_script_path = format!("{}/install.sh", installation_path);
+
+    if !Path::new(&install_script_path).exists() {
+        return Err(clap::Error::with_description(
+            format!("{} ESP-IDF installs script not found at {}", emoji::ERROR, install_script_path).as_str(),
+            clap::ErrorKind::InvalidValue,
+        ));
+    }
     println!(
         "{} Installing esp-idf with: {} for {}",
         emoji::WRENCH,
@@ -301,8 +316,8 @@ fn get_install_runner(
         targets
     );
     let mut arguments: Vec<String> = [].to_vec();
-    arguments.push(targets.to_string());
-    if let Err(_e) = run_command(install_script_path.clone(), arguments, "".to_string()) {
+    arguments.push(targets);
+    if let Err(_e) = run_command(install_script_path, arguments, "".to_string()) {
         return Err(clap::Error::with_description(
             format!("{} Esp-idf {} installation failed", emoji::ERROR, version).as_str(),
             clap::ErrorKind::InvalidValue,
@@ -540,7 +555,7 @@ fn run_idf_command(command: String) {
 #[cfg(windows)]
 fn run_build(
     idf_path: &String,
-    _shell_initializer: &String,
+    _shell_initializer: &str,
 ) -> std::result::Result<(), clap::Error> {
     // println!("Starting process");
     let root = Path::new(&idf_path);

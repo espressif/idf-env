@@ -367,7 +367,6 @@ pub fn prepare_package_strip_prefix(
         }
     }
     if !Path::new(&output_directory).exists() {
-        let package_archive = package_archive.to_string();
         let extension = Path::new(package_archive.as_str())
             .extension()
             .unwrap()
