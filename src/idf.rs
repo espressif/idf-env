@@ -14,6 +14,7 @@ use espflash::Chip;
 use git2::Repository;
 use std::env;
 use std::fmt::format;
+use std::fs;
 use std::io::Read;
 use std::path::Path;
 use std::process::Stdio;
@@ -170,9 +171,11 @@ fn get_install_runner(
     _args: &str,
     matches: &clap::ArgMatches<'_>,
 ) -> std::result::Result<(), clap::Error> {
+    let url: String = "https://github.com/espressif/esp-idf".to_string();
     let version = matches.value_of("version").unwrap();
     let targets = matches.value_of("target").unwrap();
     let targets = parse_targets(targets);
+    let minified = matches.is_present("minified");
 
     let mut installation_path = get_esp_idf_directory(version);
     if matches.is_present("path") {
@@ -184,14 +187,17 @@ fn get_install_runner(
         "{} Installing esp-idf with:
         {} version: {:?}
         {} path: {:?}
-        {} targets: {:?}",
+        {} targets: {:?}
+        {} minified: {:?}",
         emoji::DISC,
         emoji::DIAMOND,
         version,
         emoji::DIAMOND,
         installation_path,
         emoji::DIAMOND,
-        targets
+        targets,
+        emoji::DIAMOND,
+        minified
     );
 
     #[cfg(windows)]
@@ -226,7 +232,7 @@ fn get_install_runner(
         arguments.push("1".to_string());
         arguments.push("--shallow-submodules".to_string());
         arguments.push("--recursive".to_string());
-        arguments.push("https://github.com/espressif/esp-idf.git".to_string());
+        arguments.push(format!("{}.git", url));
         arguments.push(installation_path.clone());
         if let Err(_e) = run_command(git_path.clone(), arguments, "".to_string()) {
             return Err(clap::Error::with_description(
@@ -350,6 +356,15 @@ fn get_install_runner(
         ));
     }
 
+    if minified {
+        println!("{} Minifying esp-idf", emoji::WRENCH);
+        fs::remove_dir_all(format!("{}/dist", get_tools_path()))?;
+        fs::remove_dir_all(format!("{}/docs", installation_path))?;
+        fs::remove_dir_all(format!("{}/examples", installation_path))?;
+        fs::remove_dir_all(format!("{}/tools/esp_app_trace", installation_path))?;
+        fs::remove_dir_all(format!("{}/tools/test_idf_size", installation_path))?;
+    }
+
     println!("{} ESP-IDF installed suscesfully", emoji::CHECK);
     Ok(())
 }
@@ -400,6 +415,13 @@ pub fn get_install_cmd<'a>() -> Command<'a, str> {
                     .long("path")
                     .takes_value(true)
                     .help("ESP-IDF installation directory"),
+            )
+            .arg(
+                Arg::with_name("minified")
+                    .short("m")
+                    .long("minified")
+                    .takes_value(false)
+                    .help("Deletes some ESP-IDF folders to save space."),
             )
             // .arg(
             //     Arg::with_name("verbose")
