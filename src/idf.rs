@@ -1,19 +1,18 @@
 use crate::config::{
-    add_idf_config, get_git_path, get_python_env_path, get_selected_idf_path, get_tool_path,
+    add_idf_config, get_git_path, get_python_env_path, get_selected_idf_path,
     get_tools_path, update_property,
 };
 use crate::emoji;
+#[cfg(windows)]
+use crate::config::get_tool_path;
 #[cfg(windows)]
 use crate::package::prepare_package;
 use crate::shell::run_command;
 use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
-#[cfg(linux)]
-use dirs::home_dir;
 use espflash::Chip;
 use git2::Repository;
 use std::env;
-use std::fmt::format;
 use std::fs;
 use std::io::Read;
 use std::path::Path;
