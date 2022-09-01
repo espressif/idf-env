@@ -250,6 +250,32 @@ fn get_install_runner(
     }
 
     #[cfg(windows)]
+    let install_script_path = format!("{}/install.bat", installation_path);
+    #[cfg(unix)]
+    let install_script_path = format!("{}/install.sh", installation_path);
+
+    if !Path::new(&install_script_path).exists() {
+        return Err(clap::Error::with_description(
+            format!("{} ESP-IDF installs script not found at {}", emoji::ERROR, install_script_path).as_str(),
+            clap::ErrorKind::InvalidValue,
+        ));
+    }
+    println!(
+        "{} Installing esp-idf with: {} for {}",
+        emoji::WRENCH,
+        install_script_path,
+        targets
+    );
+    let mut arguments: Vec<String> = [].to_vec();
+    arguments.push(targets);
+    if let Err(_e) = run_command(install_script_path, arguments, "".to_string()) {
+        return Err(clap::Error::with_description(
+            format!("{} Esp-idf {} installation failed", emoji::ERROR, version).as_str(),
+            clap::ErrorKind::InvalidValue,
+        ));
+    }
+
+    #[cfg(windows)]
     println!("{} Downloading Python package", emoji::DOWNLOAD);
     #[cfg(windows)]
     if let Err(_e) = prepare_package(
@@ -298,34 +324,8 @@ fn get_install_runner(
     #[cfg(unix)]
     let python_path = format!("{}/bin/python", virtual_env_path);
 
-    #[cfg(windows)]
-    let install_script_path = format!("{}/install.bat", installation_path);
-    #[cfg(unix)]
-    let install_script_path = format!("{}/install.sh", installation_path);
-
-    if !Path::new(&install_script_path).exists() {
-        return Err(clap::Error::with_description(
-            format!("{} ESP-IDF installs script not found at {}", emoji::ERROR, install_script_path).as_str(),
-            clap::ErrorKind::InvalidValue,
-        ));
-    }
-    println!(
-        "{} Installing esp-idf with: {} for {}",
-        emoji::WRENCH,
-        install_script_path,
-        targets
-    );
-    let mut arguments: Vec<String> = [].to_vec();
-    arguments.push(targets);
-    if let Err(_e) = run_command(install_script_path, arguments, "".to_string()) {
-        return Err(clap::Error::with_description(
-            format!("{} Esp-idf {} installation failed", emoji::ERROR, version).as_str(),
-            clap::ErrorKind::InvalidValue,
-        ));
-    }
-
     println!("{} Installing idf_tools.py", emoji::WRENCH);
-    let idf_tools_scritp_path = format!("{}/tools/idf_tools.py", path);
+    let idf_tools_scritp_path = format!("{}/tools/idf_tools.py", installation_path);
     let mut arguments: Vec<String> = [].to_vec();
     arguments.push(idf_tools_scritp_path.clone());
     arguments.push("install".to_string());
