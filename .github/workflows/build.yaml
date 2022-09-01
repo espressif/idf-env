@@ -1,0 +1,29 @@
+---
+name: Build check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-idf-env:
+    name: Build idf-env
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          components: clippy, rustfmt, rust-src
+      - name: Build
+        run: cargo build --release --all-features
+      - name: Format check
+        run:  cargo fmt -- --check
+      # Should be enabled once clippy warnings have been cleaned up
+      - name: Clippy check
+        run:  cargo clippy --no-deps -- -Dwarnings
