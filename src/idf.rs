@@ -243,7 +243,7 @@ fn get_install_runner(
         arguments.push(installation_path.clone());
         if let Err(_e) = run_command(git_path, arguments, "".to_string()) {
             return Err(clap::Error::with_description(
-                format!("{} Esp-idf {} clon failed", emoji::ERROR, version).as_str(),
+                format!("{} Branch {} not found in esp-idf(https://github.com/espressif/esp-idf)", emoji::ERROR, version).as_str(),
                 clap::ErrorKind::InvalidValue,
             ));
         }

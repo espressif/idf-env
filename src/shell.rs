@@ -3,6 +3,7 @@ use clap_nested::{Command, Commander, MultiCommand};
 #[cfg(windows)]
 use std::io::Write;
 use std::process::Stdio;
+use crate::emoji;
 
 #[cfg(windows)]
 pub fn run_command(
@@ -35,24 +36,31 @@ pub fn run_command(
     shell: String,
     arguments: Vec<String>,
     command: String,
-) -> std::result::Result<(), clap::Error> {
+) -> std::result::Result< std::process::Output, clap::Error> {
     // Unix - pass command as parameter for initializer
-    let mut arguments = arguments.clone();
+
+    let mut arguments = arguments;
     if !command.is_empty() {
         arguments.push(command);
     }
 
-    //println!("arguments = {:?}", arguments);
-    let child_process = std::process::Command::new(shell)
-        .args(arguments)
+    // println!("arguments = {:?}", arguments);
+    let child_process = std::process::Command::new(shell.clone())
+        .args(arguments.clone())
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()?;
     {}
-    let _output = child_process.wait_with_output()?;
-    // println!("output = {:?}", output);
-    Ok(())
+    let output = child_process.wait_with_output()?;
+    if !output.status.success() {
+        println!("{} Command {} with args {:?} failed. Output: {:#?}", emoji::ERROR, shell, arguments, output);
+        return Err(clap::Error::with_description(
+            "Command failed",
+            clap::ErrorKind::InvalidValue,
+        ));
+    }
+    Ok(output)
 }
 
 #[cfg(windows)]
