@@ -291,8 +291,10 @@ fn get_install_runner(
 
     #[cfg(windows)]
     let python_path = get_tool_path("idf-python/3.8.7/python.exe".to_string());
-    #[cfg(unix)]
+    #[cfg(target_os = "linux")]
     let python_path = "/usr/bin/python".to_string();
+    #[cfg(target_os = "macos")]
+    let python_path = "/usr/local/bin/python".to_string();
     if !Path::new(&python_path).exists() {
         return Err(clap::Error::with_description(
             format!("{} Python not found at {}", emoji::ERROR, python_path).as_str(),
@@ -300,6 +302,11 @@ fn get_install_runner(
         ));
     }
 
+    #[cfg(target_os = "macos")]
+    let virtual_env_path = get_python_env_path("4.4".to_string(), "3.10".to_string());
+    #[cfg(windows)]
+    let virtual_env_path = get_python_env_path("4.4".to_string(), "3.9".to_string());
+    #[cfg(target_os = "linux")]
     let virtual_env_path = get_python_env_path("4.4".to_string(), "3.9".to_string());
 
     if !Path::new(&virtual_env_path).exists() {
