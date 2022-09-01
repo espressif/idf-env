@@ -325,13 +325,13 @@ fn get_install_runner(
     }
 
     println!("{} Installing idf_tools.py", emoji::WRENCH);
-    let idf_tools_scritp_path = format!("{}/tools/idf_tools.py", installation_path);
+    let idf_tools_scritp_path = format!("{}/tools/idf_tools.py", path);
     let mut arguments: Vec<String> = [].to_vec();
     arguments.push(idf_tools_scritp_path.clone());
     arguments.push("install".to_string());
-    if let Err(_e) = run_command(python_path.clone(), arguments, "".to_string()) {
+    if let Err(e) = run_command(python_path.clone(), arguments, "".to_string()) {
         return Err(clap::Error::with_description(
-            format!("{} {} install failed", emoji::ERROR, idf_tools_scritp_path).as_str(),
+            format!("{} {} install failed: {}", emoji::ERROR, idf_tools_scritp_path, e).as_str(),
             clap::ErrorKind::InvalidValue,
         ));
     }
