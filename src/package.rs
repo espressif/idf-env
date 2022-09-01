@@ -1,4 +1,5 @@
 use crate::config::{get_dist_path, get_tool_path};
+use crate::emoji;
 use anyhow::Context;
 use flate2::read::GzDecoder;
 use std::fs::File;
@@ -224,7 +225,7 @@ async fn download_zip(url: String, output: String) -> Result<()> {
         println!("Using cached archive: {}", output);
         return Ok(());
     }
-    println!("Downloading {} to {}", url, output);
+    println!("{} Downloading {} to {}", emoji::DOWNLOAD, url, output);
     fetch_url(url, output).await
 }
 
@@ -245,34 +246,25 @@ pub fn prepare_package(
     output_directory: String,
 ) -> Result<()> {
     if Path::new(&output_directory).exists() {
-        println!("Using cached directory: {}", output_directory);
+        println!("{} Using cached directory: {}", emoji::INFO, output_directory);
         return Ok(());
     }
 
     let dist_path = get_dist_path("");
     if !Path::new(&dist_path).exists() {
-        println!("Creating dist directory at {}", dist_path);
-        match fs::create_dir_all(&dist_path) {
-            Ok(_) => {
-                println!("Succeeded");
-            }
-            Err(_e) => {
-                println!("Failed");
-            }
-        }
+        println!("{} Creating dist directory at {}", emoji::WRENCH, dist_path);
+        fs::create_dir_all(&dist_path)?;
     }
     let package_archive = get_dist_path(package_archive);
-    println!("Downloading file {} from {}", package_archive.clone(), package_url);
-    match download_package(package_url, package_archive.clone()) {
-        Ok(_) => {
-            println!("Succeeded");
-        }
-        Err(_e) => {
-            println!("Failed");
-        }
-    }
+    println!(
+        "{} Downloading file {} from {}",
+        emoji::DOWNLOAD,
+        package_archive.clone(),
+        package_url
+    );
+    download_package(package_url, package_archive.clone())?;
 
-    println!("Extracting to {}", output_directory);
+    println!("{} Extracting to {}", emoji::WRENCH, output_directory);
     let extension = Path::new(package_archive.as_str())
         .extension()
         .unwrap()

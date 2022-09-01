@@ -81,7 +81,8 @@ fn load_json() -> json::JsonValue {
             emoji::WARN,
             json_path
         );
-        bootstrap_json(json_path.clone(), get_tools_path());
+        bootstrap_json(json_path.clone(), get_tools_path())
+            .unwrap_or_else(|e| panic!("{} {}", emoji::ERROR, e));
     }
 
     let content = fs::read_to_string(json_path).expect("Failure");
