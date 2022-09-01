@@ -1,10 +1,10 @@
-use crate::config::{
-    add_idf_config, get_git_path, get_python_env_path, get_selected_idf_path,
-    get_tools_path, update_property,
-};
-use crate::emoji;
 #[cfg(windows)]
 use crate::config::get_tool_path;
+use crate::config::{
+    add_idf_config, get_git_path, get_python_env_path, get_selected_idf_path, get_tools_path,
+    update_property,
+};
+use crate::emoji;
 #[cfg(windows)]
 use crate::package::prepare_package;
 use crate::shell::run_command;
@@ -243,7 +243,12 @@ fn get_install_runner(
         arguments.push(installation_path.clone());
         if let Err(_e) = run_command(git_path, arguments, "".to_string()) {
             return Err(clap::Error::with_description(
-                format!("{} Branch {} not found in esp-idf(https://github.com/espressif/esp-idf)", emoji::ERROR, version).as_str(),
+                format!(
+                    "{} Branch {} not found in esp-idf(https://github.com/espressif/esp-idf)",
+                    emoji::ERROR,
+                    version
+                )
+                .as_str(),
                 clap::ErrorKind::InvalidValue,
             ));
         }
@@ -256,7 +261,12 @@ fn get_install_runner(
 
     if !Path::new(&install_script_path).exists() {
         return Err(clap::Error::with_description(
-            format!("{} ESP-IDF installs script not found at {}", emoji::ERROR, install_script_path).as_str(),
+            format!(
+                "{} ESP-IDF installs script not found at {}",
+                emoji::ERROR,
+                install_script_path
+            )
+            .as_str(),
             clap::ErrorKind::InvalidValue,
         ));
     }
@@ -338,7 +348,13 @@ fn get_install_runner(
     arguments.push("install".to_string());
     if let Err(e) = run_command(python_path.clone(), arguments, "".to_string()) {
         return Err(clap::Error::with_description(
-            format!("{} {} install failed: {}", emoji::ERROR, idf_tools_scritp_path, e).as_str(),
+            format!(
+                "{} {} install failed: {}",
+                emoji::ERROR,
+                idf_tools_scritp_path,
+                e
+            )
+            .as_str(),
             clap::ErrorKind::InvalidValue,
         ));
     }
@@ -560,10 +576,7 @@ fn run_idf_command(command: String) {
 }
 
 #[cfg(windows)]
-fn run_build(
-    idf_path: &String,
-    _shell_initializer: &str,
-) -> std::result::Result<(), clap::Error> {
+fn run_build(idf_path: &String, _shell_initializer: &str) -> std::result::Result<(), clap::Error> {
     // println!("Starting process");
     let root = Path::new(&idf_path);
     assert!(env::set_current_dir(&root).is_ok());
@@ -836,4 +849,39 @@ pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
         .description("Maintain configuration of ESP-IDF installations.");
 
     multi_cmd
+}
+
+mod tests {
+    use crate::config::get_tools_path;
+    use crate::idf::get_esp_idf_directory;
+    use crate::idf::parse_targets;
+    #[test]
+    fn test_parse_targets() {
+        assert_eq!(parse_targets(""), "");
+        assert_eq!(parse_targets("esp32"), "esp32");
+        assert_eq!(parse_targets("esp32 esp32s2"), "esp32,esp32s2");
+        assert_eq!(
+            parse_targets("esp32 esp32s2,esp32s3 ,esp32c3"),
+            "esp32,esp32s2,esp32s3,esp32c3"
+        );
+        assert_eq!(parse_targets("all"), "esp32,esp32s2,esp32s3,esp32c3");
+    }
+    #[test]
+    fn test_get_esp_idf_directory() {
+        assert_eq!(
+            get_esp_idf_directory("release/v4.4"),
+            format!(
+                "{}/frameworks/esp-idf-release-v4.4",
+                get_tools_path()
+            )
+        );
+        assert_eq!(
+            get_esp_idf_directory("v4.4.2"),
+            format!("{}/frameworks/esp-idf-v4.4.2", get_tools_path())
+        );
+        assert_eq!(
+            get_esp_idf_directory("master"),
+            format!("{}/frameworks/esp-idf-master", get_tools_path())
+        );
+    }
 }
