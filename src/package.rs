@@ -246,7 +246,11 @@ pub fn prepare_package(
     output_directory: String,
 ) -> Result<()> {
     if Path::new(&output_directory).exists() {
-        println!("{} Using cached directory: {}", emoji::INFO, output_directory);
+        println!(
+            "{} Using cached directory: {}",
+            emoji::INFO,
+            output_directory
+        );
         return Ok(());
     }
 

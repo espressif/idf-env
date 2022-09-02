@@ -870,10 +870,7 @@ mod tests {
     fn test_get_esp_idf_directory() {
         assert_eq!(
             get_esp_idf_directory("release/v4.4"),
-            format!(
-                "{}/frameworks/esp-idf-release-v4.4",
-                get_tools_path()
-            )
+            format!("{}/frameworks/esp-idf-release-v4.4", get_tools_path())
         );
         assert_eq!(
             get_esp_idf_directory("v4.4.2"),
