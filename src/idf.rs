@@ -291,7 +291,7 @@ fn get_install_runner(
     if let Err(_e) = prepare_package(
         "https://dl.espressif.com/dl/idf-python/idf-python-3.8.7-embed-win64.zip",
         "idf-python-3.8.7-embed-win64.zip",
-        get_tool_path("idf-python/3.8.7"),
+        &get_tool_path("idf-python/3.8.7"),
     ) {
         return Err(clap::Error::with_description(
             format!("{} Python package download failed", emoji::ERROR).as_str(),

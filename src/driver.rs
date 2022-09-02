@@ -172,7 +172,7 @@ fn get_install_runner(
 }
 
 #[cfg(windows)]
-pub fn get_driver_path(driver_name: String) -> String {
+pub fn get_driver_path(driver_name: &str) -> String {
     let drivers_path = config::get_tool_path("idf-driver");
     format!("{}/{}", drivers_path, driver_name)
 }
@@ -192,10 +192,9 @@ fn download_drivers(
 ) -> std::result::Result<(), clap::Error> {
     if _matches.is_present("silabs") {
         match prepare_package(
-            "https://www.silabs.com/documents/public/software/CP210x_Universal_Windows_Driver.zip"
-                .to_string(),
+            "https://www.silabs.com/documents/public/software/CP210x_Universal_Windows_Driver.zip",
             "cp210x.zip",
-            get_driver_path("silabs-2021-05-03".to_string()),
+            &get_driver_path("silabs-2021-05-03"),
         ) {
             Ok(_) => {
                 println!("Ok");
@@ -207,10 +206,9 @@ fn download_drivers(
     }
     if _matches.is_present("ftdi") {
         match prepare_package(
-            "https://www.ftdichip.com/Drivers/CDM/CDM%20v2.12.28%20WHQL%20Certified.zip"
-                .to_string(),
+            "https://www.ftdichip.com/Drivers/CDM/CDM%20v2.12.28%20WHQL%20Certified.zip",
             "ftdi.zip",
-            get_driver_path("ftdi-2021-05-03".to_string()),
+            &get_driver_path("ftdi-2021-05-03"),
         ) {
             Ok(_) => {
                 println!("Ok");
@@ -222,10 +220,9 @@ fn download_drivers(
     }
     if _matches.is_present("espressif") {
         match prepare_package(
-            "https://dl.espressif.com/dl/idf-driver/idf-driver-esp32-usb-jtag-2021-07-15.zip"
-                .to_string(),
+            "https://dl.espressif.com/dl/idf-driver/idf-driver-esp32-usb-jtag-2021-07-15.zip",
             "idf-driver-esp32-usb-jtag-2021-07-15.zip",
-            get_driver_path("idf-driver-esp32-usb-jtag-2021-07-15".to_string()),
+            &get_driver_path("idf-driver-esp32-usb-jtag-2021-07-15"),
         ) {
             Ok(_) => {
                 println!("Ok");
@@ -237,9 +234,9 @@ fn download_drivers(
     }
     if _matches.is_present("wch") {
         match prepare_package(
-            "https://www.wch.cn/downloads/file/314.html".to_string(),
+            "https://www.wch.cn/downloads/file/314.html",
             "whc-ch343ser.zip",
-            get_driver_path("whc-ch343ser-2022-08-02".to_string()),
+            &get_driver_path("whc-ch343ser-2022-08-02"),
         ) {
             Ok(_) => {
                 println!("Ok");
@@ -272,24 +269,22 @@ fn get_install_runner(
 
     if windows::is_app_elevated() {
         if _matches.is_present("silabs") {
-            install_driver(get_driver_path(
-                "silabs-2021-05-03/silabser.inf".to_string(),
-            ));
+            install_driver(get_driver_path("silabs-2021-05-03/silabser.inf"));
         }
 
         if _matches.is_present("ftdi") {
-            install_driver(get_driver_path("ftdi-2021-05-03/ftdiport.inf".to_string()));
+            install_driver(get_driver_path("ftdi-2021-05-03/ftdiport.inf"));
         }
 
         if _matches.is_present("espressif") {
             install_driver(get_driver_path(
-                "idf-driver-esp32-usb-jtag-2021-07-15/usb_jtag_debug_unit.inf".to_string(),
+                "idf-driver-esp32-usb-jtag-2021-07-15/usb_jtag_debug_unit.inf",
             ));
         }
 
         if _matches.is_present("wch") {
             install_driver(get_driver_path(
-                "whc-ch343ser-2022-08-02/CH343SER/Driver/CH343SER.INF".to_string(),
+                "whc-ch343ser-2022-08-02/CH343SER/Driver/CH343SER.INF",
             ));
         }
 
