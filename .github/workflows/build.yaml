@@ -30,6 +30,5 @@ jobs:
         run:  cargo fmt -- --check
       - name: Run tests
         run:  cargo test
-      Should be enabled once clippy warnings have been cleaned up
       - name: Clippy check
         run:  cargo clippy --no-deps -- -Dwarnings
