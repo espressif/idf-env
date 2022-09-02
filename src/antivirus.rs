@@ -18,9 +18,8 @@ fn get_antivirus_property(property_name: String, include_inactive: bool) -> Resu
     use wmi::Variant;
     use wmi::*;
 
-    let wmi_con =
-        WMIConnection::with_namespace_path("ROOT\\SecurityCenter2", COMLibrary::new()?.into())?;
-    let query = format!("SELECT * FROM AntiVirusProduct");
+    let wmi_con = WMIConnection::with_namespace_path("ROOT\\SecurityCenter2", COMLibrary::new()?)?;
+    let query = "SELECT * FROM AntiVirusProduct".to_string();
     let products = wmi_con.raw_query(query)?;
     let mut is_first = true;
     for antivirus_product in products {

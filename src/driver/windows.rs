@@ -82,11 +82,10 @@ pub fn run_elevated(arguments: Vec<String>) {
     // Based on https://github.com/rust-lang/rustup/pull/1117/files
     let current_exe = std::env::current_exe().unwrap().display().to_string();
     let argument_string = arguments
-        .clone()
         .into_iter()
-        .map(|i| format!("{} ", i.to_string()))
+        .map(|i| format!("{} ", i))
         .collect::<String>();
-    let parameters_string = format!("{}", argument_string);
+    let parameters_string = argument_string;
     let operation = to_wchar("runas");
     let path = to_wchar(&current_exe);
     let parameters = to_wchar(&parameters_string);
@@ -107,13 +106,7 @@ pub fn run_elevated(arguments: Vec<String>) {
             sw_showminnoactive,
         )
     };
-
-    match result {
-        _ => {
-            println!("Exit code: {:?}", result);
-        }
-    }
-
+    println!("Exit code: {:?}", result);
     // pub fn ShellExecuteA(
     //     hwnd: HWND,
     //     lpOperation: LPCSTR,

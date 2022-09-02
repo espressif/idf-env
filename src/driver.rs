@@ -28,7 +28,7 @@ fn get_driver_property(property_name: String, filter: String) -> Result<()> {
     use wmi::Variant;
     use wmi::*;
 
-    let wmi_con = WMIConnection::with_namespace_path("ROOT\\CIMV2", COMLibrary::new()?.into())?;
+    let wmi_con = WMIConnection::with_namespace_path("ROOT\\CIMV2", COMLibrary::new()?)?;
     let query = format!(
         "SELECT {} FROM Win32_PnPEntity WHERE {}",
         property_name, filter
@@ -106,7 +106,7 @@ fn install_driver(driver_inf: String) {
     //     NULL,
     //     &DestinationInfFileNameComponent))
     // Rust: https://docs.rs/winapi/0.3.9/winapi/um/setupapi/fn.SetupCopyOEMInfW.html
-    let driver_inf = driver_inf.replace("/", "\\");
+    let driver_inf = driver_inf.replace('/', "\\");
     print!("Installing driver with INF {} ", driver_inf);
     let mut destination_inf_filename_vec: Vec<winapi::um::winnt::WCHAR> = vec![0; 255];
     let destination_inf_filename: winapi::um::winnt::PWSTR =
@@ -131,7 +131,7 @@ fn install_driver(driver_inf: String) {
         let error_code = winapi::um::errhandlingapi::GetLastError();
         let destination_oem =
             WideCString::from_vec_truncate(destination_inf_filename_vec).to_string_lossy();
-        if destination_oem.len() != 0 {
+        if !destination_oem.is_empty() {
             print!("-> {} ", destination_oem);
         }
         print!("... ");
@@ -292,18 +292,16 @@ fn get_install_runner(
             println!("Process finished...");
             thread::sleep(time::Duration::from_millis(100000));
         }
-    } else {
-        if !windows::is_app_elevated() {
-            match windows::run_self_elevated_with_extra_argument("--no-download".to_string()) {
-                Ok(_) => {
-                    println!("Ok");
-                }
-                Err(_e) => {
-                    println!("Failed");
-                }
+    } else if !windows::is_app_elevated() {
+        match windows::run_self_elevated_with_extra_argument("--no-download".to_string()) {
+            Ok(_) => {
+                println!("Ok");
             }
-            return Ok(());
+            Err(_e) => {
+                println!("Failed");
+            }
         }
+        return Ok(());
     }
     Ok(())
 }
