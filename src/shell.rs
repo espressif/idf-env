@@ -45,7 +45,7 @@ pub fn run_command(
     }
 
     // println!("arguments = {:?}", arguments);
-    let child_process = std::process::Command::new(shell.clone())
+    let child_process = std::process::Command::new(shell)
         .args(arguments.clone())
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
@@ -108,7 +108,7 @@ fn append_path(original_path: &str, new_path: &str) -> String {
         return original_path.to_string();
     }
 
-    if original_path.chars().last().unwrap() != ';' {
+    if !original_path.ends_with(';') {
         return format!("{};{};", original_path, new_path);
     }
 

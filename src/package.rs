@@ -263,7 +263,7 @@ pub fn prepare_package(
     println!(
         "{} Downloading file {} from {}",
         emoji::DOWNLOAD,
-        package_archive.clone(),
+        package_archive,
         package_url
     );
     download_package(package_url.to_string(), package_archive.to_string())?;
@@ -276,7 +276,7 @@ pub fn prepare_package(
         .unwrap();
     match extension {
         "zip" => {
-            unzip(&package_archive, &output_directory).unwrap();
+            unzip(&package_archive, output_directory).unwrap();
         }
         "gz" => {
             match fs::create_dir_all(&output_directory) {

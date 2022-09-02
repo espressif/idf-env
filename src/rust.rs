@@ -330,7 +330,7 @@ fn install_extra_crates(extra_crates: &Vec<RustCrate>) {
             println!("{} install {}", cargo_path, extra_crate.name);
             match std::process::Command::new(cargo_path)
                 .arg("install")
-                .arg(extra_crate.name.to_string())
+                .arg(&extra_crate.name)
                 .stdout(Stdio::piped())
                 .output()
             {
@@ -352,7 +352,7 @@ fn install_extra_crates(extra_crates: &Vec<RustCrate>) {
                         get_tool_path(&extra_crate.name),
                         extra_crate.dist_bin
                     );
-                    match copy(source.clone(), extra_crate.bin.to_string()) {
+                    match copy(source.clone(), &extra_crate.bin) {
                         Ok(_) => {
                             println!("Create {} installed.", extra_crate.name);
                         }
@@ -781,7 +781,7 @@ pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
         // Optionally specify a description
         .description("Maintain Rust environment for Xtensa.");
 
-    return multi_cmd;
+    multi_cmd
 }
 
 #[cfg(test)]

@@ -109,7 +109,7 @@ pub fn get_property_with_idf_id(property_name: &str, idf_id: &str) -> String {
 
 pub fn get_property_with_path(property_name: &str, idf_path: &str) -> String {
     let parsed_json = load_json();
-    let idf_id = get_idf_id(&idf_path);
+    let idf_id = get_idf_id(idf_path);
     parsed_json["idfInstalled"][idf_id][property_name].to_string()
 }
 
@@ -128,7 +128,7 @@ pub fn update_property(property_name: &str, property_value: &str) {
 }
 
 pub fn add_idf_config(idf_path: &str, version: &str, python_path: &str) {
-    let idf_id = get_idf_id(&idf_path);
+    let idf_id = get_idf_id(idf_path);
     let _data = json::object! {
         version: version,
         python: python_path,
