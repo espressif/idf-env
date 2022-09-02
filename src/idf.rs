@@ -847,6 +847,7 @@ pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
     multi_cmd
 }
 
+#[cfg(test)]
 mod tests {
     use crate::config::get_tools_path;
     use crate::idf::get_esp_idf_directory;
