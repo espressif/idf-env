@@ -10,10 +10,10 @@ pub fn run_command(
     shell: &str,
     arguments: Vec<String>,
     command: String,
-) -> std::result::Result<(), clap::Error> {
+) -> std::result::Result<std::process::Output, clap::Error> {
     // println!("arguments = {:?}", arguments);
     let mut child_process = std::process::Command::new(shell)
-        .args(arguments)
+        .args(&arguments)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -24,11 +24,21 @@ pub fn run_command(
         // Close stdin to finish and avoid indefinite blocking
         drop(child_stdin);
     }
-    let _output = child_process.wait_with_output()?;
-
-    // println!("output = {:?}", _output);
-
-    Ok(())
+    let output = child_process.wait_with_output()?;
+    if !output.status.success() {
+        println!(
+            "{} Command {} with args {:?} failed. Output: {:#?}",
+            emoji::ERROR,
+            shell,
+            arguments,
+            output
+        );
+        return Err(clap::Error::with_description(
+            "Command failed",
+            clap::ErrorKind::InvalidValue,
+        ));
+    }
+    Ok(output)
 }
 
 #[cfg(unix)]
@@ -38,7 +48,6 @@ pub fn run_command(
     command: String,
 ) -> std::result::Result<std::process::Output, clap::Error> {
     // Unix - pass command as parameter for initializer
-
     let mut arguments = arguments;
     if !command.is_empty() {
         arguments.push(command);
@@ -46,7 +55,7 @@ pub fn run_command(
 
     // println!("arguments = {:?}", arguments);
     let child_process = std::process::Command::new(shell)
-        .args(arguments.clone())
+        .args(&arguments)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
