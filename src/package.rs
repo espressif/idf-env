@@ -305,7 +305,7 @@ pub fn prepare_single_binary(
     binary_name: &str,
     output_directory: &str,
 ) -> String {
-    let tool_path = get_tool_path(output_directory.to_string());
+    let tool_path = get_tool_path(output_directory);
     let binary_path = format!("{}/{}", tool_path, binary_name);
 
     if Path::new(&binary_path).exists() {

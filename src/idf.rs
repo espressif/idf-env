@@ -313,11 +313,11 @@ fn get_install_runner(
     }
 
     #[cfg(target_os = "macos")]
-    let virtual_env_path = get_python_env_path("4.4".to_string(), "3.10".to_string());
+    let virtual_env_path = get_python_env_path("4.4", "3.10");
     #[cfg(windows)]
-    let virtual_env_path = get_python_env_path("4.4".to_string(), "3.9".to_string());
+    let virtual_env_path = get_python_env_path("4.4", "3.9");
     #[cfg(target_os = "linux")]
-    let virtual_env_path = get_python_env_path("4.4".to_string(), "3.9".to_string());
+    let virtual_env_path = get_python_env_path("4.4", "3.9");
 
     if !Path::new(&virtual_env_path).exists() {
         println!(
@@ -399,7 +399,7 @@ fn get_install_runner(
         fs::remove_dir_all(format!("{}/docs", installation_path))?;
         fs::remove_dir_all(format!("{}/examples", installation_path))?;
         fs::remove_dir_all(format!("{}/tools/esp_app_trace", installation_path))?;
-        fs::remove_dir_all(format!("{}/tools/test_idf_size", installation_path))?;
+        fs::remove_dir_all(format!("{installation_path}/tools/test_idf_size"))?;
     }
 
     println!("{} ESP-IDF installed suscesfully", emoji::CHECK);

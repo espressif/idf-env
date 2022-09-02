@@ -15,7 +15,7 @@ pub fn get_tools_path() -> String {
         .unwrap_or_else(|_e| home_dir().unwrap().display().to_string() + "/.espressif")
 }
 
-pub fn get_tool_path(tool_name: String) -> String {
+pub fn get_tool_path(tool_name: &str) -> String {
     let tools_path = get_tools_path();
     format!("{}/tools/{}", tools_path, tool_name)
 }
@@ -25,7 +25,7 @@ pub fn get_dist_path(tool_name: &str) -> String {
     format!("{}/dist/{}", tools_path, tool_name)
 }
 
-pub fn get_python_env_path(idf_version: String, python_version: String) -> String {
+pub fn get_python_env_path(idf_version: &str, python_version: &str) -> String {
     let tools_path = get_tools_path();
     format!(
         "{}/python_env/idf{}_py{}_env",

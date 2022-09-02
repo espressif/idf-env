@@ -202,7 +202,7 @@ fn build_rust_toolchain(
     );
     let idf_tool_xtensa_elf_clang = format!(
         "{}/{}-{}",
-        get_tool_path("xtensa-esp32-elf-clang".to_string()),
+        get_tool_path("xtensa-esp32-elf-clang"),
         llvm_release,
         arch
     );
@@ -215,8 +215,7 @@ fn build_rust_toolchain(
         "https://github.com/esp-rs/rust-build/releases/download/mingw-12/{}",
         mingw_dist_file
     );
-    let mingw_destination_directory =
-        format!("{}/{}", get_tool_path("mingw".to_string()), mingw_release);
+    let mingw_destination_directory = format!("{}/{}", get_tool_path("mingw"), mingw_release);
 
     RustToolchain {
         arch: arch.to_string(),
@@ -225,9 +224,9 @@ fn build_rust_toolchain(
         //artifact_file_extension,
         //version: version.to_string(),
         rust_dist,
-        rust_dist_temp: get_tool_path("rust".to_string()),
+        rust_dist_temp: get_tool_path("rust"),
         rust_src_dist,
-        rust_src_dist_temp: get_tool_path("rust-src".to_string()),
+        rust_src_dist_temp: get_tool_path("rust-src"),
         rust_src_dist_file,
         rust_dist_file,
         rust_dist_url,
@@ -345,7 +344,7 @@ fn install_extra_crates(extra_crates: &Vec<RustCrate>) {
             }
         } else {
             // Binary crate is available donwload it
-            let tmp_path = get_tool_path(extra_crate.name.to_string());
+            let tmp_path = get_tool_path(&extra_crate.name);
             match prepare_package(
                 extra_crate.url.to_string(),
                 &extra_crate.dist_file,
@@ -354,7 +353,7 @@ fn install_extra_crates(extra_crates: &Vec<RustCrate>) {
                 Ok(_) => {
                     let source = format!(
                         "{}/{}",
-                        get_tool_path(extra_crate.name.to_string()),
+                        get_tool_path(&extra_crate.name),
                         extra_crate.dist_bin
                     );
                     match copy(source.clone(), extra_crate.bin.to_string()) {

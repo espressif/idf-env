@@ -6,7 +6,7 @@ use clap_nested::{Command, Commander, MultiCommand};
 use walkdir::WalkDir;
 
 fn get_tool_files(tool_name: String, filter: String) -> Vec<String> {
-    let tool_path = config::get_tool_path(tool_name);
+    let tool_path = config::get_tool_path(&tool_name);
     let mut result_list: Vec<String> = [].to_vec();
     for e in WalkDir::new(tool_path).into_iter().filter_map(|e| e.ok()) {
         let metadata = e.metadata().unwrap();
