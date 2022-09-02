@@ -170,7 +170,7 @@ fn get_install_runner(
     _args: &str,
     matches: &clap::ArgMatches<'_>,
 ) -> std::result::Result<(), clap::Error> {
-    let url: String = "https://github.com/espressif/esp-idf".to_string();
+    let url = "https://github.com/espressif/esp-idf";
     let version = matches.value_of("version").unwrap();
     let targets = matches.value_of("target").unwrap();
     let targets = parse_targets(targets);
@@ -203,9 +203,9 @@ fn get_install_runner(
     println!("{} Downloading Git package", emoji::DOWNLOAD);
     #[cfg(windows)]
     if let Err(_e) = prepare_package(
-        "https://dl.espressif.com/dl/idf-git/idf-git-2.30.1-win64.zip".to_string(),
+        "https://dl.espressif.com/dl/idf-git/idf-git-2.30.1-win64.zip",
         "idf-git-2.30.1-win64.zip",
-        get_tool_path("idf-git/2.30.1".to_string()),
+        &get_tool_path("idf-git/2.30.1"),
     ) {
         return Err(clap::Error::with_description(
             format!("{} Git package download failed", emoji::ERROR).as_str(),
@@ -214,7 +214,7 @@ fn get_install_runner(
     }
 
     #[cfg(windows)]
-    let git_path = get_tool_path("idf-git/2.30.1/cmd/git.exe".to_string());
+    let git_path = get_tool_path("idf-git/2.30.1/cmd/git.exe");
     #[cfg(unix)]
     let git_path = "/usr/bin/git".to_string();
 
@@ -241,7 +241,7 @@ fn get_install_runner(
         arguments.push("--recursive".to_string());
         arguments.push(format!("{}.git", url));
         arguments.push(installation_path.clone());
-        if let Err(_e) = run_command(git_path, arguments, "".to_string()) {
+        if let Err(_e) = run_command(&git_path, arguments, "".to_string()) {
             return Err(clap::Error::with_description(
                 format!(
                     "{} Branch {} not found in esp-idf(https://github.com/espressif/esp-idf)",
@@ -278,7 +278,7 @@ fn get_install_runner(
     );
     let mut arguments: Vec<String> = [].to_vec();
     arguments.push(targets);
-    if let Err(_e) = run_command(install_script_path, arguments, "".to_string()) {
+    if let Err(_e) = run_command(&install_script_path, arguments, "".to_string()) {
         return Err(clap::Error::with_description(
             format!("{} Esp-idf {} installation failed", emoji::ERROR, version).as_str(),
             clap::ErrorKind::InvalidValue,
@@ -289,9 +289,9 @@ fn get_install_runner(
     println!("{} Downloading Python package", emoji::DOWNLOAD);
     #[cfg(windows)]
     if let Err(_e) = prepare_package(
-        "https://dl.espressif.com/dl/idf-python/idf-python-3.8.7-embed-win64.zip".to_string(),
+        "https://dl.espressif.com/dl/idf-python/idf-python-3.8.7-embed-win64.zip",
         "idf-python-3.8.7-embed-win64.zip",
-        get_tool_path("idf-python/3.8.7".to_string()),
+        get_tool_path("idf-python/3.8.7"),
     ) {
         return Err(clap::Error::with_description(
             format!("{} Python package download failed", emoji::ERROR).as_str(),
@@ -329,7 +329,7 @@ fn get_install_runner(
         arguments.push("-m".to_string());
         arguments.push("virtualenv".to_string());
         arguments.push(virtual_env_path.clone());
-        if let Err(_e) = run_command(python_path, arguments, "".to_string()) {
+        if let Err(_e) = run_command(&python_path, arguments, "".to_string()) {
             return Err(clap::Error::with_description(
                 format!("{} Virtual environment creation failed", emoji::ERROR).as_str(),
                 clap::ErrorKind::InvalidValue,
@@ -346,7 +346,7 @@ fn get_install_runner(
     let mut arguments: Vec<String> = [].to_vec();
     arguments.push(idf_tools_scritp_path.clone());
     arguments.push("install".to_string());
-    if let Err(e) = run_command(python_path.clone(), arguments, "".to_string()) {
+    if let Err(e) = run_command(&python_path, arguments, "".to_string()) {
         return Err(clap::Error::with_description(
             format!(
                 "{} {} install failed: {}",
@@ -363,7 +363,7 @@ fn get_install_runner(
     let mut arguments: Vec<String> = [].to_vec();
     arguments.push(idf_tools_scritp_path.clone());
     arguments.push("install-python-env".to_string());
-    if let Err(_e) = run_command(python_path.clone(), arguments, "".to_string()) {
+    if let Err(_e) = run_command(&python_path, arguments, "".to_string()) {
         return Err(clap::Error::with_description(
             format!(
                 "{} {} install-python-env failed",
@@ -382,7 +382,7 @@ fn get_install_runner(
     arguments.push(idf_tools_scritp_path);
     arguments.push("install".to_string());
     arguments.push("cmake".to_string());
-    if let Err(_e) = run_command(python_path, arguments, "".to_string()) {
+    if let Err(_e) = run_command(&python_path, arguments, "".to_string()) {
         return Err(clap::Error::with_description(
             format!("{} CMake installation failed", emoji::ERROR).as_str(),
             clap::ErrorKind::InvalidValue,
@@ -561,7 +561,7 @@ fn run_build(idf_path: &String, shell_initializer: &str) -> std::result::Result<
 }
 
 fn run_idf_command(command: String) {
-    match run_command(get_shell(), get_initializer_arguments(), command) {
+    match run_command(&get_shell(), get_initializer_arguments(), command) {
         Ok(_) => {
             println!("Ok");
         }

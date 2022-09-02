@@ -192,7 +192,7 @@ pub fn get_cmd<'a>() -> Command<'a, str> {
 fn open_idf_config() {
     let mut arguments: Vec<String> = [].to_vec();
     arguments.push(get_json_path());
-    match run_command("notepad".to_string(), arguments, "".to_string()) {
+    match run_command("notepad", arguments, "".to_string()) {
         Ok(_) => {
             println!("Ok");
         }

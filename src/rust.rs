@@ -483,7 +483,7 @@ fn install_rust_toolchain(toolchain: &RustToolchain) {
                 toolchain.destination_dir
             ));
 
-            match run_command("/bin/bash".to_string(), arguments.clone(), "".to_string()) {
+            match run_command("/bin/bash", arguments.clone(), "".to_string()) {
                 Ok(_) => {
                     println!("Command succeeded");
                 }
@@ -514,7 +514,7 @@ fn install_rust_toolchain(toolchain: &RustToolchain) {
                 toolchain.destination_dir
             ));
 
-            match run_command("/bin/bash".to_string(), arguments, "".to_string()) {
+            match run_command("/bin/bash", arguments, "".to_string()) {
                 Ok(_) => {
                     println!("Command succeeded");
                 }

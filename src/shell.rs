@@ -33,7 +33,7 @@ pub fn run_command(
 
 #[cfg(unix)]
 pub fn run_command(
-    shell: String,
+    shell: &str,
     arguments: Vec<String>,
     command: String,
 ) -> std::result::Result<std::process::Output, clap::Error> {
