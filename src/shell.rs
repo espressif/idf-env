@@ -118,9 +118,11 @@ fn append_path(original_path: &str, new_path: &str) -> String {
 
 #[cfg(test)]
 mod tests {
+    #[cfg(windows)]
     use crate::shell::append_path;
 
     #[test]
+    #[cfg(windows)]
     fn test_append_path() {
         assert_eq!(append_path("", ""), "");
         assert_eq!(append_path("a", ""), "a");

@@ -314,9 +314,7 @@ fn get_install_runner(
 
     #[cfg(target_os = "macos")]
     let virtual_env_path = get_python_env_path("4.4", "3.10");
-    #[cfg(windows)]
-    let virtual_env_path = get_python_env_path("4.4", "3.9");
-    #[cfg(target_os = "linux")]
+    #[cfg(not(target_os = "macos"))]
     let virtual_env_path = get_python_env_path("4.4", "3.9");
 
     if !Path::new(&virtual_env_path).exists() {
