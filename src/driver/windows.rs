@@ -144,7 +144,8 @@ pub fn run_with_stdin(command: String, stdin: String) -> Result<bool, Error> {
         let child_stdin = child_process.stdin.as_mut().unwrap();
         child_stdin.write_all(stdin.as_bytes())?;
         // Close stdin to finish and avoid indefinite blocking
-        drop(child_stdin);
+        // TODO: Does this doe anything? Its dropping a reference. Clippy was complaingin
+        // drop(child_stdin);
     }
     Ok(true)
 }

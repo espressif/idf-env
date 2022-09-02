@@ -22,7 +22,8 @@ pub fn run_command(
         let child_stdin = child_process.stdin.as_mut().unwrap();
         child_stdin.write_all(&*command.into_bytes())?;
         // Close stdin to finish and avoid indefinite blocking
-        drop(child_stdin);
+        // TODO: Does this doe anything? Its dropping a reference. Clippy was complaingin
+        // drop(child_stdin);
     }
     let output = child_process.wait_with_output()?;
     if !output.status.success() {
