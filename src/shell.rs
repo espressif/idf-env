@@ -194,5 +194,5 @@ pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
         // Optionally specify a description
         .description("Detection of Antivirus and handling exception registration.");
 
-    return multi_cmd;
+    multi_cmd
 }
