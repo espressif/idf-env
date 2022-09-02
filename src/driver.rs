@@ -361,7 +361,7 @@ pub fn get_install_cmd<'a>() -> Command<'a, str> {
                     .help("display diagnostic log after installation"),
             )
         })
-        .runner(|_args, matches| get_install_runner(_args, matches))
+        .runner(get_install_runner)
 }
 
 pub fn get_download_cmd<'a>() -> Command<'a, str> {
@@ -393,7 +393,7 @@ pub fn get_download_cmd<'a>() -> Command<'a, str> {
                     .help("Install WCH CH343/CH9102 driver"),
             )
         })
-        .runner(|_args, matches| download_drivers(_args, matches))
+        .runner(download_drivers)
 }
 
 pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {

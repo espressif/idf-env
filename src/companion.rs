@@ -85,13 +85,13 @@ pub fn get_start_cmd<'a>() -> Command<'a, str> {
                     .takes_value(true),
             )
         })
-        .runner(|_args, matches| get_companion_runner(_args, matches))
+        .runner(get_companion_runner)
 }
 
 pub fn get_update_cmd<'a>() -> Command<'a, str> {
     Command::new("update")
         .description("Update the companion from the server")
-        .runner(|_args, matches| get_update_runner(_args, matches))
+        .runner(get_update_runner)
 }
 
 pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {

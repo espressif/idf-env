@@ -281,7 +281,7 @@ pub fn get_set_cmd<'a>() -> Command<'a, str> {
                     .takes_value(true),
             )
         })
-        .runner(|_args, matches| get_set_runner(_args, matches))
+        .runner(get_set_runner)
 }
 
 pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {

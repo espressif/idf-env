@@ -89,7 +89,7 @@ pub fn get_add_cmd<'a>() -> Command<'a, str> {
                     .help("Path to ESP-IDF"),
             )
         })
-        .runner(|_args, matches| get_add_runner(_args, matches))
+        .runner(get_add_runner)
 }
 
 pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {

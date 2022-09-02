@@ -464,7 +464,7 @@ pub fn get_install_cmd<'a>() -> Command<'a, str> {
             //         .help("display diagnostic log after installation"),
             // )
         })
-        .runner(|_args, matches| get_install_runner(_args, matches))
+        .runner(get_install_runner)
 }
 
 #[cfg(windows)]
@@ -545,7 +545,7 @@ pub fn get_shell_cmd<'a>() -> Command<'a, str> {
                     .takes_value(true),
             )
         })
-        .runner(|_args, matches| get_shell_runner(_args, matches))
+        .runner(get_shell_runner)
 }
 
 #[cfg(unix)]
@@ -787,7 +787,7 @@ pub fn get_build_cmd<'a>() -> Command<'a, str> {
                     .takes_value(true),
             )
         })
-        .runner(|_args, matches| get_build_runner(_args, matches))
+        .runner(get_build_runner)
 }
 
 pub fn get_mirror_cmd<'a>() -> Command<'a, str> {
@@ -830,7 +830,7 @@ pub fn get_mirror_cmd<'a>() -> Command<'a, str> {
                     .help("Display progress status of git operation"),
             )
         })
-        .runner(|_args, matches| get_mirror_switch_runner(_args, matches))
+        .runner(get_mirror_switch_runner)
 }
 
 pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {

@@ -148,7 +148,7 @@ pub fn get_install_cmd<'a>() -> Command<'a, str> {
                     .takes_value(true),
             )
         })
-        .runner(|_args, matches| get_install_runner(_args, matches))
+        .runner(get_install_runner)
 }
 
 pub fn get_configure_cmd<'a>() -> Command<'a, str> {
@@ -170,7 +170,7 @@ pub fn get_configure_cmd<'a>() -> Command<'a, str> {
                     .takes_value(true),
             )
         })
-        .runner(|_args, matches| get_configure_runner(_args, matches))
+        .runner(get_configure_runner)
 }
 
 pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {

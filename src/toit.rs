@@ -119,21 +119,21 @@ pub fn get_install_cmd<'a>() -> Command<'a, str> {
     Command::new("install")
         .description("Install Toit environment")
         .options(|app| app.arg(Arg::with_name("jaguar").short("j").long("jaguar")))
-        .runner(|_args, matches| get_install_runner(_args, matches))
+        .runner(get_install_runner)
 }
 
 pub fn get_reinstall_cmd<'a>() -> Command<'a, str> {
     Command::new("reinstall")
         .description("Re-install Toit environment")
         .options(|app| app.arg(Arg::with_name("jaguar").short("j").long("jaguar")))
-        .runner(|_args, matches| get_reinstall_runner(_args, matches))
+        .runner(get_reinstall_runner)
 }
 
 pub fn get_uninstall_cmd<'a>() -> Command<'a, str> {
     Command::new("uninstall")
         .description("Uninstall Toit environment")
         .options(|app| app.arg(Arg::with_name("jaguar").short("j").long("jaguar")))
-        .runner(|_args, matches| get_uninstall_runner(_args, matches))
+        .runner(get_uninstall_runner)
 }
 
 pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {

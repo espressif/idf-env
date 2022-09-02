@@ -51,7 +51,7 @@ pub fn get_verify_cmd<'a>() -> Command<'a, str> {
                     .takes_value(true),
             )
         })
-        .runner(|_args, matches| get_verify_runner(_args, matches))
+        .runner(get_verify_runner)
 }
 
 pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {

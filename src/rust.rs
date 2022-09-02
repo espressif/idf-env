@@ -705,7 +705,7 @@ pub fn get_install_cmd<'a>() -> Command<'a, str> {
                     .default_value(""),
             )
         })
-        .runner(|_args, matches| get_install_runner(_args, matches))
+        .runner(get_install_runner)
 }
 
 pub fn get_reinstall_cmd<'a>() -> Command<'a, str> {
@@ -737,7 +737,7 @@ pub fn get_reinstall_cmd<'a>() -> Command<'a, str> {
                     .default_value(guess_host_triple::guess_host_triple().unwrap()),
             )
         })
-        .runner(|_args, matches| get_reinstall_runner(_args, matches))
+        .runner(get_reinstall_runner)
 }
 
 pub fn get_uninstall_cmd<'a>() -> Command<'a, str> {
@@ -769,7 +769,7 @@ pub fn get_uninstall_cmd<'a>() -> Command<'a, str> {
                     .default_value(guess_host_triple::guess_host_triple().unwrap()),
             )
         })
-        .runner(|_args, matches| get_uninstall_runner(_args, matches))
+        .runner(get_uninstall_runner)
 }
 
 pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {

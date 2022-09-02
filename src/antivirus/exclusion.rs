@@ -194,7 +194,7 @@ pub fn get_add_cmd<'a>() -> Command<'a, str> {
                     .default_value("20"),
             )
         })
-        .runner(|_args, matches| get_add_runner(_args, matches))
+        .runner(get_add_runner)
 }
 
 pub fn get_remove_cmd<'a>() -> Command<'a, str> {
@@ -235,7 +235,7 @@ pub fn get_remove_cmd<'a>() -> Command<'a, str> {
                     .help("Obliterate Absolutely ALL exclusions at once"),
             )
         })
-        .runner(|_args, matches| get_remove_runner(_args, matches))
+        .runner(get_remove_runner)
 }
 
 pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
