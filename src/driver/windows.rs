@@ -124,6 +124,7 @@ pub fn run_elevated(arguments: Vec<String>) {
     // ) -> HINSTANCE;
 }
 
+// DUPLICATED CODE? Same as run_command()
 pub fn run(command: String, arguments: Vec<String>) -> Result<bool, Error> {
     println!("Executing: {} {:?}", command, arguments);
     let mut _child_process = std::process::Command::new(command)

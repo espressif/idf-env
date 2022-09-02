@@ -4,8 +4,8 @@ use tokio::runtime::Handle;
 
 type ResultTokio<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
-async fn request_url(uri: String) -> ResultTokio<()> {
-    let response = reqwest::get(&uri).await;
+async fn request_url(uri: &str) -> ResultTokio<()> {
+    let response = reqwest::get(uri).await;
     if response.is_err() {
         return Err(format!("Request of {uri} failed").into());
     }
@@ -15,7 +15,7 @@ async fn request_url(uri: String) -> ResultTokio<()> {
 fn open_url(url: String) -> ResultTokio<()> {
     let handle = Handle::current();
     let th = std::thread::spawn(move || {
-        handle.block_on(request_url(url)).unwrap();
+        handle.block_on(request_url(&url)).unwrap();
     });
     th.join().unwrap();
     Ok(())

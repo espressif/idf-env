@@ -75,11 +75,11 @@ pub fn wide_null(s: &str) -> Vec<u16> {
 }
 
 #[cfg(windows)]
-pub fn set_env_variable(key: &str, value: String) {
+pub fn set_env_variable(key: &str, value: &str) {
     use winreg::{enums::HKEY_CURRENT_USER, RegKey};
     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
     let (env, _) = hkcu.create_subkey("Environment").unwrap(); // create_subkey opens with write permissions
-    env.set_value(key, &value).unwrap();
+    env.set_value(key, value).unwrap();
     // It's necessary to notify applications about update of the environment
     // https://stackoverflow.com/questions/19705401/how-to-set-system-environment-variable-in-c/19705691#19705691
     let param = wide_null("Environment").as_ptr() as winapi::shared::minwindef::LPARAM;
