@@ -93,6 +93,7 @@ pub fn set_env_variable(key: &str, value: String) {
     }
 }
 
+#[cfg(windows)]
 fn append_path(original_path: &str, new_path: &str) -> String {
     if original_path.is_empty() {
         return new_path.to_string();
@@ -146,19 +147,19 @@ pub fn update_env_path(value: &str) {
 }
 
 #[cfg(unix)]
-pub fn update_env_variable(variable_name: &str, value: &str) {
+pub fn update_env_variable(_variable_name: &str, _value: &str) {
     todo!();
 }
 
 #[cfg(unix)]
-pub fn update_env_path(value: &str) {
+pub fn update_env_path(_value: &str) {
     todo!();
 }
 
-#[cfg(unix)]
-pub fn set_env_variable(key: &str, value: &str) {
-    todo!();
-}
+// #[cfg(unix)]
+// pub fn set_env_variable(_key: &str, _value: &str) {
+//     todo!();
+// }
 
 pub fn get_cmd<'a>() -> Command<'a, str> {
     Command::new("append")

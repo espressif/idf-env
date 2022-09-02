@@ -549,7 +549,7 @@ pub fn get_shell_cmd<'a>() -> Command<'a, str> {
 }
 
 #[cfg(unix)]
-fn run_build(idf_path: &String, shell_initializer: &str) -> std::result::Result<(), clap::Error> {
+fn run_build(idf_path: &String, _shell_initializer: &str) -> std::result::Result<(), clap::Error> {
     // println!("Starting process");
     let root = Path::new(&idf_path);
     assert!(env::set_current_dir(&root).is_ok());
