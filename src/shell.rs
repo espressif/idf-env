@@ -7,7 +7,7 @@ use std::process::Stdio;
 
 #[cfg(windows)]
 pub fn run_command(
-    shell: String,
+    shell: &str,
     arguments: Vec<String>,
     command: String,
 ) -> std::result::Result<(), clap::Error> {
