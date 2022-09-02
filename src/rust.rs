@@ -8,7 +8,7 @@ use std::fs::{copy, remove_dir_all};
 use std::path::Path;
 use std::process::Stdio;
 
-const DEFAULT_RUST_TOOLCHAIN_VERSION: &str = "1.63.0.0";
+const DEFAULT_RUST_TOOLCHAIN_VERSION: &str = "1.63.0.2";
 const DEFAULT_LLVM_VERSION: &str = "esp-14.0.0-20220415";
 
 struct RustCrate {
