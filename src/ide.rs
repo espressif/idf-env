@@ -20,7 +20,7 @@ fn install_ide(ide: &Ide) {
     match prepare_package_strip_prefix(
         &ide.dist_url,
         &ide.dist_file,
-        ide.destination_dir.clone(),
+        &ide.destination_dir,
         &ide.prefix,
     ) {
         Ok(_) => {

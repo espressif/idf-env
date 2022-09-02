@@ -34,8 +34,8 @@ pub fn get_python_env_path(idf_version: &str, python_version: &str) -> String {
 }
 
 pub fn get_selected_idf_path() -> String {
-    let selected_idf_id = get_property("idfSelectedId".to_string());
-    get_property_with_idf_id("path".to_string(), selected_idf_id)
+    let selected_idf_id = get_property("idfSelectedId");
+    get_property_with_idf_id("path", &selected_idf_id)
 }
 
 fn get_json_path() -> String {
@@ -49,7 +49,7 @@ pub fn get_idf_id(idf_path: &str) -> String {
     format!("esp-idf-{:x}", digest)
 }
 
-fn bootstrap_json(json_path: String, tools_path: String) -> std::result::Result<(), clap::Error> {
+fn bootstrap_json(json_path: &str, tools_path: &str) -> std::result::Result<(), clap::Error> {
     if !Path::new(&get_json_path()).exists() {
         println!("{} Creating tools.json file: {}", emoji::WRENCH, json_path);
         if let Err(_e) = fs::create_dir_all(&tools_path) {
@@ -81,7 +81,7 @@ fn load_json() -> json::JsonValue {
             emoji::WARN,
             json_path
         );
-        bootstrap_json(json_path.clone(), get_tools_path())
+        bootstrap_json(&json_path, &get_tools_path())
             .unwrap_or_else(|e| panic!("{} {}", emoji::ERROR, e));
     }
 
@@ -89,45 +89,45 @@ fn load_json() -> json::JsonValue {
     json::parse(&content).unwrap()
 }
 
-pub fn get_property(property_name: String) -> String {
+pub fn get_property(property_name: &str) -> String {
     let parsed_json = load_json();
     parsed_json[property_name].to_string()
 }
 
-fn print_property(property_name: String) {
+fn print_property(property_name: &str) {
     print!("{}", &get_property(property_name));
 }
 
 pub fn get_git_path() -> String {
-    get_property("gitPath".to_string())
+    get_property("gitPath")
 }
 
-pub fn get_property_with_idf_id(property_name: String, idf_id: String) -> String {
+pub fn get_property_with_idf_id(property_name: &str, idf_id: &str) -> String {
     let parsed_json = load_json();
     parsed_json["idfInstalled"][idf_id][property_name].to_string()
 }
 
-pub fn get_property_with_path(property_name: String, idf_path: String) -> String {
+pub fn get_property_with_path(property_name: &str, idf_path: &str) -> String {
     let parsed_json = load_json();
     let idf_id = get_idf_id(&idf_path);
     parsed_json["idfInstalled"][idf_id][property_name].to_string()
 }
 
-fn print_property_with_path(property_name: String, idf_path: String) {
+fn print_property_with_path(property_name: &str, idf_path: &str) {
     print!("{}", get_property_with_path(property_name, idf_path));
 }
 
-fn print_property_with_id(property_name: String, idf_id: String) {
+fn print_property_with_id(property_name: &str, idf_id: &str) {
     print!("{}", get_property_with_idf_id(property_name, idf_id));
 }
 
-pub fn update_property(property_name: &str, property_value: String) {
+pub fn update_property(property_name: &str, property_value: &str) {
     let mut parsed_json = load_json();
-    parsed_json[property_name] = JsonValue::String(property_value);
+    parsed_json[property_name] = JsonValue::String(property_value.to_string());
     fs::write(get_json_path(), format!("{:#}", parsed_json)).unwrap();
 }
 
-pub fn add_idf_config(idf_path: String, version: String, python_path: String) {
+pub fn add_idf_config(idf_path: &str, version: &str, python_path: &str) {
     let idf_id = get_idf_id(&idf_path);
     let _data = json::object! {
         version: version,
@@ -174,12 +174,12 @@ pub fn get_cmd<'a>() -> Command<'a, str> {
 
                 if matches.is_present("idf-id") {
                     let idf_id = matches.value_of("idf-id").unwrap().to_string();
-                    print_property_with_id(property_name, idf_id);
+                    print_property_with_id(&property_name, &idf_id);
                 } else if matches.is_present("idf-path") {
                     let idf_path = matches.value_of("idf-path").unwrap().to_string();
-                    print_property_with_path(property_name, idf_path);
+                    print_property_with_path(&property_name, &idf_path);
                 } else {
-                    print_property(property_name);
+                    print_property(&property_name);
                 }
             } else {
                 let content = load_json();
@@ -252,9 +252,9 @@ pub fn get_add_cmd<'a>() -> Command<'a, str> {
             )
         })
         .runner(|_args, matches| {
-            let python_path = matches.value_of("python").unwrap().to_string();
-            let version = matches.value_of("idf-version").unwrap().to_string();
-            let idf_path = matches.value_of("idf-path").unwrap().to_string();
+            let python_path = matches.value_of("python").unwrap();
+            let version = matches.value_of("idf-version").unwrap();
+            let idf_path = matches.value_of("idf-path").unwrap();
             add_idf_config(idf_path, version, python_path);
             Ok(())
         })
@@ -264,7 +264,7 @@ fn get_set_runner(
     _args: &str,
     matches: &clap::ArgMatches<'_>,
 ) -> std::result::Result<(), clap::Error> {
-    let git_path = matches.value_of("git").unwrap().to_string();
+    let git_path = matches.value_of("git").unwrap();
     update_property("gitPath", git_path);
     Ok(())
 }

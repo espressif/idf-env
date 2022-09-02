@@ -307,7 +307,7 @@ fn install_mingw(toolchain: &RustToolchain) {
     match prepare_package_strip_prefix(
         &toolchain.mingw_url,
         &toolchain.mingw_dist_file,
-        toolchain.mingw_destination_directory.clone(),
+        &toolchain.mingw_destination_directory,
         "mingw64",
     ) {
         Ok(_) => {
@@ -345,11 +345,7 @@ fn install_extra_crates(extra_crates: &Vec<RustCrate>) {
         } else {
             // Binary crate is available donwload it
             let tmp_path = get_tool_path(&extra_crate.name);
-            match prepare_package(
-                extra_crate.url.to_string(),
-                &extra_crate.dist_file,
-                tmp_path,
-            ) {
+            match prepare_package(&extra_crate.url, &extra_crate.dist_file, &tmp_path) {
                 Ok(_) => {
                     let source = format!(
                         "{}/{}",
@@ -454,7 +450,7 @@ fn install_rust_toolchain(toolchain: &RustToolchain) {
             match prepare_package_strip_prefix(
                 &toolchain.rust_dist_url,
                 &toolchain.rust_dist_file,
-                toolchain.destination_dir.to_string(),
+                &toolchain.destination_dir,
                 "esp",
             ) {
                 Ok(_) => {
@@ -468,7 +464,7 @@ fn install_rust_toolchain(toolchain: &RustToolchain) {
             match prepare_package_strip_prefix(
                 &toolchain.rust_dist_url,
                 &toolchain.rust_dist_file,
-                toolchain.rust_dist_temp.to_string(),
+                &toolchain.rust_dist_temp,
                 toolchain.rust_dist.as_str(),
             ) {
                 Ok(_) => {
@@ -499,7 +495,7 @@ fn install_rust_toolchain(toolchain: &RustToolchain) {
             match prepare_package_strip_prefix(
                 &toolchain.rust_src_dist_url,
                 &toolchain.rust_src_dist_file,
-                toolchain.rust_src_dist_temp.to_string(),
+                &toolchain.rust_src_dist_temp,
                 toolchain.rust_src_dist.as_str(),
             ) {
                 Ok(_) => {
@@ -539,7 +535,7 @@ fn install_rust_toolchain(toolchain: &RustToolchain) {
         match prepare_package_strip_prefix(
             &toolchain.llvm_url,
             &toolchain.llvm_file,
-            toolchain.idf_tool_xtensa_elf_clang.clone(),
+            &toolchain.idf_tool_xtensa_elf_clang,
             "xtensa-esp32-elf-clang",
         ) {
             Ok(_) => {

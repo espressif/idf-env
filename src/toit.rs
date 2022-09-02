@@ -38,9 +38,9 @@ fn install_toit_tools(toit_tools: &ToitTools) {
         println!("Please, remove the directory before new installation.");
     } else {
         match prepare_package(
-            toit_tools.jaguar_dist_url.to_string(),
+            &toit_tools.jaguar_dist_url,
             &toit_tools.jaguar_dist_file,
-            toit_tools.jaguar_destination_dir.to_string(),
+            &toit_tools.jaguar_destination_dir,
         ) {
             Ok(_) => {
                 println!("Toit package ready");

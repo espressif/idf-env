@@ -8,9 +8,9 @@ type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>
 
 fn prepare_companion() {
     match prepare_package(
-        "https://dl.espressif.com/dl/esp-iwidc/esp-iwidc.zip".to_string(),
+        "https://dl.espressif.com/dl/esp-iwidc/esp-iwidc.zip",
         "esp-iwidc.zip",
-        "tmp/esp-iwidc".to_string(),
+        "tmp/esp-iwidc",
     ) {
         Ok(_) => {
             println!("Ok");

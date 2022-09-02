@@ -224,7 +224,7 @@ fn get_install_runner(
             clap::ErrorKind::InvalidValue,
         ));
     }
-    update_property("gitPath", git_path.clone());
+    update_property("gitPath", &git_path);
 
     println!("{} Cloning esp-idf {}", emoji::DOWNLOAD, version);
     let installation_path = get_esp_idf_directory(version);
@@ -375,11 +375,7 @@ fn get_install_runner(
         ));
     }
 
-    add_idf_config(
-        installation_path.clone(),
-        "4.4".to_string(),
-        python_path.clone(),
-    );
+    add_idf_config(&installation_path, "4.4", &python_path);
 
     println!("{} Installing CMake", emoji::WRENCH);
     let mut arguments: Vec<String> = [].to_vec();

@@ -13,7 +13,7 @@ use xz2::read::XzDecoder;
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
-pub fn unzip(file_path: String, output_directory: String) -> Result<()> {
+pub fn unzip(file_path: &str, output_directory: &str) -> Result<()> {
     let file_name = std::path::Path::new(&file_path);
     let file = fs::File::open(&file_name).unwrap();
 
@@ -60,8 +60,8 @@ pub fn unzip(file_path: String, output_directory: String) -> Result<()> {
 }
 
 pub fn unzip_strip_prefix(
-    file_path: String,
-    output_directory: String,
+    file_path: &str,
+    output_directory: &str,
     strip_prefix: &str,
 ) -> Result<()> {
     let file_name = std::path::Path::new(&file_path);
@@ -120,8 +120,8 @@ pub fn unzip_strip_prefix(
 }
 
 pub fn untarxz_strip_prefix(
-    file_path: String,
-    output_directory: String,
+    file_path: &str,
+    output_directory: &str,
     strip_prefix: &str,
 ) -> Result<()> {
     let tar_xz = File::open(file_path)?;
@@ -141,7 +141,7 @@ pub fn untarxz_strip_prefix(
     Ok(())
 }
 
-pub fn untarxz(file_path: String, output_directory: String) -> Result<()> {
+pub fn untarxz(file_path: &str, output_directory: &str) -> Result<()> {
     let tar_xz = File::open(file_path)?;
     let tar = XzDecoder::new(tar_xz);
     let mut archive = Archive::new(tar);
@@ -160,8 +160,8 @@ pub fn untarxz(file_path: String, output_directory: String) -> Result<()> {
 }
 
 pub fn untargz_strip_prefix(
-    file_path: String,
-    output_directory: String,
+    file_path: &str,
+    output_directory: &str,
     strip_prefix: &str,
 ) -> Result<()> {
     let tar_gz = File::open(file_path)?;
@@ -181,7 +181,7 @@ pub fn untargz_strip_prefix(
     Ok(())
 }
 
-pub fn untargz(file_path: String, output_directory: String) -> Result<()> {
+pub fn untargz(file_path: &str, output_directory: &str) -> Result<()> {
     let tar_gz = File::open(file_path)?;
     let tar = GzDecoder::new(tar_gz);
     let mut archive = Archive::new(tar);
@@ -199,8 +199,8 @@ pub fn untargz(file_path: String, output_directory: String) -> Result<()> {
     Ok(())
 }
 
-async fn fetch_url(url: String, output: String) -> Result<()> {
-    let response = reqwest::get(&url).await;
+async fn fetch_url(url: &str, output: &str) -> Result<()> {
+    let response = reqwest::get(url).await;
     match response {
         Ok(r) => {
             let mut file = std::fs::File::create(output)?;
@@ -220,7 +220,7 @@ async fn fetch_url(url: String, output: String) -> Result<()> {
     };
 }
 
-async fn download_zip(url: String, output: String) -> Result<()> {
+async fn download_zip(url: &str, output: &str) -> Result<()> {
     if Path::new(&output).exists() {
         println!("Using cached archive: {}", output);
         return Ok(());
@@ -233,7 +233,7 @@ pub fn download_package(package_url: String, package_archive: String) -> Result<
     let handle = Handle::current();
     let th = std::thread::spawn(move || {
         handle
-            .block_on(download_zip(package_url, package_archive))
+            .block_on(download_zip(&package_url, &package_archive))
             .unwrap();
     });
     th.join().unwrap();
@@ -241,9 +241,9 @@ pub fn download_package(package_url: String, package_archive: String) -> Result<
 }
 
 pub fn prepare_package(
-    package_url: String,
+    package_url: &str,
     package_archive: &str,
-    output_directory: String,
+    output_directory: &str,
 ) -> Result<()> {
     if Path::new(&output_directory).exists() {
         println!(
@@ -266,17 +266,17 @@ pub fn prepare_package(
         package_archive.clone(),
         package_url
     );
-    download_package(package_url, package_archive.clone())?;
+    download_package(package_url.to_string(), package_archive.to_string())?;
 
     println!("{} Extracting to {}", emoji::WRENCH, output_directory);
-    let extension = Path::new(package_archive.as_str())
+    let extension = Path::new(&package_archive)
         .extension()
         .unwrap()
         .to_str()
         .unwrap();
     match extension {
         "zip" => {
-            unzip(package_archive, output_directory).unwrap();
+            unzip(&package_archive, &output_directory).unwrap();
         }
         "gz" => {
             match fs::create_dir_all(&output_directory) {
@@ -287,10 +287,10 @@ pub fn prepare_package(
                     println!("Creating {} - Failed", output_directory);
                 }
             }
-            untargz(package_archive, output_directory).unwrap();
+            untargz(&package_archive, output_directory).unwrap();
         }
         "xz" => {
-            untarxz(package_archive, output_directory).unwrap();
+            untarxz(&package_archive, output_directory).unwrap();
         }
         _ => {
             println!("Unsuported file extension.");
@@ -339,7 +339,7 @@ pub fn prepare_single_binary(
 pub fn prepare_package_strip_prefix(
     package_url: &str,
     package_archive: &str,
-    output_directory: String,
+    output_directory: &str,
     strip_prefix: &str,
 ) -> Result<()> {
     if Path::new(&output_directory).exists() {
@@ -379,13 +379,13 @@ pub fn prepare_package_strip_prefix(
 
         match extension {
             "zip" => {
-                unzip_strip_prefix(package_archive, output_directory, strip_prefix).unwrap();
+                unzip_strip_prefix(&package_archive, output_directory, strip_prefix).unwrap();
             }
             "gz" => {
-                untargz_strip_prefix(package_archive, output_directory, strip_prefix).unwrap();
+                untargz_strip_prefix(&package_archive, output_directory, strip_prefix).unwrap();
             }
             "xz" => {
-                untarxz_strip_prefix(package_archive, output_directory, strip_prefix).unwrap();
+                untarxz_strip_prefix(&package_archive, output_directory, strip_prefix).unwrap();
             }
             _ => {
                 println!("Unsuported file extension.");
