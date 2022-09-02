@@ -300,7 +300,7 @@ fn get_install_runner(
     }
 
     #[cfg(windows)]
-    let python_path = get_tool_path("idf-python/3.8.7/python.exe".to_string());
+    let python_path = get_tool_path("idf-python/3.8.7/python.exe");
     #[cfg(target_os = "linux")]
     let python_path = "/usr/bin/python".to_string();
     #[cfg(target_os = "macos")]

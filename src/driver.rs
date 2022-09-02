@@ -173,7 +173,7 @@ fn get_install_runner(
 
 #[cfg(windows)]
 pub fn get_driver_path(driver_name: String) -> String {
-    let drivers_path = config::get_tool_path("idf-driver".to_string());
+    let drivers_path = config::get_tool_path("idf-driver");
     format!("{}/{}", drivers_path, driver_name)
 }
 
