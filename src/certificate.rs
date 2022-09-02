@@ -5,13 +5,11 @@ use tokio::runtime::Handle;
 type ResultTokio<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 async fn request_url(uri: String) -> ResultTokio<()> {
-    let response = reqwest::get(uri).await;
-    match response {
-        Ok(_r) => return Ok(()),
-        _ => {
-            std::process::exit(1);
-        }
-    };
+    let response = reqwest::get(&uri).await;
+    if response.is_err() {
+        return Err(format!("Request of {uri} failed").into());
+    }
+    Ok(())
 }
 
 fn open_url(url: String) -> ResultTokio<()> {

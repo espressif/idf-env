@@ -201,23 +201,14 @@ pub fn untargz(file_path: &str, output_directory: &str) -> Result<()> {
 
 async fn fetch_url(url: &str, output: &str) -> Result<()> {
     let response = reqwest::get(url).await;
-    match response {
-        Ok(r) => {
-            let mut file = std::fs::File::create(output)?;
-            let mut content = Cursor::new(r.bytes().await?);
-            std::io::copy(&mut content, &mut file)?;
-
-            return Ok(());
-        }
-        _ => {
-            println!("Download of {} failed", url);
-            // Exit code is 0, there is temporal issue with Windows Installer which does not recover from error exit code
-            #[cfg(windows)]
-            std::process::exit(0);
-            #[cfg(unix)]
-            std::process::exit(1);
-        }
+    if let Ok(r) = response {
+        let mut file = std::fs::File::create(output)?;
+        let mut content = Cursor::new(r.bytes().await?);
+        std::io::copy(&mut content, &mut file)?;
+    } else {
+        return Err(format!("Download of {url} failed").into());
     };
+    Ok(())
 }
 
 async fn download_zip(url: &str, output: &str) -> Result<()> {
