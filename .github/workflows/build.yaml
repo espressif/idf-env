@@ -27,8 +27,20 @@ jobs:
       - name: Build
         run: cargo build --release --all-features
       - name: Format check
-        run:  cargo fmt -- --check
+        run: cargo fmt -- --check
       - name: Run tests
-        run:  cargo test
+        run: cargo test
       - name: Clippy check
-        run:  cargo clippy --no-deps -- -Dwarnings
+        run: cargo clippy --no-deps -- -Dwarnings
+      - name: Archive artifact (Windows)
+        if: ${{ matrix.os == 'windows-latest' }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: idf-env.exe
+          path: target/release/idf-env.exe
+      - name: Archive artifact (Unix)
+        if: ${{ matrix.os != 'windows-latest' }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: idf-env
+          path: target/release/idf-env
