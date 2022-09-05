@@ -38,9 +38,15 @@ jobs:
         with:
           name: idf-env.exe
           path: target/release/idf-env.exe
-      - name: Archive artifact (Unix)
-        if: ${{ matrix.os != 'windows-latest' }}
+      - name: Archive artifact (Linux)
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         uses: actions/upload-artifact@v2
         with:
-          name: idf-env
+          name: idf-env-linux
+          path: target/release/idf-env
+      - name: Archive artifact (MacOs)
+        if: ${{ matrix.os == 'macos-latest' }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: idf-env-macos
           path: target/release/idf-env
