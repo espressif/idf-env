@@ -642,7 +642,7 @@ fn change_submodules_mirror(mut repo: Repository, submodule_url: String) {
 
     for submodule in change_set {
         println!("Submodule: {}, new URL: {}", submodule.0, submodule.1);
-        match repo.submodule_set_url(&*submodule.0, &*submodule.1) {
+        match repo.submodule_set_url(&submodule.0, &submodule.1) {
             Ok(_) => {
                 println!("Ok");
             }
