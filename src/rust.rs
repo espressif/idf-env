@@ -207,12 +207,16 @@ fn build_rust_toolchain(
         arch
     );
     let mingw_release = "x86_64-12.1.0-release-posix-seh-rt_v10-rev3".to_string();
-    let mingw_dist_file = format!("{}.zip", mingw_release);
     // Temporal solution - repackaging 7z to zip, because Rust based decompression crate does not have BCJ support: https://github.com/dyz1990/sevenz-rust/issues/1
-    //let mingw_dist_file = format!("{}.7z", mingw_release);
-    //let mingw_url = format!("https://github.com/niXman/mingw-builds-binaries/releases/download/12.1.0-rt_v10-rev3/{}", mingw_dist_file);
+    // let mingw_dist_file = format!("{}.zip", mingw_release);
+    // let mingw_url = format!(
+    //     "https://github.com/esp-rs/rust-build/releases/download/mingw-12/{}",
+    //     mingw_dist_file
+    // );
+    // Final solution - TO BE TESTED
+    let mingw_dist_file = format!("{}.7z", mingw_release);
     let mingw_url = format!(
-        "https://github.com/esp-rs/rust-build/releases/download/mingw-12/{}",
+        "https://github.com/niXman/mingw-builds-binaries/releases/download/12.1.0-rt_v10-rev3/{}",
         mingw_dist_file
     );
     let mingw_destination_directory = format!("{}/{}", get_tool_path("mingw"), mingw_release);
