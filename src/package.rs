@@ -220,6 +220,42 @@ async fn download_zip(url: &str, output: &str) -> Result<()> {
     fetch_url(url, output).await
 }
 
+pub fn download_file(url: String, file_name: &str, output_directory: &str) -> Result<String> {
+    let file_path = format!("{}/{}", output_directory, file_name);
+    if Path::new(&file_path).exists() {
+        println!("{} Using cached file: {}", emoji::INFO, file_path);
+        return Ok(file_path);
+    } else if !Path::new(&output_directory).exists() {
+        println!(
+            "{} Creating tool directory: {}",
+            emoji::WRENCH,
+            output_directory
+        );
+        if let Err(_e) = fs::create_dir_all(&output_directory) {
+            return Err(format!(
+                "{} Creating direcory {} failed",
+                emoji::ERROR,
+                output_directory
+            )
+            .into());
+        }
+    }
+    println!(
+        "{} Downloading file {} from {}",
+        emoji::DOWNLOAD,
+        file_name,
+        url
+    );
+    // TODO: Improve closures captures so we can reuse file path in the return
+    let th = std::thread::spawn(move || {
+        Handle::current()
+            .block_on(download_zip(&url, &file_path))
+            .unwrap();
+    });
+    th.join().unwrap();
+    Ok(format!("{}/{}", output_directory, file_name))
+}
+
 pub fn download_package(package_url: String, package_archive: String) -> Result<()> {
     let handle = Handle::current();
     let th = std::thread::spawn(move || {

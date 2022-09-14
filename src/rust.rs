@@ -1,6 +1,8 @@
-use crate::config::{get_cargo_home, get_home_dir, get_tool_path};
+use crate::config::{get_cargo_home, get_dist_path, get_home_dir, get_tool_path};
 use crate::emoji;
-use crate::package::{prepare_package, prepare_package_strip_prefix, prepare_single_binary};
+use crate::package::{
+    download_file, prepare_package, prepare_package_strip_prefix, prepare_single_binary,
+};
 use crate::shell::{run_command, update_env_path};
 use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
@@ -289,14 +291,22 @@ fn install_rust_nightly() {
 
 pub fn install_rustup() {
     #[cfg(windows)]
-    let rustup_init_path =
-        prepare_single_binary("https://win.rustup.rs/x86_64", "rustup-init.exe", "rustup").unwrap();
+    let rustup_init_path = download_file(
+        "https://win.rustup.rs/x86_64".to_string(),
+        "rustup-init.exe",
+        &get_dist_path("rustup"),
+    )
+    .unwrap();
     #[cfg(unix)]
-    let rustup_init_path =
-        prepare_single_binary("https://sh.rustup.rs/", "rustup-init", "rustup").unwrap();
+    let rustup_init_path = download_file(
+        "https://sh.rustup.rs".to_string(),
+        "rustup-init.sh",
+        &get_dist_path("rustup"),
+    )
+    .unwrap();
     match std::process::Command::new(rustup_init_path)
         .arg("--default-toolchain")
-        .arg("none")
+        .arg("nightly")
         .arg("--profile")
         .arg("minimal")
         .arg("-y")
