@@ -292,7 +292,8 @@ pub fn install_rustup() {
     let rustup_init_path =
         prepare_single_binary("https://win.rustup.rs/x86_64", "rustup-init.exe", "rustup");
     #[cfg(unix)]
-    let rustup_init_path = prepare_single_binary("https://sh.rustup.rs/", "rustup-init", "rustup");
+    let rustup_init_path =
+        prepare_single_binary("https://sh.rustup.rs/", "rustup-init", "rustup").unwrap();
     match std::process::Command::new(rustup_init_path)
         .arg("--default-toolchain")
         .arg("none")
@@ -406,7 +407,8 @@ fn install_vctools() {
         "https://aka.ms/vs/17/release/vs_buildtools.exe",
         "vs_buildtools.exe",
         "vs_buildtools",
-    );
+    )
+    .unwrap();
     println!("Running VS BuildTools: vs_BuildTools.exe --passive --wait --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.Windows10SDK.20348");
 
     match std::process::Command::new(vs_build_tools)

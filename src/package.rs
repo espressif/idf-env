@@ -270,13 +270,13 @@ pub fn prepare_package(
             unzip(&package_archive, output_directory).unwrap();
         }
         "gz" => {
-            match fs::create_dir_all(&output_directory) {
-                Ok(_) => {
-                    println!("Creating {} - Ok", output_directory);
-                }
-                Err(_e) => {
-                    println!("Creating {} - Failed", output_directory);
-                }
+            if let Err(_e) = fs::create_dir_all(&output_directory) {
+                return Err(format!(
+                    "{} Creating direcory {} failed",
+                    emoji::ERROR,
+                    output_directory
+                )
+                .into());
             }
             untargz(&package_archive, output_directory).unwrap();
         }
@@ -295,26 +295,32 @@ pub fn prepare_single_binary(
     package_url: &str,
     binary_name: &str,
     output_directory: &str,
-) -> String {
+) -> Result<String> {
     let tool_path = get_tool_path(output_directory);
     let binary_path = format!("{}/{}", tool_path, binary_name);
 
     if Path::new(&binary_path).exists() {
-        println!("{} Using cached tool: {}", emoji::WARN, binary_path);
-        return binary_path;
+        println!("{} Using cached directory: {}", emoji::INFO, binary_path);
+        return Ok(binary_path);
     }
 
     if !Path::new(&tool_path).exists() {
         println!("{} Creating tool directory: {}", emoji::WRENCH, tool_path);
         if let Err(_e) = fs::create_dir_all(&tool_path) {
-            println!("{} Creating direcory {} failed", emoji::ERROR, tool_path);
+            return Err(format!("{} Creating direcory {} failed", emoji::ERROR, tool_path).into());
         }
     }
 
     if let Err(_e) = download_package(package_url.to_string(), binary_path.to_string()) {
-        println!("{} Download of {} failed", emoji::ERROR, package_url);
+        return Err(format!(
+            "{} Download of {} from {} failed",
+            emoji::ERROR,
+            binary_path,
+            package_url
+        )
+        .into());
     }
-    binary_path
+    Ok(binary_path)
 }
 
 pub fn prepare_package_strip_prefix(
@@ -324,33 +330,34 @@ pub fn prepare_package_strip_prefix(
     strip_prefix: &str,
 ) -> Result<()> {
     if Path::new(&output_directory).exists() {
-        println!("Using cached directory: {}", output_directory);
+        println!(
+            "{} Using cached directory: {}",
+            emoji::INFO,
+            output_directory
+        );
         return Ok(());
     }
 
     let dist_path = get_dist_path("");
     if !Path::new(&dist_path).exists() {
         println!("Creating dist directory: {}", dist_path);
-        match fs::create_dir_all(&dist_path) {
-            Ok(_) => {
-                println!("Ok");
-            }
-            Err(_e) => {
-                println!("Failed");
-            }
+        if let Err(_e) = fs::create_dir_all(&dist_path) {
+            return Err(format!("{} Creating direcory {} failed", emoji::ERROR, dist_path).into());
         }
     }
 
     let package_archive = get_dist_path(package_archive);
 
-    match download_package(package_url.to_string(), package_archive.to_string()) {
-        Ok(_) => {
-            println!("Downloaded");
-        }
-        Err(_e) => {
-            println!("Unable to download package");
-        }
+    if let Err(_e) = download_package(package_url.to_string(), package_archive.to_string()) {
+        return Err(format!(
+            "{} Download of {} from {} failed",
+            emoji::ERROR,
+            package_archive,
+            package_url
+        )
+        .into());
     }
+
     if !Path::new(&output_directory).exists() {
         let extension = Path::new(package_archive.as_str())
             .extension()
