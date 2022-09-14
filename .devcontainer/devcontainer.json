@@ -23,9 +23,12 @@
     }
   },
   "extensions": [
+    "vadimcn.vscode-lldb",
+    "mutantdino.resourcemonitor",
     "rust-lang.rust-analyzer",
     "tamasfe.even-better-toml",
     "serayuzgur.crates",
+    "vivaxy.vscode-conventional-commits",
     "yzhang.markdown-all-in-one",
     "GitHub.copilot"
   ],
