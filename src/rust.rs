@@ -290,7 +290,7 @@ fn install_rust_nightly() {
 pub fn install_rustup() {
     #[cfg(windows)]
     let rustup_init_path =
-        prepare_single_binary("https://win.rustup.rs/x86_64", "rustup-init.exe", "rustup");
+        prepare_single_binary("https://win.rustup.rs/x86_64", "rustup-init.exe", "rustup").unwrap();
     #[cfg(unix)]
     let rustup_init_path =
         prepare_single_binary("https://sh.rustup.rs/", "rustup-init", "rustup").unwrap();
