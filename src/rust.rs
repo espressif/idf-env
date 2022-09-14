@@ -1,4 +1,5 @@
 use crate::config::{get_cargo_home, get_home_dir, get_tool_path};
+use crate::emoji;
 use crate::package::{prepare_package, prepare_package_strip_prefix, prepare_single_binary};
 use crate::shell::{run_command, update_env_path};
 use clap::Arg;
@@ -10,6 +11,7 @@ use std::process::Stdio;
 const DEFAULT_RUST_TOOLCHAIN_VERSION: &str = "1.63.0.2";
 const DEFAULT_LLVM_VERSION: &str = "esp-14.0.0-20220415";
 
+#[derive(Debug)]
 struct RustCrate {
     name: String,
     url: String,
@@ -18,10 +20,11 @@ struct RustCrate {
     bin: String,
 }
 
+#[derive(Debug)]
 struct RustToolchain {
     arch: String,
-    //llvm_release: String,
-    //llvm_arch: String,
+    // llvm_release: String,
+    // llvm_arch: String,
     //artifact_file_extension: String,
     // version: String,
     rust_dist: String,
@@ -214,10 +217,10 @@ fn build_rust_toolchain(
 
     RustToolchain {
         arch: arch.to_string(),
-        //llvm_release,
-        //llvm_arch,
+        // llvm_release,
+        // llvm_arch,
         //artifact_file_extension,
-        //version: version.to_string(),
+        // version: version.to_string(),
         rust_dist,
         rust_dist_temp: get_tool_path("rust"),
         rust_src_dist,
@@ -239,28 +242,28 @@ fn build_rust_toolchain(
     }
 }
 
-fn install_rust_stable(default_host: &str) {
-    let rustup_init_path =
-        prepare_single_binary("https://win.rustup.rs/x86_64", "rustup-init.exe", "rustup");
-    println!("rustup stable");
-    match std::process::Command::new(rustup_init_path)
-        .arg("--default-toolchain")
-        .arg("stable")
-        .arg("-y")
-        .arg("--default-host")
-        .arg(default_host)
-        .stdout(Stdio::piped())
-        .output()
-    {
-        Ok(child_output) => {
-            let result = String::from_utf8_lossy(&child_output.stdout);
-            println!("{}", result);
-        }
-        Err(e) => {
-            println!("Error: {}", e);
-        }
-    }
-}
+// fn install_rust_stable(default_host: &str) {
+//     let rustup_init_path =
+//         prepare_single_binary("https://win.rustup.rs/x86_64", "rustup-init.exe", "rustup");
+//     println!("rustup stable");
+//     match std::process::Command::new(rustup_init_path)
+//         .arg("--default-toolchain")
+//         .arg("stable")
+//         .arg("-y")
+//         .arg("--default-host")
+//         .arg(default_host)
+//         .stdout(Stdio::piped())
+//         .output()
+//     {
+//         Ok(child_output) => {
+//             let result = String::from_utf8_lossy(&child_output.stdout);
+//             println!("{}", result);
+//         }
+//         Err(e) => {
+//             println!("Error: {}", e);
+//         }
+//     }
+// }
 
 fn install_rust_nightly() {
     let rustup_path = format!("{}/bin/rustup.exe", get_cargo_home());
@@ -284,10 +287,35 @@ fn install_rust_nightly() {
     }
 }
 
-fn install_rust(default_host: &str) {
-    install_rust_stable(default_host);
-    install_rust_nightly();
+pub fn install_rustup() {
+    #[cfg(windows)]
+    let rustup_init_path =
+        prepare_single_binary("https://win.rustup.rs/x86_64", "rustup-init.exe", "rustup");
+    #[cfg(unix)]
+    let rustup_init_path = prepare_single_binary("https://sh.rustup.rs/", "rustup-init", "rustup");
+    match std::process::Command::new(rustup_init_path)
+        .arg("--default-toolchain")
+        .arg("none")
+        .arg("--profile")
+        .arg("minimal")
+        .arg("-y")
+        .stdout(Stdio::piped())
+        .output()
+    {
+        Ok(child_output) => {
+            let result = String::from_utf8_lossy(&child_output.stdout);
+            println!("{} {}", emoji::CHECK, result);
+        }
+        Err(e) => {
+            println!("{} Error: {}", emoji::ERROR, e);
+        }
+    }
 }
+
+// fn install_rust(default_host: &str) {
+//     // install_rust_stable(default_host);
+//     install_rust_nightly();
+// }
 
 fn install_mingw(toolchain: &RustToolchain) {
     if Path::new(toolchain.mingw_destination_directory.as_str()).exists() {
@@ -411,10 +439,10 @@ fn install_rust_toolchain(toolchain: &RustToolchain) {
         Ok(child_output) => {
             println!("rustup - found");
             let result = String::from_utf8_lossy(&child_output.stdout);
-            if !result.contains("stable") {
-                println!("stable toolchain not found");
-                install_rust_stable(&toolchain.arch);
-            }
+            // if !result.contains("stable") {
+            //     println!("stable toolchain not found");
+            //     install_rust_stable(&toolchain.arch);
+            // }
             if !result.contains("nightly") {
                 println!("nightly toolchain not found");
                 install_rust_nightly();
@@ -426,8 +454,8 @@ fn install_rust_toolchain(toolchain: &RustToolchain) {
         }
         Err(e) => {
             if let std::io::ErrorKind::NotFound = e.kind() {
-                println!("rustup was not found.");
-                install_rust(&toolchain.arch);
+                println!("{} rustup was not found.", emoji::WARN);
+                install_rustup();
             }
         }
     }
@@ -609,7 +637,6 @@ fn uninstall_rust_toolchain(toolchain: &RustToolchain) {
 
 fn get_default_rust_toolchain(matches: &clap::ArgMatches<'_>) -> RustToolchain {
     let default_host_triple = matches.value_of("default-host").unwrap();
-
     let toolchain_version = matches.value_of("toolchain-version").unwrap();
     let llvm_version = matches.value_of("llvm-version").unwrap();
     let extra_tools = matches.value_of("extra-tools").unwrap();
@@ -629,7 +656,13 @@ fn get_install_runner(
     matches: &clap::ArgMatches<'_>,
 ) -> std::result::Result<(), clap::Error> {
     let toolchain = get_default_rust_toolchain(matches);
-
+    println!(
+        "{} Installing esp Rust toolchan with:
+        {} toolchain: {:#?}",
+        emoji::DISC,
+        emoji::DIAMOND,
+        toolchain,
+    );
     install_rust_toolchain(&toolchain);
     Ok(())
 }
