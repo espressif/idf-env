@@ -300,29 +300,19 @@ pub fn prepare_single_binary(
     let binary_path = format!("{}/{}", tool_path, binary_name);
 
     if Path::new(&binary_path).exists() {
-        println!("Using cached tool: {}", binary_path);
+        println!("{} Using cached tool: {}", emoji::WARN, binary_path);
         return binary_path;
     }
 
     if !Path::new(&tool_path).exists() {
-        println!("Creating tool directory: {}", tool_path);
-        match fs::create_dir_all(&tool_path) {
-            Ok(_) => {
-                println!("Ok");
-            }
-            Err(_e) => {
-                println!("Failed");
-            }
+        println!("{} Creating tool directory: {}", emoji::WRENCH, tool_path);
+        if let Err(_e) = fs::create_dir_all(&tool_path) {
+            println!("{} Creating direcory {} failed", emoji::ERROR, tool_path);
         }
     }
 
-    match download_package(package_url.to_string(), binary_path.to_string()) {
-        Ok(_) => {
-            println!("Ok");
-        }
-        Err(_e) => {
-            println!("Failed");
-        }
+    if let Err(_e) = download_package(package_url.to_string(), binary_path.to_string()) {
+        println!("{} Download of {} failed", emoji::ERROR, package_url);
     }
     binary_path
 }
