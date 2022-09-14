@@ -10,9 +10,16 @@ use std::env;
 use std::fs;
 use std::path::Path;
 
+pub fn get_home_dir() -> String {
+    home_dir().unwrap().display().to_string()
+}
+
 pub fn get_tools_path() -> String {
-    env::var("IDF_TOOLS_PATH")
-        .unwrap_or_else(|_e| home_dir().unwrap().display().to_string() + "/.espressif")
+    env::var("IDF_TOOLS_PATH").unwrap_or_else(|_e| get_home_dir() + "/.espressif")
+}
+
+pub fn get_cargo_home() -> String {
+    format!("{}/.cargo", get_home_dir())
 }
 
 pub fn get_tool_path(tool_name: &str) -> String {

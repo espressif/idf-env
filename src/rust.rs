@@ -1,9 +1,8 @@
-use crate::config::get_tool_path;
+use crate::config::{get_cargo_home, get_home_dir, get_tool_path};
 use crate::package::{prepare_package, prepare_package_strip_prefix, prepare_single_binary};
 use crate::shell::{run_command, update_env_path};
 use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
-use dirs::home_dir;
 use std::fs::{copy, remove_dir_all};
 use std::path::Path;
 use std::process::Stdio;
@@ -45,10 +44,6 @@ struct RustToolchain {
     mingw_destination_directory: String,
 }
 
-fn get_home_dir() -> String {
-    home_dir().unwrap().display().to_string()
-}
-
 fn get_llvm_arch(arch: &str) -> &str {
     match arch {
         "x86_64-apple-darwin" => "macos",
@@ -88,10 +83,6 @@ fn get_llvm_version_with_underscores(llvm_version: &str) -> String {
     let version: Vec<&str> = llvm_version.split('-').collect();
     let llvm_dot_version = version[1];
     llvm_dot_version.replace('.', "_")
-}
-
-fn get_cargo_home() -> String {
-    format!("{}/.cargo", get_home_dir())
 }
 
 fn get_rust_crate(name: &str, arch: &str) -> Option<RustCrate> {
