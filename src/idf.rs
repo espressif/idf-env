@@ -6,7 +6,7 @@ use crate::config::{
 };
 use crate::emoji;
 #[cfg(windows)]
-use crate::package::prepare_package;
+use crate::package::download_file;
 use crate::shell::run_command;
 use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
@@ -202,16 +202,14 @@ fn get_install_runner(
     #[cfg(windows)]
     println!("{} Downloading Git package", emoji::DOWNLOAD);
     #[cfg(windows)]
-    if let Err(_e) = prepare_package(
-        "https://dl.espressif.com/dl/idf-git/idf-git-2.30.1-win64.zip",
+    download_file(
+        // TODO: Store the URL in RustToolchain
+        "https://dl.espressif.com/dl/idf-git/idf-git-2.30.1-win64.zip".to_string(),
         "idf-git-2.30.1-win64.zip",
         &get_tool_path("idf-git/2.30.1"),
-    ) {
-        return Err(clap::Error::with_description(
-            format!("{} Git package download failed", emoji::ERROR).as_str(),
-            clap::ErrorKind::InvalidValue,
-        ));
-    }
+        true,
+    )
+    .unwrap();
 
     #[cfg(windows)]
     let git_path = get_tool_path("idf-git/2.30.1/cmd/git.exe");
@@ -288,16 +286,14 @@ fn get_install_runner(
     #[cfg(windows)]
     println!("{} Downloading Python package", emoji::DOWNLOAD);
     #[cfg(windows)]
-    if let Err(_e) = prepare_package(
-        "https://dl.espressif.com/dl/idf-python/idf-python-3.8.7-embed-win64.zip",
+    download_file(
+        // TODO: Store the URL in RustToolchain
+        "https://dl.espressif.com/dl/idf-python/idf-python-3.8.7-embed-win64.zip".to_string(),
         "idf-python-3.8.7-embed-win64.zip",
         &get_tool_path("idf-python/3.8.7"),
-    ) {
-        return Err(clap::Error::with_description(
-            format!("{} Python package download failed", emoji::ERROR).as_str(),
-            clap::ErrorKind::InvalidValue,
-        ));
-    }
+        true,
+    )
+    .unwrap();
 
     #[cfg(windows)]
     let python_path = get_tool_path("idf-python/3.8.7/python.exe");
