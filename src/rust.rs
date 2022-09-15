@@ -555,7 +555,7 @@ fn install_rust_toolchain(toolchain: &RustToolchain) -> Result<()> {
             toolchain.idf_tool_xtensa_elf_clang
         );
         println!("Please, remove the directory before new installation.");
-    } else if let Err(_e) = prepare_package_strip_prefix(
+    } else if let Err(e) = prepare_package_strip_prefix(
         &toolchain.llvm_url,
         &toolchain.llvm_file,
         &toolchain.idf_tool_xtensa_elf_clang,
