@@ -247,7 +247,7 @@ pub fn download_file(
         file_name,
         url
     );
-    download_package(url.to_string(), file_path.to_string());
+    download_package(url, file_path)?;
 
     if let Some(strip_prefix) = strip_prefix {
         let extension = Path::new(file_name).extension().unwrap().to_str().unwrap();
