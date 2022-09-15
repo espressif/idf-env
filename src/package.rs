@@ -253,10 +253,10 @@ pub fn download_file(
         let extension = Path::new(file_name).extension().unwrap().to_str().unwrap();
         match extension {
             "zip" => {
-                unzip_strip_prefix(&file_path, output_directory, "").unwrap();
-                // let zipfile = ZipArchive::new(content_br).unwrap();
-                // let mut archive = Archive::new(zipfile);
-                // archive.unpack(output_directory).unwrap();
+                let mut tmpfile = tempfile::tempfile().unwrap();
+                resp.copy_to(&mut tmpfile)?;
+                let mut zipfile = zip::ZipArchive::new(tmpfile).unwrap();
+                zipfile.extract(output_directory).unwrap();
             }
             "gz" => {
                 println!(

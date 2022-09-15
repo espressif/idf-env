@@ -445,14 +445,13 @@ fn install_rust_toolchain(toolchain: &RustToolchain) -> Result<()> {
         // Some platfroms like Windows are available in single bundle rust + src, because install
         // script in dist is not available for the plaform. It's sufficient to extract the toolchain
         if toolchain.rust_installer.is_empty() {
-            if let Err(e) = prepare_package_strip_prefix(
-                &toolchain.rust_dist_url,
-                &toolchain.rust_dist_file,
+            download_file(
+                toolchain.rust_dist_url.clone(),
+                "rust.zip",
                 &toolchain.destination_dir,
-                "esp",
-            ) {
-                bail!("{} Unable to prepare package: {}", emoji::ERROR, e);
-            }
+                true,
+            )
+            .unwrap();
         } else {
             download_file(
                 toolchain.rust_dist_url.clone(),
@@ -500,24 +499,29 @@ fn install_rust_toolchain(toolchain: &RustToolchain) -> Result<()> {
             &toolchain.idf_tool_xtensa_elf_clang
         );
     } else {
+        #[cfg(windows)]
+        let file_name = "xtensa-esp32-elf-llvm.zip";
+        #[cfg(unix)]
+        let file_name = "xtensa-esp32-elf-llvm.tar.xz";
         download_file(
             toolchain.llvm_url.clone(),
-            "xtensa-esp32-elf-llvm.tar.xz",
+            file_name,
             &toolchain.idf_tool_xtensa_elf_clang,
             true,
         )
         .unwrap();
     }
 
-    println!("Updating environment variables:");
-    let libclang_bin = format!("{}/bin/", toolchain.idf_tool_xtensa_elf_clang);
+    // TODO: Fix environment
+    // println!("Updating environment variables:");
+    // let libclang_bin = format!("{}/bin/", toolchain.idf_tool_xtensa_elf_clang);
 
-    #[cfg(windows)]
-    println!("PATH+=\";{}\"", libclang_bin);
-    #[cfg(unix)]
-    println!("export PATH=\"{}:$PATH\"", libclang_bin);
+    // #[cfg(windows)]
+    // println!("PATH+=\";{}\"", libclang_bin);
+    // #[cfg(unix)]
+    // println!("export PATH=\"{}:$PATH\"", libclang_bin);
 
-    update_env_path(&libclang_bin);
+    // update_env_path(&libclang_bin);
 
     // It seems that LIBCLANG_PATH is not necessary for Windows
     // let libclang_path = format!("{}/libclang.dll", libclang_bin);
