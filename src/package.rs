@@ -231,14 +231,10 @@ pub fn download_file(
         println!("{} Using cached file: {}", emoji::INFO, file_path);
         return Ok(file_path);
     } else if !Path::new(&output_directory).exists() {
-        println!(
-            "{} Creating tool directory: {}",
-            emoji::WRENCH,
-            output_directory
-        );
+        println!("{} Creating directory: {}", emoji::WRENCH, output_directory);
         if let Err(_e) = fs::create_dir_all(&output_directory) {
             return Err(format!(
-                "{} Creating direcory {} failed",
+                "{} Creating directory {} failed",
                 emoji::ERROR,
                 output_directory
             )
@@ -258,6 +254,28 @@ pub fn download_file(
             .unwrap();
     });
     th.join().unwrap();
+
+    if let Some(strip_prefix) = strip_prefix {
+        let extension = Path::new(file_name).extension().unwrap().to_str().unwrap();
+
+        match extension {
+            "zip" => {
+                unzip_strip_prefix(file_name, output_directory, strip_prefix).unwrap();
+            }
+            "gz" => {
+                untargz_strip_prefix(file_name, output_directory, strip_prefix).unwrap();
+            }
+            "xz" => {
+                untarxz_strip_prefix(file_name, output_directory, strip_prefix).unwrap();
+            }
+            _ => {
+                return Err(
+                    format!("{} Unsuported file extension: {}", emoji::ERROR, extension).into(),
+                );
+            }
+        }
+    }
+
     Ok(format!("{}/{}", output_directory, file_name))
 }
 
@@ -383,7 +401,7 @@ pub fn prepare_package_strip_prefix(
     if !Path::new(&dist_path).exists() {
         println!("Creating dist directory: {}", dist_path);
         if let Err(_e) = fs::create_dir_all(&dist_path) {
-            return Err(format!("{} Creating direcory {} failed", emoji::ERROR, dist_path).into());
+            return Err(format!("{} Creating directory {} failed", emoji::ERROR, dist_path).into());
         }
     }
 
