@@ -318,26 +318,8 @@ pub fn install_rustup() -> Result<()> {
     arguments.push("--profile".to_string());
     arguments.push("minimal".to_string());
     arguments.push("-y".to_string());
-
     run_command(&rustup_init_path, arguments.clone(), "".to_string())?;
 
-    // match std::process::Command::new(rustup_init_path)
-    //     .arg("--default-toolchain")
-    //     .arg("nightly")
-    //     .arg("--profile")
-    //     .arg("minimal")
-    //     .arg("-y")
-    //     .stdout(Stdio::piped())
-    //     .output()
-    // {
-    //     Ok(child_output) => {
-    //         let result = String::from_utf8_lossy(&child_output.stdout);
-    //         println!("{} {}", emoji::CHECK, result);
-    //     }
-    //     Err(e) => {
-    //         bail!("{} Error: {}", emoji::ERROR, e);
-    //     }
-    // }
     Ok(())
 }
 

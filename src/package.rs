@@ -247,13 +247,7 @@ pub fn download_file(
         file_name,
         url
     );
-    // TODO: Improve closures captures so we can reuse file path in the return
-    let th = std::thread::spawn(move || {
-        Handle::current()
-            .block_on(download_zip(&url, &file_path))
-            .unwrap();
-    });
-    th.join().unwrap();
+    download_package(url.to_string(), file_path.to_string());
 
     if let Some(strip_prefix) = strip_prefix {
         let extension = Path::new(file_name).extension().unwrap().to_str().unwrap();
