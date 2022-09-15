@@ -247,50 +247,18 @@ fn build_rust_toolchain(
     }
 }
 
-// fn install_rust_stable(default_host: &str) {
-//     let rustup_init_path =
-//         prepare_single_binary("https://win.rustup.rs/x86_64", "rustup-init.exe", "rustup");
-//     println!("rustup stable");
-//     match std::process::Command::new(rustup_init_path)
-//         .arg("--default-toolchain")
-//         .arg("stable")
-//         .arg("-y")
-//         .arg("--default-host")
-//         .arg(default_host)
-//         .stdout(Stdio::piped())
-//         .output()
-//     {
-//         Ok(child_output) => {
-//             let result = String::from_utf8_lossy(&child_output.stdout);
-//             println!("{}", result);
-//         }
-//         Err(e) => {
-//             println!("Error: {}", e);
-//         }
-//     }
-// }
-
 fn install_rust_nightly() -> Result<()> {
+    println!("{} Installing Rust nightly toolchain", emoji::WRENCH);
+    #[cfg(windows)]
     let rustup_path = format!("{}/bin/rustup.exe", get_cargo_home());
-
-    println!("{} install nightly", rustup_path);
-    match std::process::Command::new(rustup_path)
-        .arg("install")
-        .arg("nightly")
-        // .arg("--default-host")
-        // .arg(default_host)
-        .stdout(Stdio::piped())
-        .output()
-    {
-        Ok(child_output) => {
-            let result = String::from_utf8_lossy(&child_output.stdout);
-            println!("Result: {}", result);
-        }
-        Err(e) => {
-            println!("Error: {}", e);
-            // Err(format!("Error: {}", e))?;
-        }
-    }
+    #[cfg(unix)]
+    let rustup_path = format!("{}/bin/rustup", get_cargo_home());
+    let mut arguments: Vec<String> = [].to_vec();
+    arguments.push("install".to_string());
+    arguments.push("nightly".to_string());
+    arguments.push("--profile".to_string());
+    arguments.push("minimal".to_string());
+    run_command(&rustup_path, arguments.clone(), "".to_string())?;
     Ok(())
 }
 
@@ -453,20 +421,11 @@ fn install_rust_toolchain(toolchain: &RustToolchain) -> Result<()> {
         .output()
     {
         Ok(child_output) => {
-            println!("rustup - found");
             let result = String::from_utf8_lossy(&child_output.stdout);
-            // if !result.contains("stable") {
-            //     println!("stable toolchain not found");
-            //     install_rust_stable(&toolchain.arch);
-            // }
             if !result.contains("nightly") {
-                println!("nightly toolchain not found");
+                println!("{} Rust nightly toolchain not found", emoji::WARN);
                 install_rust_nightly()?;
             }
-            println!(
-                "rustup - found - {}",
-                String::from_utf8_lossy(&child_output.stdout)
-            );
         }
         Err(e) => {
             if let std::io::ErrorKind::NotFound = e.kind() {
