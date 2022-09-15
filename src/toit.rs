@@ -32,10 +32,9 @@ fn build_toit_tools() -> ToitTools {
 fn install_toit_tools(toit_tools: &ToitTools) {
     if Path::new(&toit_tools.jaguar_destination_dir.as_str()).exists() {
         println!(
-            "Previous installation of Toit - Jaguar exist in: {}",
+            "Previous installation of Toit - Jaguar exist in: {}. Please, remove the directory before new installation.",
             toit_tools.jaguar_destination_dir
         );
-        println!("Please, remove the directory before new installation.");
     } else {
         match prepare_package(
             &toit_tools.jaguar_dist_url,

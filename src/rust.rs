@@ -30,17 +30,17 @@ struct RustToolchain {
     // llvm_arch: String,
     //artifact_file_extension: String,
     // version: String,
-    rust_dist: String,
-    rust_dist_temp: String,
-    rust_src_dist: String,
-    rust_src_dist_temp: String,
-    rust_src_dist_file: String,
+    // rust_dist: String,
+    // rust_dist_temp: String,
+    // rust_src_dist: String,
+    // rust_src_dist_temp: String,
+    // rust_src_dist_file: String,
     rust_dist_file: String,
     rust_dist_url: String,
     rust_src_dist_url: String,
     rust_installer: String,
     destination_dir: String,
-    llvm_file: String,
+    // llvm_file: String,
     llvm_url: String,
     idf_tool_xtensa_elf_clang: String,
     extra_tools: String,
@@ -226,17 +226,17 @@ fn build_rust_toolchain(
         // llvm_arch,
         //artifact_file_extension,
         // version: version.to_string(),
-        rust_dist,
-        rust_dist_temp: get_tool_path("rust"),
-        rust_src_dist,
-        rust_src_dist_temp: get_tool_path("rust-src"),
-        rust_src_dist_file,
+        // rust_dist,
+        // rust_dist_temp: get_tool_path("rust"),
+        // rust_src_dist,
+        // rust_src_dist_temp: get_tool_path("rust-src"),
+        // rust_src_dist_file,
         rust_dist_file,
         rust_dist_url,
         rust_src_dist_url,
         rust_installer: get_rust_installer(arch).to_string(),
         destination_dir: format!("{}/.rustup/toolchains/esp", get_home_dir()),
-        llvm_file,
+        // llvm_file,
         llvm_url,
         idf_tool_xtensa_elf_clang,
         extra_tools: extra_tools.to_string(),
@@ -268,7 +268,7 @@ pub fn install_rustup() -> Result<()> {
         "https://win.rustup.rs/x86_64".to_string(),
         "rustup-init.exe",
         &get_dist_path("rustup"),
-        None,
+        false,
     )
     .unwrap();
     #[cfg(unix)]
@@ -276,7 +276,7 @@ pub fn install_rustup() -> Result<()> {
         "https://sh.rustup.rs".to_string(),
         "rustup-init.sh",
         &get_dist_path("rustup"),
-        None,
+        false,
     )
     .unwrap();
 
@@ -299,13 +299,9 @@ pub fn install_rustup() -> Result<()> {
 fn install_mingw(toolchain: &RustToolchain) {
     if Path::new(toolchain.mingw_destination_directory.as_str()).exists() {
         println!(
-            "{} Previous installation of MinGW exist in: {}",
+            "{} Previous installation of MinGW exist in: {}. Please, remove the directory before new installation.",
             emoji::INFO,
             toolchain.mingw_destination_directory
-        );
-        println!(
-            "{} Please, remove the directory before new installation.",
-            emoji::INFO
         );
         return;
     }
@@ -439,13 +435,9 @@ fn install_rust_toolchain(toolchain: &RustToolchain) -> Result<()> {
 
     if Path::new(toolchain.destination_dir.as_str()).exists() {
         println!(
-            "{} Previous installation of Rust Toolchain exist in: {}",
+            "{} Previous installation of Rust Toolchain exist in: {}.\n Please, remove the directory before new installation.",
             emoji::INFO,
             toolchain.destination_dir
-        );
-        println!(
-            "{} Please, remove the directory before new installation.",
-            emoji::INFO
         );
         return Ok(());
     } else {
@@ -461,59 +453,59 @@ fn install_rust_toolchain(toolchain: &RustToolchain) -> Result<()> {
                 bail!("{} Unable to prepare package: {}", emoji::ERROR, e);
             }
         } else {
-            if let Err(e) = prepare_package_strip_prefix(
-                &toolchain.rust_dist_url,
-                &toolchain.rust_dist_file,
-                &toolchain.rust_dist_temp,
-                toolchain.rust_dist.as_str(),
-            ) {
-                bail!("{} Unable to prepare package: {}", emoji::ERROR, e);
-            }
+            download_file(
+                toolchain.rust_dist_url.clone(),
+                "rust.tar.xz",
+                &get_dist_path(""),
+                true,
+            )
+            .unwrap();
 
+            println!("{} Installing rust", emoji::WRENCH);
             let mut arguments: Vec<String> = [].to_vec();
-
             arguments.push("-c".to_string());
             arguments.push(format!(
-                "/tmp/rust/install.sh --destdir={} --prefix='' --without=rust-docs",
+                "{}/rust-nightly-{}/install.sh --destdir={} --prefix='' --without=rust-docs",
+                get_dist_path(""),
+                toolchain.arch,
                 toolchain.destination_dir
             ));
-
             run_command("/bin/bash", arguments.clone(), "".to_string())?;
 
-            if let Err(e) = prepare_package_strip_prefix(
-                &toolchain.rust_src_dist_url,
-                &toolchain.rust_src_dist_file,
-                &toolchain.rust_src_dist_temp,
-                toolchain.rust_src_dist.as_str(),
-            ) {
-                bail!("{} Unable to prepare package: {}", emoji::ERROR, e);
-            }
+            download_file(
+                toolchain.rust_src_dist_url.clone(),
+                "rust-src.tar.xz",
+                &get_dist_path(""),
+                true,
+            )
+            .unwrap();
 
+            println!("{} Installing rust-src", emoji::WRENCH);
             let mut arguments: Vec<String> = [].to_vec();
-
             arguments.push("-c".to_string());
             arguments.push(format!(
-                "/tmp/rust-src/install.sh --destdir={} --prefix='' --without=rust-docs",
+                "{}/rust-src-nightly/install.sh --destdir={} --prefix='' --without=rust-docs",
+                get_dist_path(""),
                 toolchain.destination_dir
             ));
-
             run_command("/bin/bash", arguments, "".to_string())?;
         }
     }
 
     if Path::new(toolchain.idf_tool_xtensa_elf_clang.as_str()).exists() {
         println!(
-            "Previous installation of LLVM exist in: {}",
-            toolchain.idf_tool_xtensa_elf_clang
+            "{} Previous installation of LLVM exist in: {}.\n Please, remove the directory before new installation.",
+            emoji::WARN,
+            &toolchain.idf_tool_xtensa_elf_clang
         );
-        println!("Please, remove the directory before new installation.");
-    } else if let Err(e) = prepare_package_strip_prefix(
-        &toolchain.llvm_url,
-        &toolchain.llvm_file,
-        &toolchain.idf_tool_xtensa_elf_clang,
-        "xtensa-esp32-elf-clang",
-    ) {
-        bail!("{} Unable to prepare package: {}", emoji::ERROR, e);
+    } else {
+        download_file(
+            toolchain.llvm_url.clone(),
+            "xtensa-esp32-elf-llvm.tar.xz",
+            &toolchain.idf_tool_xtensa_elf_clang,
+            true,
+        )
+        .unwrap();
     }
 
     println!("Updating environment variables:");

@@ -3,9 +3,8 @@ use crate::emoji;
 use anyhow::Context;
 use flate2::read::GzDecoder;
 use std::fs::File;
-use std::io::Cursor;
-use std::path::Path;
-use std::path::PathBuf;
+use std::io::{BufReader, Cursor};
+use std::path::{Path, PathBuf};
 use std::{fs, io};
 use tar::Archive;
 use tokio::runtime::Handle;
@@ -224,7 +223,7 @@ pub fn download_file(
     url: String,
     file_name: &str,
     output_directory: &str,
-    strip_prefix: Option<&str>,
+    uncompress: bool,
 ) -> Result<String> {
     let file_path = format!("{}/{}", output_directory, file_name);
     if Path::new(&file_path).exists() {
@@ -247,20 +246,34 @@ pub fn download_file(
         file_name,
         url
     );
-    download_package(url, file_path)?;
+    let resp = reqwest::blocking::get(&url).unwrap();
+    let content_br = BufReader::new(resp);
 
-    if let Some(strip_prefix) = strip_prefix {
+    if uncompress {
         let extension = Path::new(file_name).extension().unwrap().to_str().unwrap();
-
         match extension {
             "zip" => {
-                unzip_strip_prefix(file_name, output_directory, strip_prefix).unwrap();
+                unzip_strip_prefix(&file_path, output_directory, "").unwrap();
             }
             "gz" => {
-                untargz_strip_prefix(file_name, output_directory, strip_prefix).unwrap();
+                println!(
+                    "{} Uncompressing tar.gz file to {}",
+                    emoji::WRENCH,
+                    output_directory
+                );
+                let tarfile = GzDecoder::new(content_br);
+                let mut archive = Archive::new(tarfile);
+                archive.unpack(output_directory).unwrap();
             }
             "xz" => {
-                untarxz_strip_prefix(file_name, output_directory, strip_prefix).unwrap();
+                println!(
+                    "{} Uncompressing tar.xz file to {}",
+                    emoji::WRENCH,
+                    output_directory
+                );
+                let tarfile = XzDecoder::new(content_br);
+                let mut archive = Archive::new(tarfile);
+                archive.unpack(output_directory).unwrap();
             }
             _ => {
                 return Err(
@@ -269,7 +282,6 @@ pub fn download_file(
             }
         }
     }
-
     Ok(format!("{}/{}", output_directory, file_name))
 }
 
@@ -393,7 +405,7 @@ pub fn prepare_package_strip_prefix(
 
     let dist_path = get_dist_path("");
     if !Path::new(&dist_path).exists() {
-        println!("Creating dist directory: {}", dist_path);
+        println!("{} Creating dist directory at {}", emoji::WRENCH, dist_path);
         if let Err(_e) = fs::create_dir_all(&dist_path) {
             return Err(format!("{} Creating directory {} failed", emoji::ERROR, dist_path).into());
         }
