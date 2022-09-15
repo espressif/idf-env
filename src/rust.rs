@@ -4,6 +4,7 @@ use crate::package::{
     download_file, prepare_package, prepare_package_strip_prefix, prepare_single_binary,
 };
 use crate::shell::{run_command, update_env_path};
+use anyhow::{bail, Result};
 use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
 use std::fs::{copy, remove_dir_all};
@@ -48,6 +49,8 @@ struct RustToolchain {
     mingw_dist_file: String,
     mingw_destination_directory: String,
 }
+
+// type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 fn get_llvm_arch(arch: &str) -> &str {
     match arch {
@@ -267,7 +270,7 @@ fn build_rust_toolchain(
 //     }
 // }
 
-fn install_rust_nightly() {
+fn install_rust_nightly() -> Result<()> {
     let rustup_path = format!("{}/bin/rustup.exe", get_cargo_home());
 
     println!("{} install nightly", rustup_path);
@@ -285,11 +288,13 @@ fn install_rust_nightly() {
         }
         Err(e) => {
             println!("Error: {}", e);
+            // Err(format!("Error: {}", e))?;
         }
     }
+    Ok(())
 }
 
-pub fn install_rustup() {
+pub fn install_rustup() -> Result<()> {
     #[cfg(windows)]
     let rustup_init_path = download_file(
         "https://win.rustup.rs/x86_64".to_string(),
@@ -302,6 +307,7 @@ pub fn install_rustup() {
         "https://sh.rustup.rs".to_string(),
         "rustup-init.sh",
         &get_dist_path("rustup"),
+        None,
     )
     .unwrap();
     match std::process::Command::new(rustup_init_path)
@@ -318,9 +324,10 @@ pub fn install_rustup() {
             println!("{} {}", emoji::CHECK, result);
         }
         Err(e) => {
-            println!("{} Error: {}", emoji::ERROR, e);
+            bail!("{} Error: {}", emoji::ERROR, e);
         }
     }
+    Ok(())
 }
 
 // fn install_rust(default_host: &str) {
@@ -331,10 +338,14 @@ pub fn install_rustup() {
 fn install_mingw(toolchain: &RustToolchain) {
     if Path::new(toolchain.mingw_destination_directory.as_str()).exists() {
         println!(
-            "Previous installation of MinGW exist in: {}",
+            "{} Previous installation of MinGW exist in: {}",
+            emoji::INFO,
             toolchain.mingw_destination_directory
         );
-        println!("Please, remove the directory before new installation.");
+        println!(
+            "{} Please, remove the directory before new installation.",
+            emoji::INFO
+        );
         return;
     }
 
@@ -441,7 +452,7 @@ fn install_vctools() {
     }
 }
 
-fn install_rust_toolchain(toolchain: &RustToolchain) {
+fn install_rust_toolchain(toolchain: &RustToolchain) -> Result<()> {
     match std::process::Command::new("rustup")
         .arg("toolchain")
         .arg("list")
@@ -457,7 +468,7 @@ fn install_rust_toolchain(toolchain: &RustToolchain) {
             // }
             if !result.contains("nightly") {
                 println!("nightly toolchain not found");
-                install_rust_nightly();
+                install_rust_nightly()?;
             }
             println!(
                 "rustup - found - {}",
@@ -467,47 +478,44 @@ fn install_rust_toolchain(toolchain: &RustToolchain) {
         Err(e) => {
             if let std::io::ErrorKind::NotFound = e.kind() {
                 println!("{} rustup was not found.", emoji::WARN);
-                install_rustup();
+                install_rustup()?;
+            } else {
+                bail!("{} Error: {}", emoji::ERROR, e);
             }
         }
     }
 
     if Path::new(toolchain.destination_dir.as_str()).exists() {
         println!(
-            "Previous installation of Rust Toolchain exist in: {}",
+            "{} Previous installation of Rust Toolchain exist in: {}",
+            emoji::INFO,
             toolchain.destination_dir
         );
-        println!("Please, remove the directory before new installation.");
+        println!(
+            "{} Please, remove the directory before new installation.",
+            emoji::INFO
+        );
+        return Ok(());
     } else {
         // Some platfroms like Windows are available in single bundle rust + src, because install
         // script in dist is not available for the plaform. It's sufficient to extract the toolchain
         if toolchain.rust_installer.is_empty() {
-            match prepare_package_strip_prefix(
+            if let Err(e) = prepare_package_strip_prefix(
                 &toolchain.rust_dist_url,
                 &toolchain.rust_dist_file,
                 &toolchain.destination_dir,
                 "esp",
             ) {
-                Ok(_) => {
-                    println!("Package ready");
-                }
-                Err(_e) => {
-                    println!("Unable to prepare package");
-                }
+                bail!("{} Unable to prepare package: {}", emoji::ERROR, e);
             }
         } else {
-            match prepare_package_strip_prefix(
+            if let Err(e) = prepare_package_strip_prefix(
                 &toolchain.rust_dist_url,
                 &toolchain.rust_dist_file,
                 &toolchain.rust_dist_temp,
                 toolchain.rust_dist.as_str(),
             ) {
-                Ok(_) => {
-                    println!("Package ready");
-                }
-                Err(_e) => {
-                    println!("Unable to prepare package");
-                }
+                bail!("{} Unable to prepare package: {}", emoji::ERROR, e);
             }
 
             let mut arguments: Vec<String> = [].to_vec();
@@ -518,27 +526,15 @@ fn install_rust_toolchain(toolchain: &RustToolchain) {
                 toolchain.destination_dir
             ));
 
-            match run_command("/bin/bash", arguments.clone(), "".to_string()) {
-                Ok(_) => {
-                    println!("Command succeeded");
-                }
-                Err(_e) => {
-                    println!("Command failed");
-                }
-            }
+            run_command("/bin/bash", arguments.clone(), "".to_string())?;
 
-            match prepare_package_strip_prefix(
+            if let Err(e) = prepare_package_strip_prefix(
                 &toolchain.rust_src_dist_url,
                 &toolchain.rust_src_dist_file,
                 &toolchain.rust_src_dist_temp,
                 toolchain.rust_src_dist.as_str(),
             ) {
-                Ok(_) => {
-                    println!("Package ready");
-                }
-                Err(_e) => {
-                    println!("Unable to prepare package");
-                }
+                bail!("{} Unable to prepare package: {}", emoji::ERROR, e);
             }
 
             let mut arguments: Vec<String> = [].to_vec();
@@ -549,14 +545,7 @@ fn install_rust_toolchain(toolchain: &RustToolchain) {
                 toolchain.destination_dir
             ));
 
-            match run_command("/bin/bash", arguments, "".to_string()) {
-                Ok(_) => {
-                    println!("Command succeeded");
-                }
-                Err(_e) => {
-                    println!("Command failed");
-                }
-            }
+            run_command("/bin/bash", arguments, "".to_string())?;
         }
     }
 
@@ -566,20 +555,13 @@ fn install_rust_toolchain(toolchain: &RustToolchain) {
             toolchain.idf_tool_xtensa_elf_clang
         );
         println!("Please, remove the directory before new installation.");
-    } else {
-        match prepare_package_strip_prefix(
-            &toolchain.llvm_url,
-            &toolchain.llvm_file,
-            &toolchain.idf_tool_xtensa_elf_clang,
-            "xtensa-esp32-elf-clang",
-        ) {
-            Ok(_) => {
-                println!("Package ready");
-            }
-            Err(_e) => {
-                println!("Unable to prepare package");
-            }
-        }
+    } else if let Err(_e) = prepare_package_strip_prefix(
+        &toolchain.llvm_url,
+        &toolchain.llvm_file,
+        &toolchain.idf_tool_xtensa_elf_clang,
+        "xtensa-esp32-elf-clang",
+    ) {
+        bail!("{} Unable to prepare package: {}", emoji::ERROR, e);
     }
 
     println!("Updating environment variables:");
@@ -619,6 +601,7 @@ fn install_rust_toolchain(toolchain: &RustToolchain) {
     }
 
     install_extra_crates(&toolchain.extra_crates);
+    Ok(())
 }
 
 fn uninstall_rust_toolchain(toolchain: &RustToolchain) {
@@ -675,7 +658,7 @@ fn get_install_runner(
         emoji::DIAMOND,
         toolchain,
     );
-    install_rust_toolchain(&toolchain);
+    install_rust_toolchain(&toolchain).unwrap();
     Ok(())
 }
 
@@ -686,7 +669,7 @@ fn get_reinstall_runner(
     let toolchain = get_default_rust_toolchain(matches);
 
     uninstall_rust_toolchain(&toolchain);
-    install_rust_toolchain(&toolchain);
+    install_rust_toolchain(&toolchain).unwrap();
     Ok(())
 }
 

@@ -220,7 +220,12 @@ async fn download_zip(url: &str, output: &str) -> Result<()> {
     fetch_url(url, output).await
 }
 
-pub fn download_file(url: String, file_name: &str, output_directory: &str) -> Result<String> {
+pub fn download_file(
+    url: String,
+    file_name: &str,
+    output_directory: &str,
+    strip_prefix: Option<&str>,
+) -> Result<String> {
     let file_path = format!("{}/{}", output_directory, file_name);
     if Path::new(&file_path).exists() {
         println!("{} Using cached file: {}", emoji::INFO, file_path);
@@ -412,7 +417,9 @@ pub fn prepare_package_strip_prefix(
                 untarxz_strip_prefix(&package_archive, output_directory, strip_prefix).unwrap();
             }
             _ => {
-                println!("Unsuported file extension.");
+                return Err(
+                    format!("{} Unsuported file extension: {}", emoji::ERROR, extension).into(),
+                );
             }
         }
     }
