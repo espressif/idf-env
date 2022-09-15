@@ -279,14 +279,15 @@ pub fn install_rustup() -> Result<()> {
         false,
     )
     .unwrap();
-
+    println!("{} Installing rustup with nightly toolchain", emoji::WRENCH);
     let mut arguments: Vec<String> = [].to_vec();
+    arguments.push(rustup_init_path);
     arguments.push("--default-toolchain".to_string());
     arguments.push("nightly".to_string());
     arguments.push("--profile".to_string());
     arguments.push("minimal".to_string());
     arguments.push("-y".to_string());
-    run_command(&rustup_init_path, arguments.clone(), "".to_string())?;
+    run_command("/bin/bash", arguments.clone(), "".to_string())?;
 
     Ok(())
 }
