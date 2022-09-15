@@ -9,6 +9,7 @@ use std::{fs, io};
 use tar::Archive;
 use tokio::runtime::Handle;
 use xz2::read::XzDecoder;
+// use zip::ZipArchive;
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
@@ -246,14 +247,16 @@ pub fn download_file(
         file_name,
         url
     );
-    let resp = reqwest::blocking::get(&url).unwrap();
-    let content_br = BufReader::new(resp);
+    let mut resp = reqwest::blocking::get(&url).unwrap();
 
     if uncompress {
         let extension = Path::new(file_name).extension().unwrap().to_str().unwrap();
         match extension {
             "zip" => {
                 unzip_strip_prefix(&file_path, output_directory, "").unwrap();
+                // let zipfile = ZipArchive::new(content_br).unwrap();
+                // let mut archive = Archive::new(zipfile);
+                // archive.unpack(output_directory).unwrap();
             }
             "gz" => {
                 println!(
@@ -261,6 +264,7 @@ pub fn download_file(
                     emoji::WRENCH,
                     output_directory
                 );
+                let content_br = BufReader::new(resp);
                 let tarfile = GzDecoder::new(content_br);
                 let mut archive = Archive::new(tarfile);
                 archive.unpack(output_directory).unwrap();
@@ -271,6 +275,7 @@ pub fn download_file(
                     emoji::WRENCH,
                     output_directory
                 );
+                let content_br = BufReader::new(resp);
                 let tarfile = XzDecoder::new(content_br);
                 let mut archive = Archive::new(tarfile);
                 archive.unpack(output_directory).unwrap();
@@ -281,6 +286,10 @@ pub fn download_file(
                 );
             }
         }
+    } else {
+        println!("{} Creating file: {}", emoji::WRENCH, file_path);
+        let mut out = File::create(file_path)?;
+        io::copy(&mut resp, &mut out)?;
     }
     Ok(format!("{}/{}", output_directory, file_name))
 }
