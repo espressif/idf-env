@@ -258,7 +258,7 @@ fn install_rust_nightly() -> Result<()> {
     arguments.push("nightly".to_string());
     arguments.push("--profile".to_string());
     arguments.push("minimal".to_string());
-    run_command(&rustup_path, arguments.clone(), "".to_string())?;
+    run_command(&rustup_path, arguments, "".to_string())?;
     Ok(())
 }
 
@@ -287,7 +287,7 @@ pub fn install_rustup() -> Result<()> {
     arguments.push("--profile".to_string());
     arguments.push("minimal".to_string());
     arguments.push("-y".to_string());
-    run_command("/bin/bash", arguments.clone(), "".to_string())?;
+    run_command("/bin/bash", arguments, "".to_string())?;
 
     Ok(())
 }
@@ -471,7 +471,7 @@ fn install_rust_toolchain(toolchain: &RustToolchain) -> Result<()> {
                 toolchain.arch,
                 toolchain.destination_dir
             ));
-            run_command("/bin/bash", arguments.clone(), "".to_string())?;
+            run_command("/bin/bash", arguments, "".to_string())?;
 
             download_file(
                 toolchain.rust_src_dist_url.clone(),
