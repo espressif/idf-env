@@ -1,5 +1,9 @@
-use crate::config::{get_cargo_home, get_dist_path, get_home_dir, get_tool_path};
+use crate::config::{
+    get_cargo_home, get_dist_path, get_esp_idf_directory, get_home_dir, get_tool_path,
+    get_tools_path, parse_idf_targets, parse_targets,
+};
 use crate::emoji;
+use crate::idf::{install_espidf, EspIdf, GIT_REPOSITORY_URL};
 use crate::package::{
     download_file, prepare_package, prepare_package_strip_prefix, prepare_single_binary,
 };
@@ -7,12 +11,23 @@ use crate::shell::{run_command, update_env_path};
 use anyhow::{bail, Result};
 use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
-use std::fs::{copy, remove_dir_all};
+use espflash::Chip;
+use std::fs::{copy, remove_dir_all, File};
+use std::io::Write;
 use std::path::Path;
 use std::process::Stdio;
 
 const DEFAULT_RUST_TOOLCHAIN_VERSION: &str = "1.63.0.2";
 const DEFAULT_LLVM_VERSION: &str = "esp-14.0.0-20220415";
+const DEFAULT_BUILD_TARGET: &str = "all";
+const DEFAULT_ESP_IDF: &str = "";
+const DEFAULT_EXTRA_CRATES: &str = "cargo-espflash";
+const DEFAULT_EXTRA_TOOLS: &str = "";
+const DEFAULT_NIGHTLY_VERSION: &str = "nightly";
+#[cfg(windows)]
+const DEFAULT_EXPORT_FILE: &str = "export-esp.bat";
+#[cfg(unix)]
+const DEFAULT_EXPORT_FILE: &str = "export-esp.sh";
 
 #[derive(Debug)]
 struct RustCrate {
@@ -26,31 +41,22 @@ struct RustCrate {
 #[derive(Debug)]
 struct RustToolchain {
     arch: String,
-    // llvm_release: String,
-    // llvm_arch: String,
-    //artifact_file_extension: String,
-    // version: String,
-    // rust_dist: String,
-    // rust_dist_temp: String,
-    // rust_src_dist: String,
-    // rust_src_dist_temp: String,
-    // rust_src_dist_file: String,
-    // rust_dist_file: String,
-    rust_dist_url: String,
-    rust_src_dist_url: String,
-    rust_installer: String,
+    build_target: Vec<Chip>,
     destination_dir: String,
-    // llvm_file: String,
-    llvm_url: String,
-    idf_tool_xtensa_elf_clang: String,
-    extra_tools: String,
+    esp_idf: String,
+    export_file: String,
     extra_crates: Vec<RustCrate>,
-    mingw_url: String,
-    mingw_dist_file: String,
+    extra_tools: String,
+    llvm_url: String,
     mingw_destination_directory: String,
+    mingw_dist_file: String,
+    mingw_url: String,
+    nightly_version: String,
+    rust_dist_url: String,
+    rust_installer: String,
+    rust_src_dist_url: String,
+    xtensa_elf_clang_file: String,
 }
-
-// type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 fn get_llvm_arch(arch: &str) -> &str {
     match arch {
@@ -58,6 +64,17 @@ fn get_llvm_arch(arch: &str) -> &str {
         "x86_64-unknown-linux-gnu" => "linux-amd64",
         "x86_64-pc-windows-msvc" => "win64",
         "x86_64-pc-windows-gnu" => "win64",
+        _ => arch,
+    }
+}
+fn get_gcc_arch_extension(arch: &str) -> &str {
+    match arch {
+        "aarch64-apple-darwin" => "macos.tar.gz",
+        "aarch64-unknown-linux-gnu" => "linux-arm64.tar.gz",
+        "x86_64-apple-darwin" => "macos.tar.gz",
+        "x86_64-unknown-linux-gnu" => "linux-amd64.tar.gz",
+        "x86_64-pc-windows-msvc" => "win64.zip",
+        "x86_64-pc-windows-gnu" => "win64.zip",
         _ => arch,
     }
 }
@@ -166,85 +183,68 @@ fn get_extra_crates(crates_list: &str, arch: &str) -> Vec<RustCrate> {
         .collect()
 }
 
-fn build_rust_toolchain(
-    version: &str,
-    llvm_version: &str,
-    arch: &str,
-    extra_tools: &str,
-    extra_crates_list: &str,
-) -> RustToolchain {
-    let llvm_release = llvm_version.to_string();
-    let artifact_file_extension = get_artifact_file_extension(arch).to_string();
-    let llvm_arch = get_llvm_arch(arch).to_string();
-    let llvm_file = format!(
-        "xtensa-esp32-elf-llvm{}-{}-{}.{}",
-        get_llvm_version_with_underscores(&llvm_release),
-        llvm_release,
-        llvm_arch,
-        artifact_file_extension
-    );
-    let rust_dist = format!("rust-{}-{}", version, arch);
-    let rust_src_dist = format!("rust-src-{}", version);
-    let rust_dist_file = format!("{}.{}", rust_dist, artifact_file_extension);
-    let rust_src_dist_file = format!("{}.{}", rust_src_dist, artifact_file_extension);
-    let rust_dist_url = format!(
-        "https://github.com/esp-rs/rust-build/releases/download/v{}/{}",
-        version, rust_dist_file
-    );
-    let rust_src_dist_url = format!(
-        "https://github.com/esp-rs/rust-build/releases/download/v{}/{}",
-        version, rust_src_dist_file
-    );
-    let llvm_url = format!(
-        "https://github.com/espressif/llvm-project/releases/download/{}/{}",
-        llvm_release, llvm_file
-    );
-    let idf_tool_xtensa_elf_clang = format!(
-        "{}/{}-{}",
-        get_tool_path("xtensa-esp32-elf-clang"),
-        llvm_release,
-        arch
-    );
-    let mingw_release = "x86_64-12.1.0-release-posix-seh-rt_v10-rev3".to_string();
-    // Temporal solution - repackaging 7z to zip, because Rust based decompression crate does not have BCJ support: https://github.com/dyz1990/sevenz-rust/issues/1
-    // let mingw_dist_file = format!("{}.zip", mingw_release);
-    // let mingw_url = format!(
-    //     "https://github.com/esp-rs/rust-build/releases/download/mingw-12/{}",
-    //     mingw_dist_file
-    // );
-    // Final solution - TO BE TESTED
-    let mingw_dist_file = format!("{}.7z", mingw_release);
-    let mingw_url = format!(
-        "https://github.com/niXman/mingw-builds-binaries/releases/download/12.1.0-rt_v10-rev3/{}",
-        mingw_dist_file
-    );
-    let mingw_destination_directory = format!("{}/{}", get_tool_path("mingw"), mingw_release);
-
-    RustToolchain {
-        arch: arch.to_string(),
-        // llvm_release,
-        // llvm_arch,
-        //artifact_file_extension,
-        // version: version.to_string(),
-        // rust_dist,
-        // rust_dist_temp: get_tool_path("rust"),
-        // rust_src_dist,
-        // rust_src_dist_temp: get_tool_path("rust-src"),
-        // rust_src_dist_file,
-        // rust_dist_file,
-        rust_dist_url,
-        rust_src_dist_url,
-        rust_installer: get_rust_installer(arch).to_string(),
-        destination_dir: format!("{}/.rustup/toolchains/esp", get_home_dir()),
-        // llvm_file,
-        llvm_url,
-        idf_tool_xtensa_elf_clang,
-        extra_tools: extra_tools.to_string(),
-        extra_crates: get_extra_crates(extra_crates_list, arch),
-        mingw_url,
-        mingw_dist_file,
-        mingw_destination_directory,
+fn install_gcc_targets(targets: Vec<Chip>) -> Result<Vec<String>, String> {
+    let mut exports: Vec<String> = Vec::new();
+    for target in targets {
+        match target {
+            Chip::Esp32 => {
+                install_gcc("xtensa-esp32-elf").unwrap();
+                exports.push(format!(
+                    "export PATH={}:$PATH",
+                    get_tool_path("xtensa-esp32-elf/bin")
+                ));
+            }
+            Chip::Esp32s2 => {
+                install_gcc("xtensa-esp32s2-elf").unwrap();
+                exports.push(format!(
+                    "export PATH={}:$PATH",
+                    get_tool_path("xtensa-esp32s2-elf/bin")
+                ));
+            }
+            Chip::Esp32s3 => {
+                install_gcc("xtensa-esp32s3-elf").unwrap();
+                exports.push(format!(
+                    "export PATH={}:$PATH",
+                    get_tool_path("xtensa-esp32s3-elf/bin")
+                ));
+            }
+            Chip::Esp32c3 => {
+                install_gcc("riscv32-esp-elf").unwrap();
+                exports.push(format!(
+                    "export PATH={}:$PATH",
+                    get_tool_path("riscv32-esp-elf/bin")
+                ));
+            }
+            _ => {
+                println!("{} Unknown target", emoji::ERROR)
+            }
+        }
     }
+    Ok(exports)
+}
+
+fn install_gcc(gcc_target: &str) -> Result<()> {
+    let gcc_path = get_tool_path(gcc_target);
+    // println!("gcc path: {}", gcc_path);
+    let gcc_file = format!(
+        "{}-gcc8_4_0-esp-2021r2-patch3-{}",
+        gcc_target,
+        get_gcc_arch_extension(guess_host_triple::guess_host_triple().unwrap())
+    );
+    let gcc_dist_url = format!(
+        "https://github.com/espressif/crosstool-NG/releases/download/esp-2021r2-patch3/{}",
+        gcc_file
+    );
+    // match prepare_package_strip_prefix(&gcc_dist_url, gcc_path, "") {
+    //     Ok(_) => {
+    //         println!("{} Package {} ready", SPARKLE, gcc_file);
+    //     }
+    //     Err(_e) => {
+    //         println!("{} Unable to prepare {}", ERROR, gcc_file);
+    //     }
+    // }
+    download_file(gcc_dist_url, &gcc_file, &gcc_path, true).unwrap();
+    Ok(())
 }
 
 fn install_rust_nightly() -> Result<()> {
@@ -260,6 +260,56 @@ fn install_rust_nightly() -> Result<()> {
     arguments.push("minimal".to_string());
     run_command(&rustup_path, arguments, "".to_string())?;
     Ok(())
+}
+
+pub fn install_riscv_target(version: &str) {
+    match std::process::Command::new("rustup")
+        .arg("component")
+        .arg("add")
+        .arg("rust-src")
+        .arg("--toolchain")
+        .arg(version)
+        .stdout(Stdio::piped())
+        .output()
+    {
+        Ok(child_output) => {
+            let result = String::from_utf8_lossy(&child_output.stdout);
+            println!(
+                "{} Rust-src for RiscV target installed suscesfully: {}",
+                emoji::CHECK,
+                result
+            );
+        }
+        Err(e) => {
+            println!(
+                "{}  Rust-src for RiscV target installation failed: {}",
+                emoji::ERROR,
+                e
+            );
+        }
+    }
+
+    match std::process::Command::new("rustup")
+        .arg("target")
+        .arg("add")
+        .arg("--toolchain")
+        .arg(version)
+        .arg("riscv32imc-unknown-none-elf")
+        .stdout(Stdio::piped())
+        .output()
+    {
+        Ok(child_output) => {
+            let result = String::from_utf8_lossy(&child_output.stdout);
+            println!(
+                "{} RiscV target installed suscesfully: {}",
+                emoji::CHECK,
+                result
+            );
+        }
+        Err(e) => {
+            println!("{} RiscV target installation failed: {}", emoji::ERROR, e);
+        }
+    }
 }
 
 pub fn install_rustup() -> Result<()> {
@@ -292,11 +342,6 @@ pub fn install_rustup() -> Result<()> {
     Ok(())
 }
 
-// fn install_rust(default_host: &str) {
-//     // install_rust_stable(default_host);
-//     install_rust_nightly();
-// }
-
 fn install_mingw(toolchain: &RustToolchain) {
     if Path::new(toolchain.mingw_destination_directory.as_str()).exists() {
         println!(
@@ -322,56 +367,53 @@ fn install_mingw(toolchain: &RustToolchain) {
     }
 }
 
-fn install_extra_crates(extra_crates: &[RustCrate]) {
-    for extra_crate in extra_crates.iter() {
-        println!("Installing crate {}", extra_crate.name);
+fn install_crate(extra_crate: &RustCrate) {
+    println!("Installing crate {}", extra_crate.name);
+    if extra_crate.url.is_empty() {
+        // Binary crate is not available, install from source code
+        let cargo_path = format!("{}/bin/cargo.exe", get_cargo_home());
 
-        if extra_crate.url.is_empty() {
-            // Binary crate is not available, install from source code
-            let cargo_path = format!("{}/bin/cargo.exe", get_cargo_home());
-
-            println!("{} install {}", cargo_path, extra_crate.name);
-            match std::process::Command::new(cargo_path)
-                .arg("install")
-                .arg(&extra_crate.name)
-                .stdout(Stdio::piped())
-                .output()
-            {
-                Ok(child_output) => {
-                    let result = String::from_utf8_lossy(&child_output.stdout);
-                    println!("Crate installed: {}", result);
-                }
-                Err(e) => {
-                    println!("Crate installation failed: {}", e);
-                }
+        println!("{} install {}", cargo_path, extra_crate.name);
+        match std::process::Command::new(cargo_path)
+            .arg("install")
+            .arg(&extra_crate.name)
+            .stdout(Stdio::piped())
+            .output()
+        {
+            Ok(child_output) => {
+                let result = String::from_utf8_lossy(&child_output.stdout);
+                println!("Crate installed: {}", result);
             }
-        } else {
-            // Binary crate is available donwload it
-            let tmp_path = get_tool_path(&extra_crate.name);
-            match prepare_package(&extra_crate.url, &extra_crate.dist_file, &tmp_path) {
-                Ok(_) => {
-                    let source = format!(
-                        "{}/{}",
-                        get_tool_path(&extra_crate.name),
-                        extra_crate.dist_bin
-                    );
-                    match copy(source.clone(), &extra_crate.bin) {
-                        Ok(_) => {
-                            println!("Create {} installed.", extra_crate.name);
-                        }
-                        Err(_e) => {
-                            println!(
-                                "Unable to copy crate binary from {} to {}",
-                                source, extra_crate.bin
-                            )
-                        }
+            Err(e) => {
+                println!("Crate installation failed: {}", e);
+            }
+        }
+    } else {
+        // Binary crate is available donwload it
+        let tmp_path = get_tool_path(&extra_crate.name);
+        match prepare_package(&extra_crate.url, &extra_crate.dist_file, &tmp_path) {
+            Ok(_) => {
+                let source = format!(
+                    "{}/{}",
+                    get_tool_path(&extra_crate.name),
+                    extra_crate.dist_bin
+                );
+                match copy(source.clone(), &extra_crate.bin) {
+                    Ok(_) => {
+                        println!("Create {} installed.", extra_crate.name);
+                    }
+                    Err(_e) => {
+                        println!(
+                            "Unable to copy crate binary from {} to {}",
+                            source, extra_crate.bin
+                        )
                     }
                 }
-                Err(_e) => {
-                    println!("Unable to unpack bianry crate {}.", extra_crate.name);
-                }
-            };
-        }
+            }
+            Err(_e) => {
+                println!("Unable to unpack bianry crate {}.", extra_crate.name);
+            }
+        };
     }
 }
 
@@ -492,11 +534,11 @@ fn install_rust_toolchain(toolchain: &RustToolchain) -> Result<()> {
         }
     }
 
-    if Path::new(toolchain.idf_tool_xtensa_elf_clang.as_str()).exists() {
+    if Path::new(toolchain.xtensa_elf_clang_file.as_str()).exists() {
         println!(
             "{} Previous installation of LLVM exist in: {}.\n Please, remove the directory before new installation.",
             emoji::WARN,
-            &toolchain.idf_tool_xtensa_elf_clang
+            &toolchain.xtensa_elf_clang_file
         );
     } else {
         #[cfg(windows)]
@@ -506,27 +548,52 @@ fn install_rust_toolchain(toolchain: &RustToolchain) -> Result<()> {
         download_file(
             toolchain.llvm_url.clone(),
             file_name,
-            &toolchain.idf_tool_xtensa_elf_clang,
+            &toolchain.xtensa_elf_clang_file,
             true,
         )
         .unwrap();
     }
 
-    // TODO: Fix environment
-    // println!("Updating environment variables:");
-    // let libclang_bin = format!("{}/bin/", toolchain.idf_tool_xtensa_elf_clang);
+    let mut exports: Vec<String> = Vec::new();
+    let libclang_path = format!("{}/lib", get_tool_path("xtensa-esp32-elf-clang"));
+    #[cfg(unix)]
+    exports.push(format!("export LIBCLANG_PATH=\"{}\"", &libclang_path));
+    #[cfg(windows)]
+    exports.push(format!("set \"LIBCLANG_PATH={}\"", &libclang_path));
 
-    // #[cfg(windows)]
-    // println!("PATH+=\";{}\"", libclang_bin);
-    // #[cfg(unix)]
-    // println!("export PATH=\"{}:$PATH\"", libclang_bin);
+    if toolchain.build_target.contains(&Chip::Esp32c3) {
+        println!("{} Installing riscv target", emoji::WRENCH);
+        install_riscv_target(&toolchain.nightly_version);
+    }
 
-    // update_env_path(&libclang_bin);
-
-    // It seems that LIBCLANG_PATH is not necessary for Windows
-    // let libclang_path = format!("{}/libclang.dll", libclang_bin);
-    // println!("LIBCLANG_PATH=\"{}\"", libclang_path);
-    // set_env_variable("LIBCLANG_PATH", libclang_path);
+    if !toolchain.esp_idf.is_empty() {
+        println!("{} Installing ESP-IDF", emoji::WRENCH);
+        let build_target = parse_idf_targets(toolchain.build_target.clone()).unwrap();
+        let espidf = EspIdf {
+            build_target,
+            minified: true,
+            path: get_tools_path(),
+            repository_url: GIT_REPOSITORY_URL.to_string(),
+            version: toolchain.esp_idf.clone(),
+        };
+        install_espidf(&espidf)?;
+        exports.push(format!("export IDF_TOOLS_PATH=\"{}\"", get_tools_path()));
+        exports.push(format!(
+            ". {}/export.sh",
+            get_esp_idf_directory(&espidf.version)
+        ));
+        let ldproxy = get_rust_crate("ldproxy", &toolchain.arch).unwrap();
+        // install_crate(&ldproxy);
+    } else {
+        println!("{} No esp-idf version provided.", emoji::WARN);
+        println!("{} Installing gcc for targets", emoji::WRENCH);
+        exports.extend(
+            install_gcc_targets(toolchain.build_target.clone())
+                .unwrap()
+                .iter()
+                .cloned(),
+        );
+    }
 
     // Install additional dependencies specific for the host
     // for extra_tool in toolchain.extra_tools
@@ -549,7 +616,26 @@ fn install_rust_toolchain(toolchain: &RustToolchain) -> Result<()> {
         }
     }
 
-    install_extra_crates(&toolchain.extra_crates);
+    // for extra_crate in toolchain.extra_crates.iter() {
+    //     install_crate(extra_crate);
+    // }
+
+    println!("{} Updating environment variables:", emoji::DIAMOND);
+    for e in exports.iter() {
+        println!("{}", e);
+    }
+    println!(
+        "{} Creating export file at {}",
+        emoji::INFO,
+        &toolchain.export_file
+    );
+    let mut file = File::create(&toolchain.export_file)?;
+    for e in exports.iter() {
+        file.write_all(e.as_bytes())?;
+        file.write_all(b"\n")?;
+    }
+    println!("{} Installation succeeded", emoji::CHECK);
+
     Ok(())
 }
 
@@ -566,9 +652,9 @@ fn uninstall_rust_toolchain(toolchain: &RustToolchain) {
         }
     }
 
-    if Path::new(toolchain.idf_tool_xtensa_elf_clang.as_str()).exists() {
-        println!("Removing: {}", toolchain.idf_tool_xtensa_elf_clang);
-        match remove_dir_all(&toolchain.idf_tool_xtensa_elf_clang) {
+    if Path::new(toolchain.xtensa_elf_clang_file.as_str()).exists() {
+        println!("Removing: {}", toolchain.xtensa_elf_clang_file);
+        match remove_dir_all(&toolchain.xtensa_elf_clang_file) {
             Ok(_) => {
                 println!("Removed.");
             }
@@ -579,27 +665,88 @@ fn uninstall_rust_toolchain(toolchain: &RustToolchain) {
     }
 }
 
-fn get_default_rust_toolchain(matches: &clap::ArgMatches<'_>) -> RustToolchain {
-    let default_host_triple = matches.value_of("default-host").unwrap();
-    let toolchain_version = matches.value_of("toolchain-version").unwrap();
-    let llvm_version = matches.value_of("llvm-version").unwrap();
+fn get_rust_toolchain(matches: &clap::ArgMatches<'_>) -> RustToolchain {
+    let build_target = matches.value_of("build-target").unwrap();
+    let targets: Vec<Chip> = parse_targets(build_target).unwrap();
+    let arch = matches.value_of("default-host").unwrap();
+    let esp_idf = matches.value_of("esp-idf").unwrap();
+    let export_file = matches.value_of("export-file").unwrap();
+    let extra_crates = matches.value_of("extra-crates").unwrap();
     let extra_tools = matches.value_of("extra-tools").unwrap();
-    let extra_crates_list = matches.value_of("extra-crates").unwrap();
-
-    build_rust_toolchain(
-        toolchain_version,
+    let llvm_version = matches.value_of("llvm-version").unwrap();
+    let nightly_version = matches.value_of("nightly-version").unwrap();
+    let toolchain_version = matches.value_of("toolchain-version").unwrap();
+    let artifact_file_extension = get_artifact_file_extension(arch).to_string();
+    let llvm_arch = get_llvm_arch(arch).to_string();
+    let llvm_file = format!(
+        "xtensa-esp32-elf-llvm{}-{}-{}.{}",
+        get_llvm_version_with_underscores(llvm_version),
         llvm_version,
-        default_host_triple,
-        extra_tools,
-        extra_crates_list,
-    )
+        llvm_arch,
+        artifact_file_extension
+    );
+    let llvm_url = format!(
+        "https://github.com/espressif/llvm-project/releases/download/{}/{}",
+        llvm_version, llvm_file
+    );
+    let rust_dist = format!("rust-{}-{}", toolchain_version, arch);
+    let rust_src_dist = format!("rust-src-{}", toolchain_version);
+    let rust_dist_file = format!("{}.{}", rust_dist, artifact_file_extension);
+    let rust_src_dist_file = format!("{}.{}", rust_src_dist, artifact_file_extension);
+    let rust_dist_url = format!(
+        "https://github.com/esp-rs/rust-build/releases/download/v{}/{}",
+        toolchain_version, rust_dist_file
+    );
+    let rust_src_dist_url = format!(
+        "https://github.com/esp-rs/rust-build/releases/download/v{}/{}",
+        toolchain_version, rust_src_dist_file
+    );
+    let xtensa_elf_clang_file = format!(
+        "{}/{}-{}",
+        get_tool_path("xtensa-esp32-elf-clang"),
+        llvm_version,
+        arch
+    );
+    let mingw_release = "x86_64-12.1.0-release-posix-seh-rt_v10-rev3".to_string();
+    // Temporal solution - repackaging 7z to zip, because Rust based decompression crate does not have BCJ support: https://github.com/dyz1990/sevenz-rust/issues/1
+    // let mingw_dist_file = format!("{}.zip", mingw_release);
+    // let mingw_url = format!(
+    //     "https://github.com/esp-rs/rust-build/releases/download/mingw-12/{}",
+    //     mingw_dist_file
+    // );
+    // Final solution - TO BE TESTED
+    let mingw_dist_file = format!("{}.7z", mingw_release);
+    let mingw_url = format!(
+        "https://github.com/niXman/mingw-builds-binaries/releases/download/12.1.0-rt_v10-rev3/{}",
+        mingw_dist_file
+    );
+    let mingw_destination_directory = format!("{}/{}", get_tool_path("mingw"), mingw_release);
+
+    RustToolchain {
+        arch: arch.to_string(),
+        build_target: targets,
+        destination_dir: format!("{}/.rustup/toolchains/esp", get_home_dir()),
+        esp_idf: esp_idf.to_string(),
+        export_file: export_file.to_string(),
+        extra_crates: get_extra_crates(extra_crates, arch),
+        extra_tools: extra_tools.to_string(),
+        llvm_url,
+        mingw_destination_directory,
+        mingw_dist_file,
+        mingw_url,
+        nightly_version: nightly_version.to_string(),
+        rust_dist_url,
+        rust_installer: get_rust_installer(arch).to_string(),
+        rust_src_dist_url,
+        xtensa_elf_clang_file,
+    }
 }
 
 fn get_install_runner(
     _args: &str,
     matches: &clap::ArgMatches<'_>,
 ) -> std::result::Result<(), clap::Error> {
-    let toolchain = get_default_rust_toolchain(matches);
+    let toolchain = get_rust_toolchain(matches);
     println!(
         "{} Installing esp Rust toolchan with:
         {} toolchain: {:#?}",
@@ -615,7 +762,7 @@ fn get_reinstall_runner(
     _args: &str,
     matches: &clap::ArgMatches<'_>,
 ) -> std::result::Result<(), clap::Error> {
-    let toolchain = get_default_rust_toolchain(matches);
+    let toolchain = get_rust_toolchain(matches);
 
     uninstall_rust_toolchain(&toolchain);
     install_rust_toolchain(&toolchain).unwrap();
@@ -626,7 +773,7 @@ fn get_uninstall_runner(
     _args: &str,
     matches: &clap::ArgMatches<'_>,
 ) -> std::result::Result<(), clap::Error> {
-    let toolchain = get_default_rust_toolchain(matches);
+    let toolchain = get_rust_toolchain(matches);
 
     uninstall_rust_toolchain(&toolchain);
     Ok(())
@@ -637,20 +784,12 @@ pub fn get_install_cmd<'a>() -> Command<'a, str> {
         .description("Install Rust environment for Xtensa")
         .options(|app| {
             app.arg(
-                Arg::with_name("toolchain-version")
-                    .short("t")
-                    .long("toolchain-version")
-                    .help("Version of Rust toolchain")
+                Arg::with_name("build-target")
+                    .short("b")
+                    .long("build-target")
+                    .help("Comma or space separated list of targets [esp32,esp32s2,esp32s3,esp32c3,all].")
                     .takes_value(true)
-                    .default_value(DEFAULT_RUST_TOOLCHAIN_VERSION),
-            )
-            .arg(
-                Arg::with_name("llvm-version")
-                    .short("l")
-                    .long("llvm-version")
-                    .help("Version of LLVM with Xtensa support")
-                    .takes_value(true)
-                    .default_value(DEFAULT_LLVM_VERSION),
+                    .default_value(DEFAULT_BUILD_TARGET),
             )
             .arg(
                 Arg::with_name("default-host")
@@ -661,20 +800,60 @@ pub fn get_install_cmd<'a>() -> Command<'a, str> {
                     .default_value(guess_host_triple::guess_host_triple().unwrap()),
             )
             .arg(
-                Arg::with_name("extra-tools")
-                    .short("x")
-                    .long("extra-tools")
-                    .help("Extra tools which should be deployed. E.g. MinGW")
+                Arg::with_name("esp-idf")
+                    .short("e")
+                    .long("esp-idf")
+                    .help("ESP-IDF branch to install. If empty, no esp-idf is installed.")
                     .takes_value(true)
-                    .default_value(""),
+                    .default_value(DEFAULT_ESP_IDF),
+            )
+            .arg(
+                Arg::with_name("export-file")
+                    .short("f")
+                    .long("export-file")
+                    .help("Destination of the export file generated")
+                    .takes_value(true)
+                    .default_value(DEFAULT_EXPORT_FILE),
             )
             .arg(
                 Arg::with_name("extra-crates")
-                    .short("e")
+                    .short("c")
                     .long("extra-crates")
                     .help("Extra crates which should be deployed. E.g. cargo-espflash")
                     .takes_value(true)
-                    .default_value(""),
+                    .default_value(DEFAULT_EXTRA_CRATES),
+            )
+            .arg(
+                Arg::with_name("extra-tools")
+                    .short("t")
+                    .long("extra-tools")
+                    .help("Extra tools which should be deployed. E.g. MinGW")
+                    .takes_value(true)
+                    .default_value(DEFAULT_EXTRA_TOOLS),
+            )
+            .arg(
+                Arg::with_name("llvm-version")
+                    .short("l")
+                    .long("llvm-version")
+                    .help("Version of LLVM with Xtensa support")
+                    .takes_value(true)
+                    .default_value(DEFAULT_LLVM_VERSION),
+            )
+            .arg(
+                Arg::with_name("nightly-version")
+                    .short("n")
+                    .long("nightly-version")
+                    .help("Nightly Rust toolchain version.")
+                    .takes_value(true)
+                    .default_value(DEFAULT_NIGHTLY_VERSION),
+            )
+            .arg(
+                Arg::with_name("toolchain-version")
+                    .short("v")
+                    .long("toolchain-version")
+                    .help("Version of Rust toolchain")
+                    .takes_value(true)
+                    .default_value(DEFAULT_RUST_TOOLCHAIN_VERSION),
             )
         })
         .runner(get_install_runner)

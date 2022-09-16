@@ -5,6 +5,7 @@ use crate::shell::run_command;
 use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
 use dirs::home_dir;
+use espflash::Chip;
 use json::JsonValue;
 use std::env;
 use std::fs;
@@ -38,6 +39,17 @@ pub fn get_python_env_path(idf_version: &str, python_version: &str) -> String {
         "{}/python_env/idf{}_py{}_env",
         tools_path, idf_version, python_version
     )
+}
+
+pub fn get_esp_idf_directory(idf_version: &str) -> String {
+    let parsed_version: String = idf_version
+        .chars()
+        .map(|x| match x {
+            '/' => '-',
+            _ => x,
+        })
+        .collect();
+    format!("{}/frameworks/esp-idf-{}", get_tools_path(), parsed_version)
 }
 
 pub fn get_selected_idf_path() -> String {
@@ -147,6 +159,49 @@ pub fn add_idf_config(idf_path: &str, version: &str, python_path: &str) {
     parsed_json["idfSelectedId"] = JsonValue::String(idf_id);
 
     fs::write(get_json_path(), format!("{:#}", parsed_json)).unwrap();
+}
+
+pub fn parse_targets(build_target: &str) -> Result<Vec<Chip>, String> {
+    // println!("Parsing targets: {}", build_target);
+    let mut chips: Vec<Chip> = Vec::new();
+    if build_target.contains("all") {
+        chips.push(Chip::Esp32);
+        chips.push(Chip::Esp32s2);
+        chips.push(Chip::Esp32s3);
+        chips.push(Chip::Esp32c3);
+        return Ok(chips);
+    }
+    let targets: Vec<&str> = if build_target.contains(' ') || build_target.contains(',') {
+        build_target.split([',', ' ']).collect()
+    } else {
+        vec![build_target]
+    };
+    for target in targets {
+        match target {
+            "esp32" => chips.push(Chip::Esp32),
+            "esp32s2" => chips.push(Chip::Esp32s2),
+            "esp32s3" => chips.push(Chip::Esp32s3),
+            "esp32c3" => chips.push(Chip::Esp32c3),
+            _ => {
+                return Err(format!("Unknown target: {}", target));
+            }
+        };
+    }
+
+    Ok(chips)
+}
+
+pub fn parse_idf_targets(build_target: Vec<Chip>) -> Result<String, String> {
+    let mut espidf_targets: String = String::new();
+    for chip in build_target {
+        if espidf_targets.is_empty() {
+            espidf_targets = espidf_targets + &chip.to_string().to_lowercase().replace('-', "");
+        } else {
+            espidf_targets =
+                espidf_targets + "," + &chip.to_string().to_lowercase().replace('-', "");
+        }
+    }
+    Ok(espidf_targets)
 }
 
 pub fn get_cmd<'a>() -> Command<'a, str> {
@@ -302,4 +357,44 @@ pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
         .description("Maintain configuration of ESP-IDF installations.");
 
     multi_cmd
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::config::get_esp_idf_directory;
+    use crate::config::get_tools_path;
+    use crate::config::parse_idf_targets;
+    // TODO: Refactor test into two subtests
+    // #[test]
+    // fn test_parse_idf_targets() {
+    //     // assert_eq!(parse_idf_targets(""), "");
+    //     assert_eq!(parse_idf_targets("esp32"), Ok("esp32".to_string()));
+    //     assert_eq!(
+    //         parse_idf_targets("esp32 esp32s2"),
+    //         Ok("esp32,esp32s2".to_string())
+    //     );
+    //     assert_eq!(
+    //         parse_idf_targets("esp32 esp32s2,esp32s3,esp32c3"),
+    //         Ok("esp32,esp32s2,esp32s3,esp32c3".to_string())
+    //     );
+    //     assert_eq!(
+    //         parse_idf_targets("all"),
+    //         Ok("esp32,esp32s2,esp32s3,esp32c3".to_string())
+    //     );
+    // }
+    #[test]
+    fn test_get_esp_idf_directory() {
+        assert_eq!(
+            get_esp_idf_directory("release/v4.4"),
+            format!("{}/frameworks/esp-idf-release-v4.4", get_tools_path())
+        );
+        assert_eq!(
+            get_esp_idf_directory("v4.4.2"),
+            format!("{}/frameworks/esp-idf-v4.4.2", get_tools_path())
+        );
+        assert_eq!(
+            get_esp_idf_directory("master"),
+            format!("{}/frameworks/esp-idf-master", get_tools_path())
+        );
+    }
 }

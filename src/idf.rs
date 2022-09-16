@@ -1,16 +1,16 @@
 #[cfg(windows)]
 use crate::config::get_tool_path;
 use crate::config::{
-    add_idf_config, get_git_path, get_python_env_path, get_selected_idf_path, get_tools_path,
-    update_property,
+    add_idf_config, get_esp_idf_directory, get_git_path, get_python_env_path,
+    get_selected_idf_path, get_tools_path, parse_idf_targets, parse_targets, update_property,
 };
 use crate::emoji;
 #[cfg(windows)]
 use crate::package::download_file;
 use crate::shell::run_command;
+use anyhow::{bail, Result};
 use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
-use espflash::Chip;
 use git2::Repository;
 use std::env;
 use std::fs;
@@ -20,7 +20,16 @@ use std::process::Stdio;
 use std::time::Instant;
 use tokio::runtime::Handle;
 
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+pub const GIT_REPOSITORY_URL: &str = "https://github.com/espressif/esp-idf";
+
+#[derive(Debug)]
+pub struct EspIdf {
+    pub build_target: String,
+    pub minified: bool,
+    pub path: String,
+    pub repository_url: String,
+    pub version: String,
+}
 
 async fn excecute_async(command: String, arguments: Vec<String>) {
     let _child_process = tokio::process::Command::new(command)
@@ -118,87 +127,25 @@ fn get_reset_cmd<'a>() -> Command<'a, str> {
         })
 }
 
-fn get_esp_idf_directory(idf_version: &str) -> String {
-    let parsed_version: String = idf_version
-        .chars()
-        .map(|x| match x {
-            '/' => '-',
-            _ => x,
-        })
-        .collect();
-    format!("{}/frameworks/esp-idf-{}", get_tools_path(), parsed_version)
-}
-
-fn parse_targets(build_target: &str) -> String {
-    // println!("Parsing targets: {}", build_target);
-    let mut chips: Vec<Chip> = Vec::new();
-    if build_target.contains("all") {
-        chips.push(Chip::Esp32);
-        chips.push(Chip::Esp32s2);
-        chips.push(Chip::Esp32s3);
-        chips.push(Chip::Esp32c3);
-    }
-    let targets: Vec<&str> = if build_target.contains(' ') || build_target.contains(',') {
-        build_target.split([',', ' ']).collect()
-    } else {
-        vec![build_target]
-    };
-    for target in targets {
-        match target {
-            "esp32" => chips.push(Chip::Esp32),
-            "esp32s2" => chips.push(Chip::Esp32s2),
-            "esp32s3" => chips.push(Chip::Esp32s3),
-            "esp32c3" => chips.push(Chip::Esp32c3),
-            _ => {
-                println!("Unknown target: {}", target);
-            }
-        };
-    }
-    let mut espidf_targets: String = String::new();
-    for chip in chips {
-        if espidf_targets.is_empty() {
-            espidf_targets = espidf_targets + &chip.to_string().to_lowercase().replace('-', "");
-        } else {
-            espidf_targets =
-                espidf_targets + "," + &chip.to_string().to_lowercase().replace('-', "");
-        }
-    }
-    espidf_targets
-}
-
-fn get_install_runner(
-    _args: &str,
-    matches: &clap::ArgMatches<'_>,
-) -> std::result::Result<(), clap::Error> {
-    let url = "https://github.com/espressif/esp-idf";
-    let version = matches.value_of("version").unwrap();
-    let targets = matches.value_of("target").unwrap();
-    let targets = parse_targets(targets);
-    let minified = matches.is_present("minified");
-
+fn get_espidf(matches: &clap::ArgMatches<'_>) -> EspIdf {
+    let targets = matches.value_of("target").unwrap().to_string();
+    let targets = parse_targets(&targets).unwrap();
+    let build_target = parse_idf_targets(targets).unwrap();
     let mut path = get_tools_path();
     if matches.is_present("path") {
         path = matches.value_of("path").unwrap().to_string();
         env::set_var("IDF_TOOLS_PATH", &path);
     }
-
-    println!(
-        "{} Installing esp-idf with:
-        {} version: {:?}
-        {} path: {:?}
-        {} targets: {:?}
-        {} minified: {:?}",
-        emoji::DISC,
-        emoji::DIAMOND,
-        version,
-        emoji::DIAMOND,
+    EspIdf {
+        build_target,
+        minified: matches.is_present("minified"),
         path,
-        emoji::DIAMOND,
-        targets,
-        emoji::DIAMOND,
-        minified
-    );
+        repository_url: GIT_REPOSITORY_URL.to_string(),
+        version: matches.value_of("version").unwrap().to_string(),
+    }
+}
 
+pub fn install_espidf(espidf: &EspIdf) -> Result<()> {
     #[cfg(windows)]
     println!("{} Downloading Git package", emoji::DOWNLOAD);
     #[cfg(windows)]
@@ -217,38 +164,31 @@ fn get_install_runner(
     let git_path = "/usr/bin/git".to_string();
 
     if !Path::new(&git_path).exists() {
-        return Err(clap::Error::with_description(
-            format!("{} Git not found at {}", emoji::ERROR, git_path).as_str(),
-            clap::ErrorKind::InvalidValue,
-        ));
+        bail!("{} Git not found at {}", emoji::ERROR, git_path);
     }
     update_property("gitPath", &git_path);
 
-    println!("{} Cloning esp-idf {}", emoji::DOWNLOAD, version);
-    let installation_path = get_esp_idf_directory(version);
+    println!("{} Cloning esp-idf {}", emoji::DOWNLOAD, espidf.version);
+    let installation_path = get_esp_idf_directory(&espidf.version);
     if !Path::new(&installation_path).exists() {
         let mut arguments: Vec<String> = [].to_vec();
         arguments.push("clone".to_string());
         arguments.push("--jobs".to_string());
         arguments.push("8".to_string());
         arguments.push("--branch".to_string());
-        arguments.push(version.to_string());
+        arguments.push(espidf.version.clone());
         arguments.push("--depth".to_string());
         arguments.push("1".to_string());
         arguments.push("--shallow-submodules".to_string());
         arguments.push("--recursive".to_string());
-        arguments.push(format!("{}.git", url));
+        arguments.push(format!("{}.git", espidf.repository_url));
         arguments.push(installation_path.clone());
         if let Err(_e) = run_command(&git_path, arguments, "".to_string()) {
-            return Err(clap::Error::with_description(
-                format!(
-                    "{} Branch {} not found in esp-idf(https://github.com/espressif/esp-idf)",
-                    emoji::ERROR,
-                    version
-                )
-                .as_str(),
-                clap::ErrorKind::InvalidValue,
-            ));
+            bail!(
+                "{} Branch {} not found in esp-idf(https://github.com/espressif/esp-idf)",
+                emoji::ERROR,
+                espidf.version
+            );
         }
     }
 
@@ -258,29 +198,26 @@ fn get_install_runner(
     let install_script_path = format!("{}/install.sh", installation_path);
 
     if !Path::new(&install_script_path).exists() {
-        return Err(clap::Error::with_description(
-            format!(
-                "{} ESP-IDF installs script not found at {}",
-                emoji::ERROR,
-                install_script_path
-            )
-            .as_str(),
-            clap::ErrorKind::InvalidValue,
-        ));
+        bail!(
+            "{} ESP-IDF installs script not found at {}",
+            emoji::ERROR,
+            install_script_path
+        );
     }
     println!(
         "{} Installing esp-idf with: {} for {}",
         emoji::WRENCH,
         install_script_path,
-        targets
+        espidf.build_target
     );
     let mut arguments: Vec<String> = [].to_vec();
-    arguments.push(targets);
+    arguments.push(espidf.build_target.clone());
     if let Err(_e) = run_command(&install_script_path, arguments, "".to_string()) {
-        return Err(clap::Error::with_description(
-            format!("{} Esp-idf {} installation failed", emoji::ERROR, version).as_str(),
-            clap::ErrorKind::InvalidValue,
-        ));
+        bail!(
+            "{} Esp-idf {} installation failed",
+            emoji::ERROR,
+            espidf.version
+        );
     }
 
     #[cfg(windows)]
@@ -302,10 +239,7 @@ fn get_install_runner(
     #[cfg(target_os = "macos")]
     let python_path = "/usr/local/bin/python".to_string();
     if !Path::new(&python_path).exists() {
-        return Err(clap::Error::with_description(
-            format!("{} Python not found at {}", emoji::ERROR, python_path).as_str(),
-            clap::ErrorKind::InvalidValue,
-        ));
+        bail!("{} Python not found at {}", emoji::ERROR, python_path);
     }
 
     #[cfg(target_os = "macos")]
@@ -324,10 +258,7 @@ fn get_install_runner(
         arguments.push("virtualenv".to_string());
         arguments.push(virtual_env_path.clone());
         if let Err(_e) = run_command(&python_path, arguments, "".to_string()) {
-            return Err(clap::Error::with_description(
-                format!("{} Virtual environment creation failed", emoji::ERROR).as_str(),
-                clap::ErrorKind::InvalidValue,
-            ));
+            bail!("{} Virtual environment creation failed", emoji::ERROR);
         }
     }
     #[cfg(windows)]
@@ -341,16 +272,12 @@ fn get_install_runner(
     arguments.push(idf_tools_scritp_path.clone());
     arguments.push("install".to_string());
     if let Err(e) = run_command(&python_path, arguments, "".to_string()) {
-        return Err(clap::Error::with_description(
-            format!(
-                "{} {} install failed: {}",
-                emoji::ERROR,
-                idf_tools_scritp_path,
-                e
-            )
-            .as_str(),
-            clap::ErrorKind::InvalidValue,
-        ));
+        bail!(
+            "{} {} install failed: {}",
+            emoji::ERROR,
+            idf_tools_scritp_path,
+            e
+        );
     }
 
     println!("{} Installing idf_tools.py python-env", emoji::WRENCH);
@@ -358,15 +285,11 @@ fn get_install_runner(
     arguments.push(idf_tools_scritp_path.clone());
     arguments.push("install-python-env".to_string());
     if let Err(_e) = run_command(&python_path, arguments, "".to_string()) {
-        return Err(clap::Error::with_description(
-            format!(
-                "{} {} install-python-env failed",
-                emoji::ERROR,
-                idf_tools_scritp_path
-            )
-            .as_str(),
-            clap::ErrorKind::InvalidValue,
-        ));
+        bail!(
+            "{} {} install-python-env failed",
+            emoji::ERROR,
+            idf_tools_scritp_path
+        );
     }
 
     add_idf_config(&installation_path, "4.4", &python_path);
@@ -377,13 +300,10 @@ fn get_install_runner(
     arguments.push("install".to_string());
     arguments.push("cmake".to_string());
     if let Err(_e) = run_command(&python_path, arguments, "".to_string()) {
-        return Err(clap::Error::with_description(
-            format!("{} CMake installation failed", emoji::ERROR).as_str(),
-            clap::ErrorKind::InvalidValue,
-        ));
+        bail!("{} CMake installation failed", emoji::ERROR);
     }
 
-    if minified {
+    if espidf.minified {
         println!("{} Minifying esp-idf", emoji::WRENCH);
         fs::remove_dir_all(format!("{}/dist", get_tools_path()))?;
         fs::remove_dir_all(format!("{}/docs", installation_path))?;
@@ -392,7 +312,36 @@ fn get_install_runner(
         fs::remove_dir_all(format!("{installation_path}/tools/test_idf_size"))?;
     }
 
-    println!("{} ESP-IDF installed suscesfully", emoji::CHECK);
+    println!("{} ESP-IDF installation succeeded", emoji::CHECK);
+
+    Ok(())
+}
+
+fn get_install_runner(
+    _args: &str,
+    matches: &clap::ArgMatches<'_>,
+) -> std::result::Result<(), clap::Error> {
+    let espidf = get_espidf(matches);
+
+    println!(
+        "{} Installing esp-idf with:
+        {} version: {:?}
+        {} path: {:?}
+        {} targets: {:?}
+        {} minified: {:?}",
+        emoji::DISC,
+        emoji::DIAMOND,
+        espidf.version,
+        emoji::DIAMOND,
+        espidf.path,
+        emoji::DIAMOND,
+        espidf.build_target,
+        emoji::DIAMOND,
+        espidf.minified
+    );
+
+    install_espidf(&espidf).unwrap();
+
     Ok(())
 }
 
@@ -839,37 +788,4 @@ pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
         .description("Maintain configuration of ESP-IDF installations.");
 
     multi_cmd
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::config::get_tools_path;
-    use crate::idf::get_esp_idf_directory;
-    use crate::idf::parse_targets;
-    #[test]
-    fn test_parse_targets() {
-        assert_eq!(parse_targets(""), "");
-        assert_eq!(parse_targets("esp32"), "esp32");
-        assert_eq!(parse_targets("esp32 esp32s2"), "esp32,esp32s2");
-        assert_eq!(
-            parse_targets("esp32 esp32s2,esp32s3 ,esp32c3"),
-            "esp32,esp32s2,esp32s3,esp32c3"
-        );
-        assert_eq!(parse_targets("all"), "esp32,esp32s2,esp32s3,esp32c3");
-    }
-    #[test]
-    fn test_get_esp_idf_directory() {
-        assert_eq!(
-            get_esp_idf_directory("release/v4.4"),
-            format!("{}/frameworks/esp-idf-release-v4.4", get_tools_path())
-        );
-        assert_eq!(
-            get_esp_idf_directory("v4.4.2"),
-            format!("{}/frameworks/esp-idf-v4.4.2", get_tools_path())
-        );
-        assert_eq!(
-            get_esp_idf_directory("master"),
-            format!("{}/frameworks/esp-idf-master", get_tools_path())
-        );
-    }
 }
