@@ -82,7 +82,7 @@ pub fn get_log_level(log_level: &str) -> LevelFilter {
 fn bootstrap_json(json_path: &str, tools_path: &str) -> std::result::Result<(), clap::Error> {
     if !Path::new(&get_json_path()).exists() {
         println!("{} Creating tools.json file: {}", emoji::WRENCH, json_path);
-        if let Err(_e) = fs::create_dir_all(&tools_path) {
+        if let Err(_e) = fs::create_dir_all(tools_path) {
             return Err(clap::Error::with_description(
                 format!("{} File tools.json creation failed", emoji::ERROR).as_str(),
                 clap::ErrorKind::InvalidValue,

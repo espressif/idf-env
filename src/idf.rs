@@ -53,7 +53,7 @@ fn execute_command(command: String, arguments: Vec<String>) -> Result<()> {
 
 fn reset_repository(repository_path: String) -> Result<()> {
     let idf_path = Path::new(&repository_path);
-    assert!(env::set_current_dir(&idf_path).is_ok());
+    assert!(env::set_current_dir(idf_path).is_ok());
     println!("Working directory: {}", idf_path.display());
 
     let git_path = get_git_path();
@@ -495,7 +495,7 @@ pub fn get_shell_cmd<'a>() -> Command<'a, str> {
 fn run_build(idf_path: &String, _shell_initializer: &str) -> std::result::Result<(), clap::Error> {
     // println!("Starting process");
     let root = Path::new(&idf_path);
-    assert!(env::set_current_dir(&root).is_ok());
+    assert!(env::set_current_dir(root).is_ok());
 
     run_idf_command("cd examples/get-started/blink; idf.py fullclean; idf.py build".to_string());
 

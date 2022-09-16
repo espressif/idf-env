@@ -14,7 +14,6 @@ use clap_nested::{Command, Commander, MultiCommand};
 use espflash::Chip;
 use log::{debug, error, info, warn, LevelFilter};
 use simplelog::{ColorChoice, ConfigBuilder, TermLogger, TerminalMode};
-use std::any::Any;
 use std::fs::{copy, remove_dir_all, File};
 use std::io::Write;
 use std::path::Path;

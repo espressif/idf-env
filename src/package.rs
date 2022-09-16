@@ -15,7 +15,7 @@ type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>
 
 pub fn unzip(file_path: &str, output_directory: &str) -> Result<()> {
     let file_name = std::path::Path::new(&file_path);
-    let file = fs::File::open(&file_name).unwrap();
+    let file = fs::File::open(file_name).unwrap();
 
     let mut archive = zip::ZipArchive::new(file).unwrap();
 
@@ -28,7 +28,7 @@ pub fn unzip(file_path: &str, output_directory: &str) -> Result<()> {
 
         // Add path prefix to extract the file
         let mut outpath = std::path::PathBuf::new();
-        outpath.push(&output_directory);
+        outpath.push(output_directory);
         outpath.push(file_outpath);
 
         {
@@ -78,7 +78,7 @@ pub fn unzip_strip_prefix(
 
         // Add path prefix to extract the file
         let mut outpath = std::path::PathBuf::new();
-        outpath.push(&output_directory);
+        outpath.push(output_directory);
 
         // Skip files in top level directories which are not under directory with prefix
         if !file_outpath.starts_with(strip_prefix) {
@@ -109,7 +109,7 @@ pub fn unzip_strip_prefix(
             );
             if let Some(p) = outpath.parent() {
                 if !p.exists() {
-                    fs::create_dir_all(&p).unwrap();
+                    fs::create_dir_all(p).unwrap();
                 }
             }
             let mut outfile = fs::File::create(&outpath).unwrap();
@@ -232,7 +232,7 @@ pub fn download_file(
         return Ok(file_path);
     } else if !Path::new(&output_directory).exists() {
         println!("{} Creating directory: {}", emoji::WRENCH, output_directory);
-        if let Err(_e) = fs::create_dir_all(&output_directory) {
+        if let Err(_e) = fs::create_dir_all(output_directory) {
             return Err(format!(
                 "{} Creating directory {} failed",
                 emoji::ERROR,
@@ -344,7 +344,7 @@ pub fn prepare_package(
             unzip(&package_archive, output_directory).unwrap();
         }
         "gz" => {
-            if let Err(_e) = fs::create_dir_all(&output_directory) {
+            if let Err(_e) = fs::create_dir_all(output_directory) {
                 return Err(format!(
                     "{} Creating direcory {} failed",
                     emoji::ERROR,
