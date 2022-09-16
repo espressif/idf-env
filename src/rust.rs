@@ -1,6 +1,6 @@
 use crate::config::{
-    get_cargo_home, get_dist_path, get_esp_idf_directory, get_home_dir, get_tool_path,
-    get_tools_path, parse_idf_targets, parse_targets,
+    get_cargo_home, get_dist_path, get_esp_idf_directory, get_home_dir, get_log_level,
+    get_tool_path, get_tools_path, parse_idf_targets, parse_targets,
 };
 use crate::emoji;
 use crate::idf::{install_espidf, EspIdf, GIT_REPOSITORY_URL};
@@ -12,6 +12,9 @@ use anyhow::{bail, Result};
 use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
 use espflash::Chip;
+use log::{debug, error, info, warn, LevelFilter};
+use simplelog::{ColorChoice, ConfigBuilder, TermLogger, TerminalMode};
+use std::any::Any;
 use std::fs::{copy, remove_dir_all, File};
 use std::io::Write;
 use std::path::Path;
@@ -45,7 +48,7 @@ struct RustToolchain {
     destination_dir: String,
     esp_idf: String,
     export_file: String,
-    extra_crates: Vec<RustCrate>,
+    // extra_crates: Vec<RustCrate>,
     extra_tools: String,
     llvm_url: String,
     mingw_destination_directory: String,
@@ -216,7 +219,7 @@ fn install_gcc_targets(targets: Vec<Chip>) -> Result<Vec<String>, String> {
                 ));
             }
             _ => {
-                println!("{} Unknown target", emoji::ERROR)
+                error!("{} Unknown target", emoji::ERROR);
             }
         }
     }
@@ -225,7 +228,7 @@ fn install_gcc_targets(targets: Vec<Chip>) -> Result<Vec<String>, String> {
 
 fn install_gcc(gcc_target: &str) -> Result<()> {
     let gcc_path = get_tool_path(gcc_target);
-    // println!("gcc path: {}", gcc_path);
+    debug!("{} gcc path: {}", emoji::INFO, gcc_path);
     let gcc_file = format!(
         "{}-gcc8_4_0-esp-2021r2-patch3-{}",
         gcc_target,
@@ -235,14 +238,6 @@ fn install_gcc(gcc_target: &str) -> Result<()> {
         "https://github.com/espressif/crosstool-NG/releases/download/esp-2021r2-patch3/{}",
         gcc_file
     );
-    // match prepare_package_strip_prefix(&gcc_dist_url, gcc_path, "") {
-    //     Ok(_) => {
-    //         println!("{} Package {} ready", SPARKLE, gcc_file);
-    //     }
-    //     Err(_e) => {
-    //         println!("{} Unable to prepare {}", ERROR, gcc_file);
-    //     }
-    // }
     download_file(gcc_dist_url, &gcc_file, &gcc_path, true).unwrap();
     Ok(())
 }
@@ -274,14 +269,14 @@ pub fn install_riscv_target(version: &str) {
     {
         Ok(child_output) => {
             let result = String::from_utf8_lossy(&child_output.stdout);
-            println!(
+            info!(
                 "{} Rust-src for RiscV target installed suscesfully: {}",
                 emoji::CHECK,
                 result
             );
         }
         Err(e) => {
-            println!(
+            error!(
                 "{}  Rust-src for RiscV target installation failed: {}",
                 emoji::ERROR,
                 e
@@ -300,14 +295,14 @@ pub fn install_riscv_target(version: &str) {
     {
         Ok(child_output) => {
             let result = String::from_utf8_lossy(&child_output.stdout);
-            println!(
+            info!(
                 "{} RiscV target installed suscesfully: {}",
                 emoji::CHECK,
                 result
             );
         }
         Err(e) => {
-            println!("{} RiscV target installation failed: {}", emoji::ERROR, e);
+            error!("{} RiscV target installation failed: {}", emoji::ERROR, e);
         }
     }
 }
@@ -344,7 +339,7 @@ pub fn install_rustup() -> Result<()> {
 
 fn install_mingw(toolchain: &RustToolchain) {
     if Path::new(toolchain.mingw_destination_directory.as_str()).exists() {
-        println!(
+        warn!(
             "{} Previous installation of MinGW exist in: {}. Please, remove the directory before new installation.",
             emoji::INFO,
             toolchain.mingw_destination_directory
@@ -359,10 +354,10 @@ fn install_mingw(toolchain: &RustToolchain) {
         "mingw64",
     ) {
         Ok(_) => {
-            println!("Package ready");
+            info!("Package ready");
         }
         Err(_e) => {
-            println!("Unable to prepare package");
+            error!("Unable to prepare package");
         }
     }
 }
@@ -373,7 +368,7 @@ fn install_crate(extra_crate: &RustCrate) {
         // Binary crate is not available, install from source code
         let cargo_path = format!("{}/bin/cargo.exe", get_cargo_home());
 
-        println!("{} install {}", cargo_path, extra_crate.name);
+        info!("{} install {}", cargo_path, extra_crate.name);
         match std::process::Command::new(cargo_path)
             .arg("install")
             .arg(&extra_crate.name)
@@ -382,10 +377,10 @@ fn install_crate(extra_crate: &RustCrate) {
         {
             Ok(child_output) => {
                 let result = String::from_utf8_lossy(&child_output.stdout);
-                println!("Crate installed: {}", result);
+                info!("Crate installed: {}", result);
             }
             Err(e) => {
-                println!("Crate installation failed: {}", e);
+                error!("Crate installation failed: {}", e);
             }
         }
     } else {
@@ -400,10 +395,10 @@ fn install_crate(extra_crate: &RustCrate) {
                 );
                 match copy(source.clone(), &extra_crate.bin) {
                     Ok(_) => {
-                        println!("Create {} installed.", extra_crate.name);
+                        info!("Create {} installed.", extra_crate.name);
                     }
                     Err(_e) => {
-                        println!(
+                        error!(
                             "Unable to copy crate binary from {} to {}",
                             source, extra_crate.bin
                         )
@@ -411,7 +406,7 @@ fn install_crate(extra_crate: &RustCrate) {
                 }
             }
             Err(_e) => {
-                println!("Unable to unpack bianry crate {}.", extra_crate.name);
+                error!("Unable to unpack bianry crate {}.", extra_crate.name);
             }
         };
     }
@@ -430,7 +425,7 @@ fn install_vctools() {
         "vs_buildtools",
     )
     .unwrap();
-    println!("Running VS BuildTools: vs_BuildTools.exe --passive --wait --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.Windows10SDK.20348");
+    info!("Running VS BuildTools: vs_BuildTools.exe --passive --wait --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.Windows10SDK.20348");
 
     match std::process::Command::new(vs_build_tools)
         .arg("--passive")
@@ -444,10 +439,10 @@ fn install_vctools() {
     {
         Ok(child_output) => {
             let result = String::from_utf8_lossy(&child_output.stdout);
-            println!("{}", result);
+            info!("{}", result);
         }
         Err(e) => {
-            println!("Error: {}", e);
+            error!("Error: {}", e);
         }
     }
 }
@@ -462,13 +457,13 @@ fn install_rust_toolchain(toolchain: &RustToolchain) -> Result<()> {
         Ok(child_output) => {
             let result = String::from_utf8_lossy(&child_output.stdout);
             if !result.contains("nightly") {
-                println!("{} Rust nightly toolchain not found", emoji::WARN);
+                warn!("{} Rust nightly toolchain not found", emoji::WARN);
                 install_rust_nightly()?;
             }
         }
         Err(e) => {
             if let std::io::ErrorKind::NotFound = e.kind() {
-                println!("{} rustup was not found.", emoji::WARN);
+                warn!("{} rustup was not found.", emoji::WARN);
                 install_rustup()?;
             } else {
                 bail!("{} Error: {}", emoji::ERROR, e);
@@ -582,10 +577,10 @@ fn install_rust_toolchain(toolchain: &RustToolchain) -> Result<()> {
             ". {}/export.sh",
             get_esp_idf_directory(&espidf.version)
         ));
-        let ldproxy = get_rust_crate("ldproxy", &toolchain.arch).unwrap();
+        // let ldproxy = get_rust_crate("ldproxy", &toolchain.arch).unwrap();
         // install_crate(&ldproxy);
     } else {
-        println!("{} No esp-idf version provided.", emoji::WARN);
+        warn!("{} No esp-idf version provided.", emoji::WARN);
         println!("{} Installing gcc for targets", emoji::WRENCH);
         exports.extend(
             install_gcc_targets(toolchain.build_target.clone())
@@ -604,7 +599,7 @@ fn install_rust_toolchain(toolchain: &RustToolchain) -> Result<()> {
                 update_env_path(format!("{}/bin", toolchain.mingw_destination_directory).as_str());
             }
             _ => {
-                println!("Ok");
+                info!("Ok");
             }
         },
         "vctools" => {
@@ -612,7 +607,7 @@ fn install_rust_toolchain(toolchain: &RustToolchain) -> Result<()> {
             update_env_path("C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Tools\\MSVC\\14.33.31629\\bin\\Hostx64\\x64");
         }
         _ => {
-            println!("No extra tools selected");
+            info!("{} No extra tools selected", emoji::INFO);
         }
     }
 
@@ -644,10 +639,10 @@ fn uninstall_rust_toolchain(toolchain: &RustToolchain) {
         println!("Removing: {}", toolchain.destination_dir);
         match remove_dir_all(&toolchain.destination_dir) {
             Ok(_) => {
-                println!("Removed.");
+                info!("Removed.");
             }
             Err(_e) => {
-                println!("Failed to remove.");
+                error!("Failed to remove.");
             }
         }
     }
@@ -656,10 +651,10 @@ fn uninstall_rust_toolchain(toolchain: &RustToolchain) {
         println!("Removing: {}", toolchain.xtensa_elf_clang_file);
         match remove_dir_all(&toolchain.xtensa_elf_clang_file) {
             Ok(_) => {
-                println!("Removed.");
+                info!("Removed.");
             }
             Err(_e) => {
-                println!("Failed to remove.");
+                error!("Failed to remove.");
             }
         }
     }
@@ -728,7 +723,7 @@ fn get_rust_toolchain(matches: &clap::ArgMatches<'_>) -> RustToolchain {
         destination_dir: format!("{}/.rustup/toolchains/esp", get_home_dir()),
         esp_idf: esp_idf.to_string(),
         export_file: export_file.to_string(),
-        extra_crates: get_extra_crates(extra_crates, arch),
+        // extra_crates: get_extra_crates(extra_crates, arch),
         extra_tools: extra_tools.to_string(),
         llvm_url,
         mingw_destination_directory,
@@ -746,14 +741,22 @@ fn get_install_runner(
     _args: &str,
     matches: &clap::ArgMatches<'_>,
 ) -> std::result::Result<(), clap::Error> {
+    // Setup logging
+    let log_level = matches.value_of("log-level").unwrap();
+    let mut log_config = ConfigBuilder::new();
+    log_config.set_location_level(LevelFilter::Off);
+    TermLogger::init(
+        get_log_level(log_level),
+        log_config.build(),
+        TerminalMode::Mixed,
+        ColorChoice::Auto,
+    )
+    .unwrap();
     let toolchain = get_rust_toolchain(matches);
-    println!(
-        "{} Installing esp Rust toolchan with:
-        {} toolchain: {:#?}",
-        emoji::DISC,
+    println!( "{} Installing esp Rust toolchan",emoji::DISC,);
+    info!("{} Esp Rust Toolchain arguments: {:#?}",
         emoji::DIAMOND,
-        toolchain,
-    );
+        toolchain);
     install_rust_toolchain(&toolchain).unwrap();
     Ok(())
 }
@@ -828,6 +831,7 @@ pub fn get_install_cmd<'a>() -> Command<'a, str> {
                     .short("t")
                     .long("extra-tools")
                     .help("Extra tools which should be deployed. E.g. MinGW")
+                    .possible_values(&["vctools", "mingw", ""])
                     .takes_value(true)
                     .default_value(DEFAULT_EXTRA_TOOLS),
             )
@@ -836,8 +840,18 @@ pub fn get_install_cmd<'a>() -> Command<'a, str> {
                     .short("l")
                     .long("llvm-version")
                     .help("Version of LLVM with Xtensa support")
+                    .possible_values(&["esp-13.0.0-20211203", "esp-14.0.0-20220415"])
                     .takes_value(true)
                     .default_value(DEFAULT_LLVM_VERSION),
+            )
+            .arg(
+                Arg::with_name("log-level")
+                    .short("g")
+                    .help("Log level for the installation process")
+                    .long("log-level")
+                    .possible_values(&["debug", "info", "warn", "error", "off"])
+                    .takes_value(true)
+                    .default_value("info"),
             )
             .arg(
                 Arg::with_name("nightly-version")

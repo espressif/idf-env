@@ -7,6 +7,7 @@ use clap_nested::{Command, Commander, MultiCommand};
 use dirs::home_dir;
 use espflash::Chip;
 use json::JsonValue;
+use log::{debug, error, info, warn, LevelFilter};
 use std::env;
 use std::fs;
 use std::path::Path;
@@ -66,6 +67,16 @@ pub fn get_idf_id(idf_path: &str) -> String {
     let idf_path_with_slash = idf_path.replace('\\', "/");
     let digest = md5::compute(idf_path_with_slash);
     format!("esp-idf-{:x}", digest)
+}
+
+pub fn get_log_level(log_level: &str) -> LevelFilter {
+    match log_level {
+        "info" => LevelFilter::Info,
+        "debug" => LevelFilter::Debug,
+        "warn" => LevelFilter::Warn,
+        "error" => LevelFilter::Error,
+        _ => LevelFilter::Off,
+    }
 }
 
 fn bootstrap_json(json_path: &str, tools_path: &str) -> std::result::Result<(), clap::Error> {

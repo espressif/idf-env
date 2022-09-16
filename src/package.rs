@@ -49,7 +49,7 @@ pub fn unzip(file_path: &str, output_directory: &str) -> Result<()> {
             // );
             if let Some(p) = outpath.parent() {
                 if !p.exists() {
-                    fs::create_dir_all(&p).unwrap();
+                    fs::create_dir_all(p).unwrap();
                 }
             }
             let mut outfile = fs::File::create(&outpath).unwrap();
@@ -65,7 +65,7 @@ pub fn unzip_strip_prefix(
     strip_prefix: &str,
 ) -> Result<()> {
     let file_name = std::path::Path::new(&file_path);
-    let file = fs::File::open(&file_name).unwrap();
+    let file = fs::File::open(file_name).unwrap();
 
     let mut archive = zip::ZipArchive::new(file).unwrap();
 
@@ -149,7 +149,7 @@ pub fn untarxz(file_path: &str, output_directory: &str) -> Result<()> {
         .entries()?
         .filter_map(|e| e.ok())
         .map(|mut entry| -> Result<PathBuf> {
-            let path = entry.path()?.to_owned();
+            let path = entry.path()?.into_owned();
             let full_path = format!("{}/{}", output_directory, path.display());
             entry.unpack(&full_path)?;
             Ok(full_path.parse().unwrap())
@@ -189,7 +189,7 @@ pub fn untargz(file_path: &str, output_directory: &str) -> Result<()> {
         .entries()?
         .filter_map(|e| e.ok())
         .map(|mut entry| -> Result<PathBuf> {
-            let path = entry.path()?.to_owned();
+            let path = entry.path()?.into_owned();
             let full_path = format!("{}/{}", output_directory, path.display());
             entry.unpack(&full_path)?;
             Ok(full_path.parse().unwrap())
