@@ -1,6 +1,6 @@
 use crate::config::{get_dist_path, get_tool_path};
 use crate::emoji;
-use anyhow::Context;
+use anyhow::{bail, Context, Result};
 use flate2::read::GzDecoder;
 use std::fs::File;
 use std::io::{BufReader, Cursor};
@@ -10,8 +10,6 @@ use tar::Archive;
 use tokio::runtime::Handle;
 use xz2::read::XzDecoder;
 // use zip::ZipArchive;
-
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 pub fn unzip(file_path: &str, output_directory: &str) -> Result<()> {
     let file_name = std::path::Path::new(&file_path);
@@ -206,7 +204,7 @@ async fn fetch_url(url: &str, output: &str) -> Result<()> {
         let mut content = Cursor::new(r.bytes().await?);
         std::io::copy(&mut content, &mut file)?;
     } else {
-        return Err(format!("Download of {url} failed").into());
+        bail!("Download of {url} failed");
     };
     Ok(())
 }
@@ -233,12 +231,11 @@ pub fn download_file(
     } else if !Path::new(&output_directory).exists() {
         println!("{} Creating directory: {}", emoji::WRENCH, output_directory);
         if let Err(_e) = fs::create_dir_all(output_directory) {
-            return Err(format!(
+            bail!(
                 "{} Creating directory {} failed",
                 emoji::ERROR,
                 output_directory
-            )
-            .into());
+            );
         }
     }
     println!(
@@ -281,9 +278,7 @@ pub fn download_file(
                 archive.unpack(output_directory).unwrap();
             }
             _ => {
-                return Err(
-                    format!("{} Unsuported file extension: {}", emoji::ERROR, extension).into(),
-                );
+                bail!("{} Unsuported file extension: {}", emoji::ERROR, extension);
             }
         }
     } else {
@@ -345,12 +340,11 @@ pub fn prepare_package(
         }
         "gz" => {
             if let Err(_e) = fs::create_dir_all(output_directory) {
-                return Err(format!(
+                bail!(
                     "{} Creating direcory {} failed",
                     emoji::ERROR,
                     output_directory
-                )
-                .into());
+                );
             }
             untargz(&package_archive, output_directory).unwrap();
         }
@@ -381,18 +375,17 @@ pub fn prepare_single_binary(
     if !Path::new(&tool_path).exists() {
         println!("{} Creating tool directory: {}", emoji::WRENCH, tool_path);
         if let Err(_e) = fs::create_dir_all(&tool_path) {
-            return Err(format!("{} Creating direcory {} failed", emoji::ERROR, tool_path).into());
+            bail!("{} Creating direcory {} failed", emoji::ERROR, tool_path);
         }
     }
 
     if let Err(_e) = download_package(package_url.to_string(), binary_path.to_string()) {
-        return Err(format!(
+        bail!(
             "{} Download of {} from {} failed",
             emoji::ERROR,
             binary_path,
             package_url
-        )
-        .into());
+        );
     }
     Ok(binary_path)
 }
@@ -416,20 +409,19 @@ pub fn prepare_package_strip_prefix(
     if !Path::new(&dist_path).exists() {
         println!("{} Creating dist directory at {}", emoji::WRENCH, dist_path);
         if let Err(_e) = fs::create_dir_all(&dist_path) {
-            return Err(format!("{} Creating directory {} failed", emoji::ERROR, dist_path).into());
+            bail!("{} Creating directory {} failed", emoji::ERROR, dist_path);
         }
     }
 
     let package_archive = get_dist_path(package_archive);
 
     if let Err(_e) = download_package(package_url.to_string(), package_archive.to_string()) {
-        return Err(format!(
+        bail!(
             "{} Download of {} from {} failed",
             emoji::ERROR,
             package_archive,
             package_url
-        )
-        .into());
+        );
     }
 
     if !Path::new(&output_directory).exists() {
@@ -450,9 +442,7 @@ pub fn prepare_package_strip_prefix(
                 untarxz_strip_prefix(&package_archive, output_directory, strip_prefix).unwrap();
             }
             _ => {
-                return Err(
-                    format!("{} Unsuported file extension: {}", emoji::ERROR, extension).into(),
-                );
+                bail!("{} Unsuported file extension: {}", emoji::ERROR, extension);
             }
         }
     }

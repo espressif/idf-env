@@ -22,7 +22,8 @@ fn prepare_companion() {
 }
 
 fn remove_companion() -> Result<()> {
-    remove_package("esp-iwidc.zip", "tmp/esp-iwidc")
+    remove_package("esp-iwidc.zip", "tmp/esp-iwidc")?;
+    Ok(())
 }
 
 fn get_update_runner(
