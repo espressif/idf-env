@@ -1,0 +1,44 @@
+name: Sign espup artifact
+
+on:
+  workflow_dispatch:
+    inputs:
+      release-version:
+        description: EspUp release version
+        required: true
+        default: latest
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  sign_release:
+    name: Sign EspUp release
+    runs-on: windows-latest
+    steps:
+      - name: Checkout idf-env repo
+        uses: actions/checkout@v3
+      - name: Get artifact
+        if: inputs.release-version == 'latest'
+        uses: robinraju/release-downloader@v1.6
+        with:
+          repository: "esp-rs/espup"
+          latest: true
+          fileName: espup-x86_64-pc-windows-msvc.exe
+      - name: Get artifact
+        if: inputs.release-version != 'latest'
+        uses: robinraju/release-downloader@v1.6
+        with:
+          repository: "esp-rs/espup"
+          tag: ${{ inputs.release-version }}
+          fileName: espup-x86_64-pc-windows-msvc.exe
+      - name: Sign artifact
+        env:
+          CERTIFICATE: ${{ secrets.CERTIFICATE }}
+          CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
+        shell: pwsh
+        run: ./Sign-File.ps1 -Path target/release/espup.exe
+      - name: Archive artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: espup-x86_64-pc-windows-msvc.exe
+          path: target/release/espup.exe
