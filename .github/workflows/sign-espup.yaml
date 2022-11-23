@@ -40,5 +40,5 @@ jobs:
       - name: Archive artifact
         uses: actions/upload-artifact@v3
         with:
-          name: espup-x86_64-pc-windows-msvc.exe
+          name: espup-x86_64-pc-windows-msvc
           path: espup-x86_64-pc-windows-msvc.exe
