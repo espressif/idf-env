@@ -36,7 +36,7 @@ jobs:
           CERTIFICATE: ${{ secrets.CERTIFICATE }}
           CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
         shell: pwsh
-        run: ./Sign-File.ps1 -Path target/release/espup.exe
+        run: ./Sign-File.ps1 -Path espup-x86_64-pc-windows-msvc.exe
       - name: Archive artifact
         uses: actions/upload-artifact@v3
         with:
