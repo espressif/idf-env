@@ -41,4 +41,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: espup-x86_64-pc-windows-msvc.exe
-          path: target/release/espup.exe
+          path: espup-x86_64-pc-windows-msvc.exe
