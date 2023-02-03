@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       release-version:
-        description: EspUp release version
+        description: espup release version
         required: true
         default: latest
 env:
@@ -12,7 +12,7 @@ env:
 
 jobs:
   sign_release:
-    name: Sign EspUp release
+    name: Sign espup release
     runs-on: windows-latest
     steps:
       - name: Checkout idf-env repo
