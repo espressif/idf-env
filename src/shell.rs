@@ -1,8 +1,8 @@
 use std::process::Stdio;
 use std::io::{Write};
 
-use clap::Arg;
-use clap_nested::{Command, Commander, MultiCommand};
+// use clap::Arg;
+// use clap_nested::{Command, Commander, MultiCommand};
 
 #[cfg(windows)]
 pub fn run_command(shell: String, arguments: Vec<String>, command: String) -> std::result::Result<(), clap::Error> {
@@ -47,7 +47,7 @@ pub fn run_command(shell: String, arguments: Vec<String>, command: String) -> st
 
     }
     let output = child_process.wait_with_output()?;
-    //println!("output = {:?}", output);
+    println!("output = {:?}", output);
     Ok(())
 }
 
@@ -139,41 +139,41 @@ pub fn set_env_variable(key:&str, value:&str) {
 
 }
 
-
-pub fn get_cmd<'a>() -> Command<'a, str> {
-    Command::new("append")
-        .description("Append path to environment variable")
-        .options(|app| {
-            app.arg(
-                Arg::with_name("variable")
-                    .short("v")
-                    .long("variable")
-                    .help("Name of environment variable")
-                    .takes_value(true),
-            )
-                .arg(
-                    Arg::with_name("path")
-                        .short("p")
-                        .long("path")
-                        .help("Path which should be added to the variable")
-                        .takes_value(true),
-                )
-        })
-        .runner(|_args, matches| {
-            let variable_name = matches.value_of("variable").unwrap().to_string();
-            let path_value = matches.value_of("path").unwrap().to_string();
-            update_env_variable(variable_name.as_str(), path_value.as_str());
-            Ok(())
-        })
-}
-
-pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
-    let multi_cmd: MultiCommand<str, str> = Commander::new()
-        .add_cmd(get_cmd())
-        .into_cmd("shell")
-
-        // Optionally specify a description
-        .description("Detection of Antivirus and handling exception registration.");
-
-    return multi_cmd;
-}
+//
+// pub fn get_cmd<'a>() -> Command<'a, str> {
+//     Command::new("append")
+//         .description("Append path to environment variable")
+//         .options(|app| {
+//             app.arg(
+//                 Arg::with_name("variable")
+//                     .short("v")
+//                     .long("variable")
+//                     .help("Name of environment variable")
+//                     .takes_value(true),
+//             )
+//                 .arg(
+//                     Arg::with_name("path")
+//                         .short("p")
+//                         .long("path")
+//                         .help("Path which should be added to the variable")
+//                         .takes_value(true),
+//                 )
+//         })
+//         .runner(|_args, matches| {
+//             let variable_name = matches.value_of("variable").unwrap().to_string();
+//             let path_value = matches.value_of("path").unwrap().to_string();
+//             update_env_variable(variable_name.as_str(), path_value.as_str());
+//             Ok(())
+//         })
+// }
+//
+// pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
+//     let multi_cmd: MultiCommand<str, str> = Commander::new()
+//         .add_cmd(get_cmd())
+//         .into_cmd("shell")
+//
+//         // Optionally specify a description
+//         .description("Detection of Antivirus and handling exception registration.");
+//
+//     return multi_cmd;
+// }

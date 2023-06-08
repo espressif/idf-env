@@ -1,4 +1,4 @@
-use clap::Arg;
+use clap::{Arg, ArgMatches};
 use clap_nested::{Command, Commander, MultiCommand};
 
 #[cfg(windows)]
@@ -67,7 +67,7 @@ fn nuke_exclusions() {
     }
 }
 
-fn get_add_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_add_runner(_args: &str, matches: &ArgMatches) -> std::result::Result<(), clap::Error> {
     #[cfg(windows)]
     if !windows::is_app_elevated() {
         #[cfg(windows)]
@@ -103,7 +103,7 @@ fn remove_exclusions(file_list:Vec<String>, chunk_size:usize) {
     process_exclusion("Remove-MpPreference".to_string(), file_list, chunk_size);
 }
 
-fn get_remove_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_remove_runner(_args: &str, matches: &ArgMatches) -> std::result::Result<(), clap::Error> {
     #[cfg(windows)]
     if !windows::is_app_elevated() {
         #[cfg(windows)]

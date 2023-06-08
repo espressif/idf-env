@@ -1,4 +1,4 @@
-use clap::Arg;
+use clap::{Arg, ArgMatches};
 use clap_nested::{Command, Commander, MultiCommand};
 
 use std::{env, fs};
@@ -14,7 +14,7 @@ fn get_powershell_path() -> String {
     format!("{}/System32/WindowsPowerShell/v1.0/powershell.exe", windir)
 }
 
-fn get_add_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_add_runner(_args: &str, matches: &ArgMatches) -> std::result::Result<(), clap::Error> {
     let title = matches.value_of("title").unwrap();
     let idf_path = matches.value_of("idf-path").unwrap();
     let fragments_path = get_windows_terminal_fragments_path(title);

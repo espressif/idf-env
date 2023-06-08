@@ -1,4 +1,4 @@
-use clap::Arg;
+use clap::{Arg, ArgMatches};
 use clap_nested::{Command, Commander, MultiCommand};
 
 use tokio::runtime::Handle;
@@ -25,7 +25,7 @@ fn open_url(url: String) -> ResultTokio<()> {
     Ok(th.join().unwrap())
 }
 
-fn get_verify_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_verify_runner(_args: &str, matches: &ArgMatches) -> std::result::Result<(), clap::Error> {
     let url = matches.value_of("url").unwrap().to_string();
     match open_url(url) {
         Ok(_) => { println!("URL verified"); },

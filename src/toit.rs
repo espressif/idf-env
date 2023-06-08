@@ -1,4 +1,4 @@
-use clap::Arg;
+use clap::{Arg, ArgMatches};
 use clap_nested::{Command, Commander, MultiCommand};
 
 use dirs::home_dir;
@@ -61,11 +61,11 @@ fn uninstall_toit_tools(toit_tools:&ToitTools) {
     }
 }
 
-fn get_default_toit_tools(_matches: &clap::ArgMatches<'_>) -> ToitTools {
+fn get_default_toit_tools(_matches: &ArgMatches) -> ToitTools {
     build_toit_tools()
 }
 
-fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_install_runner(_args: &str, matches: &ArgMatches) -> std::result::Result<(), clap::Error> {
     let toit_tools = get_default_toit_tools(&matches);
     if matches.is_present("jaguar") {
         install_toit_tools(&toit_tools);
@@ -73,7 +73,7 @@ fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::resul
     Ok(())
 }
 
-fn get_reinstall_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_reinstall_runner(_args: &str, matches: &ArgMatches) -> std::result::Result<(), clap::Error> {
     let toit_tools = get_default_toit_tools(matches);
     if matches.is_present("jaguar") {
         uninstall_toit_tools(&toit_tools);
@@ -82,7 +82,7 @@ fn get_reinstall_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::res
     Ok(())
 }
 
-fn get_uninstall_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_uninstall_runner(_args: &str, matches: &ArgMatches) -> std::result::Result<(), clap::Error> {
     let toit_tools = get_default_toit_tools(matches);
     if matches.is_present("jaguar") {
         uninstall_toit_tools(&toit_tools);

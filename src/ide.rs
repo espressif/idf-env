@@ -1,4 +1,4 @@
-use clap::Arg;
+use clap::{Arg, ArgMatches};
 use clap_nested::{Command, Commander, MultiCommand};
 
 use std::fs::File;
@@ -30,7 +30,7 @@ fn install_ide(ide:&Ide) {
 
 }
 
-fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_install_runner(_args: &str, matches: &ArgMatches) -> std::result::Result<(), clap::Error> {
     let ide = Ide {
         dist_url: matches.value_of("url").unwrap().to_string(),
         dist_file: matches.value_of("file").unwrap().to_string(),
@@ -90,7 +90,7 @@ fn set_vm_to_ini_file(ini_file: String, vm_path: String) {
     }
 }
 
-fn get_configure_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_configure_runner(_args: &str, matches: &ArgMatches) -> std::result::Result<(), clap::Error> {
     let ini_file = matches.value_of("ini").unwrap().to_string();
     let vm_path = matches.value_of("vm").unwrap().to_string();
 

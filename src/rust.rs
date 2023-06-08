@@ -1,4 +1,4 @@
-use clap::Arg;
+use clap::{Arg, ArgMatches};
 use clap_nested::{Command, Commander, MultiCommand};
 
 use dirs::home_dir;
@@ -515,7 +515,7 @@ fn uninstall_rust_toolchain(toolchain:&RustToolchain) {
     }
 }
 
-fn get_default_rust_toolchain(matches: &clap::ArgMatches<'_>) -> RustToolchain {
+fn get_default_rust_toolchain(matches: &ArgMatches) -> RustToolchain {
     let default_host_triple = matches.value_of("default-host")
         .unwrap();
 
@@ -536,14 +536,14 @@ fn get_default_rust_toolchain(matches: &clap::ArgMatches<'_>) -> RustToolchain {
         extra_crates_list)
 }
 
-fn get_install_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_install_runner(_args: &str, matches: &ArgMatches) -> std::result::Result<(), clap::Error> {
     let toolchain = get_default_rust_toolchain(matches);
 
     install_rust_toolchain(&toolchain);
     Ok(())
 }
 
-fn get_reinstall_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_reinstall_runner(_args: &str, matches: &ArgMatches) -> std::result::Result<(), clap::Error> {
     let toolchain = get_default_rust_toolchain(matches);
 
     uninstall_rust_toolchain(&toolchain);
@@ -551,7 +551,7 @@ fn get_reinstall_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::res
     Ok(())
 }
 
-fn get_uninstall_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_uninstall_runner(_args: &str, matches: &ArgMatches) -> std::result::Result<(), clap::Error> {
     let toolchain = get_default_rust_toolchain(matches);
 
     uninstall_rust_toolchain(&toolchain);

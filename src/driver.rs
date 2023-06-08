@@ -1,4 +1,4 @@
-use clap::Arg;
+use clap::{Arg, ArgMatches};
 use clap_nested::{Command, Commander, MultiCommand};
 #[cfg(windows)]
 use std::collections::HashMap;
@@ -146,7 +146,7 @@ fn install_driver(driver_inf: String) {
 }
 
 #[cfg(unix)]
-fn get_install_runner(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_install_runner(_args: &str, _matches: &ArgMatches) -> std::result::Result<(), clap::Error> {
     Ok(())
 }
 
@@ -156,12 +156,12 @@ pub fn get_driver_path(driver_name:String) -> String {
 }
 
 #[cfg(unix)]
-fn download_drivers(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn download_drivers(_args: &str, _matches: &ArgMatches) -> std::result::Result<(), clap::Error> {
     Ok(())
 }
 
 #[cfg(windows)]
-fn download_drivers(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn download_drivers(_args: &str, _matches: &ArgMatches) -> std::result::Result<(), clap::Error> {
     if _matches.is_present("silabs") {
         match prepare_package("https://www.silabs.com/documents/public/software/CP210x_Universal_Windows_Driver.zip".to_string(),
                         "cp210x.zip",
@@ -200,7 +200,7 @@ fn download_drivers(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result
 
 
 #[cfg(windows)]
-fn get_install_runner(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_install_runner(_args: &str, _matches: &ArgMatches) -> std::result::Result<(), clap::Error> {
 
     // Download drivers, if app is self-elevated this flag serves to avoid downloading in elevated mode.
     if !_matches.is_present("no-download") {

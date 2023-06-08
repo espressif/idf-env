@@ -1,4 +1,4 @@
-use clap::Arg;
+use clap::{Arg, ArgMatches};
 use clap_nested::{Command, Commander, MultiCommand};
 use git2::{Repository};
 use std::path::Path;
@@ -12,6 +12,7 @@ use std::process::Stdio;
 use std::io::Read;
 
 use std::time::{Instant};
+use dirs::home_dir;
 
 use crate::config::{add_idf_config, get_git_path, get_tool_path, get_dist_path, get_python_env_path, update_property};
 use crate::config::get_tools_path;
@@ -128,7 +129,7 @@ fn get_esp_idf_directory(idf_name:String) -> String {
     format!("{}/{}", get_idf_base_directory(), idf_name)
 }
 
-fn get_install_runner(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_install_runner(_args: &str, _matches: &ArgMatches) -> std::result::Result<(), clap::Error> {
     let esp_idf = get_esp_idf_directory("esp-idf-master/".to_string());
     println!("ESP-IDF Path: {}", esp_idf);
 
@@ -304,7 +305,7 @@ fn get_initializer_arguments() -> Vec<String> {
     arguments
 }
 
-fn get_shell_runner(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_shell_runner(_args: &str, _matches: &ArgMatches) -> std::result::Result<(), clap::Error> {
     println!("Starting process");
     // let root = Path::new("C:\\esp");
     // assert!(env::set_current_dir(&root).is_ok());
@@ -371,7 +372,7 @@ fn run_build(idf_path: &String, _shell_initializer: &String) -> std::result::Res
     Ok(())
 }
 
-fn get_build_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_build_runner(_args: &str, matches: &ArgMatches) -> std::result::Result<(), clap::Error> {
     let build_repetitions:i32 = matches.value_of("repeat").unwrap().to_string().parse().unwrap();
     let idf_path = matches.value_of("idf-path")
         .unwrap_or(&*get_selected_idf_path()).to_string();
@@ -430,7 +431,7 @@ fn change_submodules_mirror(mut repo: Repository, submodule_url: String) {
 
 }
 
-fn get_mirror_switch_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_mirror_switch_runner(_args: &str, matches: &ArgMatches) -> std::result::Result<(), clap::Error> {
     let idf_path = matches.value_of("idf-path")
         .unwrap_or(&*get_selected_idf_path()).to_string();
     let url = matches.value_of("url")

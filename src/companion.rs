@@ -1,4 +1,4 @@
-use clap::Arg;
+use clap::{Arg, ArgMatches};
 use clap_nested::{Command, Commander, MultiCommand};
 
 use crate::package::{prepare_package, remove_package};
@@ -21,7 +21,7 @@ fn remove_companion() -> Result<()> {
                     "tmp/esp-iwidc")
 }
 
-fn get_update_runner(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_update_runner(_args: &str, _matches: &ArgMatches) -> std::result::Result<(), clap::Error> {
     match remove_companion() {
         Ok(_content) => {
             prepare_companion();
@@ -34,7 +34,7 @@ fn get_update_runner(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::resul
 }
 
 
-fn get_companion_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+fn get_companion_runner(_args: &str, matches: &ArgMatches) -> std::result::Result<(), clap::Error> {
     prepare_companion();
 
     let mut arguments: Vec<String> = [].to_vec();
