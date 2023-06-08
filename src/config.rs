@@ -352,6 +352,7 @@ pub async fn command_config(args: ConfigOpts) -> Result<()> {
         }
         ConfigOpts { subcommand: Some(ConfigCommands::Get), .. } => {
             println!("Get");
+            command_get(p).await;
         }
         ConfigOpts { subcommand: Some(ConfigCommands::Set), .. } => {
             println!("Set");
@@ -366,6 +367,10 @@ pub async fn command_config(args: ConfigOpts) -> Result<()> {
 
 // Get property from configuration file.
 pub async fn command_get(args: Get) -> Result<()> {
+
+    let content = get_json_content();
+    println!("{:#}", content);
+
     Ok(())
 }
 
