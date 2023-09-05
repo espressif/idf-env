@@ -171,7 +171,7 @@ fn download_drivers(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result
                         }
     }
     if _matches.is_present("ftdi") {
-        match prepare_package("https://www.ftdichip.com/Drivers/CDM/CDM%20v2.12.28%20WHQL%20Certified.zip".to_string(),
+        match prepare_package("https://www.ftdichip.com/Driver/CDM/CDM%20v2.12.28%20WHQL%20Certified.zip".to_string(),
                         "ftdi.zip",
                         get_driver_path("ftdi-2021-05-03".to_string())) {
                             Ok(_) => { println!("Ok"); },
