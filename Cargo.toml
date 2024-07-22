@@ -33,3 +33,8 @@ winreg = "0.10.1"
 [[bin]]
 name = "idf-env"
 path = "src/idf_env.rs"
+
+
+[lib]
+crate-type = ["lib"]
+path = "src/idf_env_lib.rs"
