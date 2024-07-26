@@ -1,13 +1,14 @@
-extern crate json;
 extern crate clap;
+extern crate json;
 
-use clap_nested::{Commander};
+use clap_nested::Commander;
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 mod antivirus;
-mod config;
+mod certificate;
 mod companion;
+mod config;
 mod driver;
 mod ide;
 mod idf;
@@ -15,7 +16,6 @@ mod launcher;
 mod package;
 mod rust;
 mod shell;
-mod certificate;
 mod toit;
 
 async fn app() -> Result<()> {
@@ -25,7 +25,6 @@ async fn app() -> Result<()> {
                 .name("idf-env")
                 .author("Espressif Systems - https://www.espressif.com")
                 .about("Tool for maintaining ESP-IDF environment on computer.")
-
         })
         .args(|_args, matches| matches.value_of("environment").unwrap_or("dev"))
         .add_cmd(antivirus::get_multi_cmd())

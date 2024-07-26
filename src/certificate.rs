@@ -8,9 +8,7 @@ type ResultTokio<T> = std::result::Result<T, Box<dyn std::error::Error + Send + 
 async fn request_url(uri: String) -> ResultTokio<()> {
     let response = reqwest::get(uri).await;
     match response {
-        Ok(_r) => {
-            return Ok(())
-        },
+        Ok(_r) => return Ok(()),
         _ => {
             std::process::exit(1);
         }
@@ -25,14 +23,20 @@ fn open_url(url: String) -> ResultTokio<()> {
     Ok(th.join().unwrap())
 }
 
-fn get_verify_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+pub fn get_verify_runner(
+    _args: &str,
+    matches: &clap::ArgMatches<'_>,
+) -> std::result::Result<(), clap::Error> {
     let url = matches.value_of("url").unwrap().to_string();
     match open_url(url) {
-        Ok(_) => { println!("URL verified"); },
-        Err(_e) => { println!("Unable to open URL"); }
+        Ok(_) => {
+            println!("URL verified");
+        }
+        Err(_e) => {
+            println!("Unable to open URL");
+        }
     }
     Ok(())
-
 }
 
 pub fn get_verify_cmd<'a>() -> Command<'a, str> {
@@ -44,10 +48,10 @@ pub fn get_verify_cmd<'a>() -> Command<'a, str> {
                     .short("u")
                     .long("url")
                     .help("URL to perform certificate check")
-                    .takes_value(true)
+                    .takes_value(true),
             )
         })
-        .runner(|_args, matches| get_verify_runner(_args, matches) )
+        .runner(|_args, matches| get_verify_runner(_args, matches))
 }
 
 pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {

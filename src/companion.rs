@@ -2,39 +2,51 @@ use clap::Arg;
 use clap_nested::{Command, Commander, MultiCommand};
 
 use crate::package::{prepare_package, remove_package};
-use std::process::Stdio;
 use std::io::Read;
+use std::process::Stdio;
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 fn prepare_companion() {
-    match prepare_package("https://dl.espressif.com/dl/esp-iwidc/esp-iwidc.zip".to_string(),
-                    "esp-iwidc.zip",
-                    "tmp/esp-iwidc".to_string()) {
-                        Ok(_) => { println!("Ok"); },
-                        Err(_e) => { println!("Failed");}
-                    }
+    match prepare_package(
+        "https://dl.espressif.com/dl/esp-iwidc/esp-iwidc.zip".to_string(),
+        "esp-iwidc.zip",
+        "tmp/esp-iwidc".to_string(),
+    ) {
+        Ok(_) => {
+            println!("Ok");
+        }
+        Err(_e) => {
+            println!("Failed");
+        }
+    }
 }
 
 fn remove_companion() -> Result<()> {
-    remove_package("esp-iwidc.zip",
-                    "tmp/esp-iwidc")
+    remove_package("esp-iwidc.zip", "tmp/esp-iwidc")
 }
 
-fn get_update_runner(_args: &str, _matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+pub fn get_update_runner(
+    _args: &str,
+    _matches: &clap::ArgMatches<'_>,
+) -> std::result::Result<(), clap::Error> {
     match remove_companion() {
         Ok(_content) => {
             prepare_companion();
             println!("Web Companion updated");
         }
-        Err(error) => { println!("{}", error);  }
+        Err(error) => {
+            println!("{}", error);
+        }
     }
 
     Ok(())
 }
 
-
-fn get_companion_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::result::Result<(), clap::Error> {
+pub fn get_companion_runner(
+    _args: &str,
+    matches: &clap::ArgMatches<'_>,
+) -> std::result::Result<(), clap::Error> {
     prepare_companion();
 
     let mut arguments: Vec<String> = [].to_vec();
@@ -50,7 +62,8 @@ fn get_companion_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::res
         .args(arguments)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
-        .spawn().unwrap();
+        .spawn()
+        .unwrap();
 
     let mut s = String::new();
     match process.stdout.unwrap().read_to_string(&mut s) {
@@ -59,7 +72,6 @@ fn get_companion_runner(_args: &str, matches: &clap::ArgMatches<'_>) -> std::res
     }
 
     Ok(())
-
 }
 
 pub fn get_start_cmd<'a>() -> Command<'a, str> {
@@ -71,28 +83,27 @@ pub fn get_start_cmd<'a>() -> Command<'a, str> {
                     .short("p")
                     .long("port")
                     .help("Name of communication port")
-                    .takes_value(true)
+                    .takes_value(true),
             )
         })
-        .runner(|_args, matches| get_companion_runner(_args, matches) )
+        .runner(|_args, matches| get_companion_runner(_args, matches))
 }
-
 
 pub fn get_update_cmd<'a>() -> Command<'a, str> {
     Command::new("update")
         .description("Update the companion from the server")
-        .runner(|_args, matches| get_update_runner(_args, matches) )
+        .runner(|_args, matches| get_update_runner(_args, matches))
 }
-
 
 pub fn get_multi_cmd<'a>() -> MultiCommand<'a, str, str> {
     let multi_cmd: MultiCommand<str, str> = Commander::new()
         .add_cmd(get_start_cmd())
         .add_cmd(get_update_cmd())
         .into_cmd("companion")
-
         // Optionally specify a description
-        .description("ESP-IDF Desktop Web Companion for flashing and monitoring device from Web IDE.");
+        .description(
+            "ESP-IDF Desktop Web Companion for flashing and monitoring device from Web IDE.",
+        );
 
     return multi_cmd;
 }
