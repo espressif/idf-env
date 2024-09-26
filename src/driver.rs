@@ -193,7 +193,7 @@ pub fn download_drivers(
 ) -> std::result::Result<(), clap::Error> {
     if _matches.is_present("silabs") {
         match prepare_package(
-            "https://www.silabs.com/documents/public/software/CP210x_Universal_Windows_Driver.zip"
+            "https://dl.espressif.com/dl/idf-installer/CP210x_Universal_Windows_Driver.zip"
                 .to_string(),
             "cp210x.zip",
             get_driver_path("silabs-2021-05-03".to_string()),
@@ -208,7 +208,7 @@ pub fn download_drivers(
     }
     if _matches.is_present("ftdi") {
         match prepare_package(
-            "https://www.ftdichip.com/Driver/CDM/CDM%20v2.12.28%20WHQL%20Certified.zip".to_string(),
+            "https://dl.espressif.com/dl/idf-installer/CDM_v2.12.28_WHQL_Certified.zip".to_string(),
             "ftdi.zip",
             get_driver_path("ftdi-2021-05-03".to_string()),
         ) {
@@ -237,7 +237,7 @@ pub fn download_drivers(
     }
     if _matches.is_present("wch") {
         match prepare_package(
-            "https://www.wch.cn/downloads/file/314.html".to_string(),
+            "https://dl.espressif.com/dl/idf-installer/CH341SER.ZIP".to_string(),
             "whc-ch343ser.zip",
             get_driver_path("whc-ch343ser-2022-08-02".to_string()),
         ) {
