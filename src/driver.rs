@@ -98,6 +98,40 @@ use widestring::WideCString;
 
 #[cfg(windows)]
 pub fn install_driver(driver_inf: String) {
+    print!("Installing driver with INF {} ", driver_inf);
+    
+    match install_driver_res(driver_inf) {
+        Ok(msg) => {
+            if msg.contains(" -> ") {
+                let parts: Vec<&str> = msg.split(" -> ").collect();
+                if parts.len() == 2 {
+                    print!("-> {} ", parts[1].replace("Ok", ""));
+                }
+            }
+            print!("... ");
+            if msg.starts_with("Ok") {
+                println!("Ok");
+            } else {
+                println!("{}", msg);
+            }
+        }
+        Err(e) => {
+            let error_str = e.to_string();
+            if error_str.contains(" -> ") {
+                let parts: Vec<&str> = error_str.split(" -> ").collect();
+                if parts.len() == 2 {
+                    print!("-> {} ", parts[1]);
+                }
+            }
+            print!("... ");
+            println!("{}", error_str.split(" -> ").next().unwrap_or(&error_str));
+        }
+    }
+    
+}
+
+#[cfg(windows)]
+pub fn install_driver_res(driver_inf: String) -> Result<String> {
     // Reference: https://github.com/microsoft/Windows-driver-samples/tree/master/setup/devcon
     // SetupCopyOEMInf(SourceInfFileName,
     //     NULL,
@@ -109,7 +143,6 @@ pub fn install_driver(driver_inf: String) {
     //     &DestinationInfFileNameComponent))
     // Rust: https://docs.rs/winapi/0.3.9/winapi/um/setupapi/fn.SetupCopyOEMInfW.html
     let driver_inf = driver_inf.replace("/", "\\");
-    print!("Installing driver with INF {} ", driver_inf);
     let mut destination_inf_filename_vec: Vec<winapi::um::winnt::WCHAR> = vec![0; 255];
     let destination_inf_filename: winapi::um::winnt::PWSTR =
         destination_inf_filename_vec.as_mut_ptr();
@@ -119,7 +152,6 @@ pub fn install_driver(driver_inf: String) {
 
     let source_inf_filename = WideCString::from_str(&driver_inf).unwrap();
     unsafe {
-        // https://docs.microsoft.com/en-us/windows/win32/api/setupapi/nf-setupapi-setupcopyoeminfw
         let result = winapi::um::setupapi::SetupCopyOEMInfW(
             source_inf_filename.as_slice_with_nul().as_ptr(),
             null_mut(),
@@ -133,36 +165,28 @@ pub fn install_driver(driver_inf: String) {
         let error_code = winapi::um::errhandlingapi::GetLastError();
         let destination_oem =
             WideCString::from_vec_truncate(destination_inf_filename_vec).to_string_lossy();
-        if destination_oem.len() != 0 {
-            print!("-> {} ", destination_oem);
-        }
-        print!("... ");
+        
+        let destination_info = if destination_oem.len() != 0 {
+            format!(" -> {}", destination_oem)
+        } else {
+            String::new()
+        };
 
         match (result, error_code) {
-            (1, 0) => {
-                println!("Ok");
-            }
-            (0, 2) => {
-                println!("File not found");
-            }
-            (0, 80) => {
-                println!("Already installed");
-            }
-            (0, 87) => {
-                println!("Invalid parameter");
-            }
-            (0, 122) => {
-                println!("Insufficient buffer");
-            }
-            (0, 1630) => {
-                println!("Unsupported type");
-            }
-            _ => {
-                println!("Exit codes: {:#}, {:#}", result, error_code);
-                println!("{:#?}", source_inf_filename);
-            }
+            (1, 0) => Ok(format!("Ok{}", destination_info)),
+            (0, 2) => Err(format!("File not found{}", destination_info).into()),
+            (0, 80) => Err(format!("Already installed{}", destination_info).into()),
+            (0, 87) => Err(format!("Invalid parameter{}", destination_info).into()),
+            (0, 122) => Err(format!("Insufficient buffer{}", destination_info).into()),
+            (0, 1630) => Err(format!("Unsupported type{}", destination_info).into()),
+            _ => Err(format!("Exit codes: {:#}, {:#}{}", result, error_code, destination_info).into()),
         }
     }
+}
+
+#[cfg(unix)]
+pub fn install_driver_res(driver_inf: String) -> Result<String> {
+    Ok("Unix not supported".to_string())
 }
 
 #[cfg(unix)]
