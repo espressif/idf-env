@@ -24,7 +24,7 @@ walkdir = "*"
 wmi = "*"
 widestring = "1.0.2"
 winapi = { version = "*", features = ["setupapi", "handleapi", "processthreadsapi", "winnt", "securitybaseapi", "impl-default", "shellapi", "winuser"] }
-zip = "*"
+zip = "0.6"
 xz2 = "0.1.6"
 
 [target.'cfg(windows)'.dependencies]
