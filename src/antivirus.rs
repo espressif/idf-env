@@ -19,7 +19,7 @@ pub fn get_antivirus_property(property_name: String, include_inactive: bool) -> 
     use wmi::*;
 
     let wmi_con =
-        WMIConnection::with_namespace_path("ROOT\\SecurityCenter2", COMLibrary::new()?.into())?;
+        WMIConnection::with_namespace_path("ROOT\\SecurityCenter2")?;
     let query = format!("SELECT * FROM AntiVirusProduct");
     let products = wmi_con.raw_query(query)?;
     let mut is_first = true;

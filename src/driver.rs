@@ -25,7 +25,7 @@ pub fn get_driver_property(property_name: String, filter: String) -> Result<()> 
     use wmi::Variant;
     use wmi::*;
 
-    let wmi_con = WMIConnection::with_namespace_path("ROOT\\CIMV2", COMLibrary::new()?.into())?;
+    let wmi_con = WMIConnection::with_namespace_path("ROOT\\CIMV2")?;
     let query = format!(
         "SELECT {} FROM Win32_PnPEntity WHERE {}",
         property_name, filter
