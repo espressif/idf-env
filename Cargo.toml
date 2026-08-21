@@ -1,6 +1,6 @@
 [package]
 name = "idf-env"
-version = "1.2.32"
+version = "1.2.33"
 authors = ["Juraj Michalek <juraj.michalek@espressif.com>"]
 edition = "2018"
 
@@ -23,7 +23,7 @@ tokio = { version = "1.49.0", features = ["full"] }
 walkdir = "*"
 wmi = "*"
 widestring = "1.2"
-winapi = { version = "*", features = ["setupapi", "handleapi", "processthreadsapi", "winnt", "securitybaseapi", "impl-default", "shellapi", "winuser"] }
+winapi = { version = "*", features = ["setupapi", "handleapi", "processthreadsapi", "winnt", "securitybaseapi", "impl-default", "shellapi", "winuser", "sysinfoapi", "libloaderapi"] }
 zip = "*"
 xz2 = "0.1.6"
 
